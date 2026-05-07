@@ -5,7 +5,7 @@
 <title>SilentGPT Flashcards</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,-apple-system,sans-serif;background:#0a0a12;color:#e2e2e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;user-select:none;overflow:hidden}
+body{font-family:system-ui,-apple-system,sans-serif;background:#050505;color:#e2e2e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;user-select:none;overflow:hidden}
 .header{position:fixed;top:0;left:0;right:0;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;z-index:10}
 .header h1{font-size:16px;font-weight:600;color:#999;letter-spacing:0.5px}
 .header .controls{display:flex;gap:8px}
@@ -16,8 +16,8 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0a0a12;color:#e2
 .card{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.5s ease;cursor:pointer}
 .card.flipped{transform:rotateY(180deg)}
 .card-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 40px rgba(0,0,0,0.4)}
-.card-front{background:linear-gradient(145deg,#14142a,#1a1a2e)}
-.card-back{background:linear-gradient(145deg,#0f1f2e,#0a1a28);transform:rotateY(180deg)}
+.card-front{background:linear-gradient(145deg,#111111,#191919)}
+.card-back{background:linear-gradient(145deg,#1f1700,#3a2a00);transform:rotateY(180deg)}
 .card-label{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#facc15;margin-bottom:16px;font-weight:600}
 .card-text{font-size:22px;line-height:1.5;color:#e8e8ee;max-height:280px;overflow-y:auto}
 .card-back .card-text{font-size:18px;color:#b8d4e3}
