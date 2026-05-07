@@ -38,6 +38,7 @@ contextBridge.exposeInMainWorld('silentgpt', {
   getChangelog:    () => ipcRenderer.invoke('get-changelog'),
   startTrial:      () => ipcRenderer.send('start-trial'),
   acceptTerms:     () => ipcRenderer.invoke('accept-terms'),
+  startFreeLite:   () => ipcRenderer.invoke('start-free-lite'),
   validateLicense: (key) => ipcRenderer.invoke('validate-license', key),
   getLicenseStatus: () => ipcRenderer.invoke('get-license-status'),
   createCheckoutSession: (email, plan) => ipcRenderer.invoke('create-checkout-session', email, plan),

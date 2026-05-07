@@ -100,7 +100,7 @@ const STORE_DEFAULTS = {
   apiEndpoint:   'https://api.openai.com/v1/chat/completions',
   model:         'gpt-4o',
   overlayOpacity: 0.0,
-  accentColor:   '#facc15',
+  accentColor:   '#2f4f4f',
   fontSize:      14,
   fontFamily:    'system-ui, -apple-system, sans-serif',
   borderRadius:  12,
@@ -132,7 +132,7 @@ const STORE_DEFAULTS = {
   typoRate:      0.03,
   dripPauseChance: 0.03,
   dripBurstChance: 0.08,
-  invisibleOverlay: true,
+  invisibleOverlay: false,
   autopilotDelay:     800,
   autopilotDelayRandom: 500,
   autopilotHumanize:  true,
@@ -278,8 +278,22 @@ function initAnalytics() {
 
 /* ─────────────────── Lockdown Mode ─────────────────── */
 
+function hasProAccess() {
+  if (!store) initStore();
+  if (isAdmin()) return true;
+  return store.get('licenseValid') === true &&
+    store.get('membershipTier') === 'premium' &&
+    store.get('subscriptionStatus') === 'active' &&
+    !!store.get('stripeSubscriptionId');
+}
+
+function isAppUnlocked() {
+  if (!store) initStore();
+  return hasProAccess() || store.get('termsAccepted') === true;
+}
+
 function isLockdown() {
-  return !!(store && store.get('lockdownMode'));
+  return !!(store && hasProAccess() && store.get('lockdownMode'));
 }
 
 /** In lockdown mode, re-assert overlay above everything on a fast timer */
@@ -613,7 +627,7 @@ function makeSettings() {
     ...minSize,
     resizable: true, minimizable: true, maximizable: false,
     title: 'SilentGPT Settings',
-    backgroundColor: '#050505',
+    backgroundColor: '#020403',
     webPreferences: {
       preload:          path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -640,7 +654,7 @@ function showFlashcards(cardsText) {
     resizable: true, minimizable: true, maximizable: true,
     fullscreenable: true,
     title: 'SilentGPT Flashcards',
-    backgroundColor: '#050505',
+    backgroundColor: '#020403',
     show: false,
     webPreferences: {
       preload:          path.join(__dirname, 'preload.js'),
@@ -657,7 +671,7 @@ function showFlashcards(cardsText) {
   flashcardsWin.once('ready-to-show', () => { flashcardsWin.show(); flashcardsWin.focus(); });
   flashcardsWin.on('closed', () => {
     flashcardsWin = null;
-    if (process.platform === 'darwin' && isLicensed()) app.dock?.hide();
+    if (process.platform === 'darwin' && isAppUnlocked()) app.dock?.hide();
   });
 }
 
@@ -767,8 +781,8 @@ async function grabScreen() {
 /* ─────────────────── Show / Toggle Overlay ─────────────────── */
 
 function showWithMode(mode) {
-  // Block overlay if not licensed
-  if (!isLicensed()) { showActivate(); return; }
+  // Block overlay until the user has chosen Lite or Pro.
+  if (!isAppUnlocked()) { showActivate(); return; }
   if (!overlayWin) makeOverlay();
 
   if (overlayUp) {
@@ -783,7 +797,7 @@ function showWithMode(mode) {
     applyOverlayLevel();               // re-assert level before every show
     overlayWin.webContents.send('set-mode', mode);
     overlayWin.webContents.send('screen-captured', img);
-    overlayWin.webContents.send('load-settings', store.store);
+    overlayWin.webContents.send('load-settings', sanitizedSettings());
     overlayWin.showInactive();
     // Re-enforce content protection AFTER show — critical for panel windows
     enforceContentProtection(overlayWin);
@@ -817,7 +831,7 @@ function showWithMode(mode) {
 
 // Instant Answer: capture full screen → show overlay → auto-send to AI (no drag needed)
 function instantAnswer() {
-  if (!isLicensed()) { showActivate(); return; }
+  if (!isAppUnlocked()) { showActivate(); return; }
   if (!overlayWin) makeOverlay();
 
   const finishInstant = (img) => {
@@ -825,7 +839,7 @@ function instantAnswer() {
     applyOverlayLevel();
     overlayWin.webContents.send('set-mode', 'answer');
     overlayWin.webContents.send('screen-captured', img);
-    overlayWin.webContents.send('load-settings', store.store);
+    overlayWin.webContents.send('load-settings', sanitizedSettings());
     overlayWin.showInactive();
     enforceContentProtection(overlayWin);
     overlayUp = true;
@@ -854,8 +868,8 @@ function instantAnswer() {
 }
 
 function toggle() {
-  // Block overlay if not licensed
-  if (!isLicensed()) { showActivate(); return; }
+  // Block overlay until the user has chosen Lite or Pro.
+  if (!isAppUnlocked()) { showActivate(); return; }
   if (!overlayWin) makeOverlay();
   if (overlayUp) { overlayWin.hide(); overlayUp = false; stopLockdownKeepAlive(); }
   else showWithMode(store.get('lastMode') || 'answer');
@@ -868,7 +882,7 @@ function makeTray() {
 
   tray = new Tray(nativeImage.createFromDataURL('data:image/png;base64,' + icon64));
 
-  const licensed = isLicensed();
+  const licensed = isAppUnlocked();
   const menu = Menu.buildFromTemplate([
     { label: 'Toggle Overlay', accelerator: store.get('hotkey'), click: toggle, enabled: licensed },
     { type: 'separator' },
@@ -878,10 +892,10 @@ function makeTray() {
     { label: 'Autopilot Mode',  click: () => showWithMode('autopilot'), enabled: licensed },
     { label: 'Drip Type Mode',  click: () => showWithMode('driptype'),  enabled: licensed },
     { type: 'separator' },
-    ...(licensed ? [] : [{ label: 'Subscribe to Unlock', click: showActivate }, { type: 'separator' }]),
+    ...(licensed ? [] : [{ label: 'Choose Lite or Pro', click: showActivate }, { type: 'separator' }]),
     { label: 'Settings', click: makeSettings },
     { type: 'separator' },
-    { label: 'Phantom Mode (Always On)', type: 'checkbox', checked: true, enabled: false },
+    { label: hasProAccess() ? 'Pro Stealth Features Available' : 'Pro unlocks stealth features', enabled: false },
     { type: 'separator' },
     { label: 'Quit SilentGPT', click: () => app.quit() }
   ]);
@@ -903,8 +917,8 @@ function bindKeys() {
     if (!key) continue;
     try { globalShortcut.register(key, fn); } catch (_) {}
   }
-  // Overlay/feature hotkeys only work if licensed
-  if (!isLicensed()) return;
+  // Overlay/feature hotkeys work for free Lite and paid Pro users.
+  if (!isAppUnlocked()) return;
 
   // In lockdown mode, register BOTH normal hotkeys AND stealth hotkeys
   // Stealth hotkeys use F-key combos that lockdown browsers are less likely to intercept
@@ -1014,7 +1028,7 @@ function cleanMarkdown(t) {
 ipcMain.handle('drip-type', async (_ev, text) => {
   // Hide overlay FIRST — before any early return — so the selection/drag feature cannot activate
   if (overlayWin) { overlayWin.hide(); overlayUp = false; }
-  if (!isLicensed()) return { error: 'Subscription required.' };
+  if (!isAppUnlocked()) return { error: 'Choose Lite or Pro to use SilentGPT.' };
   if (!text) return { error: 'No text provided.' };
   text = cleanMarkdown(text);
   trackUsage('dripType');
@@ -1633,13 +1647,13 @@ ipcMain.handle('pin-answer', (_ev, html) => {
   const page = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
     *{margin:0;padding:0;box-sizing:border-box}
     html,body{background:transparent;overflow:hidden;font-family:'SF Pro Display',system-ui,-apple-system,'Segoe UI',sans-serif}
-    .wrap{background:rgba(12,12,12,0.92);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid rgba(250,204,21,0.2);border-radius:14px;color:#f5f0e8;font-size:13px;line-height:1.5;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+    .wrap{background:rgba(13,20,18,0.94);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid rgba(111,143,132,0.22);border-radius:14px;color:#eef5f0;font-size:13px;line-height:1.5;display:flex;flex-direction:column;height:100vh;overflow:hidden}
     .bar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;-webkit-app-region:drag;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0}
     .bar span{font-size:11px;color:#b8b0a0;font-weight:600}
     .bar button{-webkit-app-region:no-drag;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.2);color:#ef4444;font-size:10px;padding:3px 10px;border-radius:6px;cursor:pointer;font-family:inherit;font-weight:600}
     .bar button:hover{background:rgba(239,68,68,0.25)}
     .body{padding:12px;overflow-y:auto;flex:1;font-size:13px;line-height:1.6;color:#e8e0d8}
-    .body strong{color:#fff} .body code{background:rgba(250,204,21,0.15);padding:1px 5px;border-radius:4px;font-size:12px}
+    .body strong{color:#fff} .body code{background:rgba(111,143,132,0.16);padding:1px 5px;border-radius:4px;font-size:12px}
     .body pre{background:rgba(8,8,8,0.8);padding:10px;border-radius:8px;overflow-x:auto;font-size:12px;margin:8px 0}
   </style></head><body><div class="wrap">
     <div class="bar"><span>Pinned Answer</span><button onclick="window.close()">Close</button></div>
@@ -1769,7 +1783,15 @@ function selfDestructExecute() {
 
 ipcMain.on('self-destruct', () => { selfDestructTrigger(); });
 
-ipcMain.handle('get-settings', () => store.store);
+const PRO_ONLY_SETTING_KEYS = ['lockdownMode','phantomMode','invisibleOverlay','ghostAnswer','clearScreen'];
+
+function sanitizedSettings() {
+  const settings = { ...store.store, proAccess: hasProAccess(), appUnlocked: isAppUnlocked() };
+  if (!settings.proAccess) PRO_ONLY_SETTING_KEYS.forEach((key) => { settings[key] = false; });
+  return settings;
+}
+
+ipcMain.handle('get-settings', () => sanitizedSettings());
 
 // Recapture screen — hide overlay briefly, grab new screenshot, send back
 ipcMain.handle('recapture-screen', async () => {
@@ -1794,16 +1816,21 @@ ipcMain.handle('recapture-screen', async () => {
 ipcMain.on('save-settings', (_ev, s) => {
   // Block renderer from modifying license/auth fields
   const protectedKeys = ['licenseKey','licenseValid','licenseEmail','stripeCustomerId','stripeSubscriptionId','subscriptionStatus','membershipTier','authDone','authPasswordHash','onboardingDone'];
-  for (const [k, v] of Object.entries(s)) { if (!protectedKeys.includes(k)) store.set(k, v); }
+  const proAccess = hasProAccess();
+  for (const [k, v] of Object.entries(s)) {
+    if (protectedKeys.includes(k)) continue;
+    if (!proAccess && PRO_ONLY_SETTING_KEYS.includes(k)) { store.set(k, false); continue; }
+    store.set(k, v);
+  }
   bindKeys();
   applyProcessDisguise(); // Re-apply disguise if lockdown mode was toggled
-  if (s.lockdownMode) { activateKernelStealth(); installPersistence(); } else { deactivateKernelStealth(); removePersistence(); }
+  if (proAccess && store.get('lockdownMode')) { activateKernelStealth(); installPersistence(); } else { deactivateKernelStealth(); removePersistence(); }
   if (s.startAtLogin !== undefined) {
     try { app.setLoginItemSettings({ openAtLogin: s.startAtLogin }); } catch (_) {}
   }
   // Content protection always on
   try { if (overlayWin) overlayWin.setContentProtection(true); } catch (_) {}
-  if (overlayWin)  overlayWin.webContents.send('load-settings', store.store);
+  if (overlayWin)  overlayWin.webContents.send('load-settings', sanitizedSettings());
   if (settingsWin) settingsWin.webContents.send('settings-saved');
 });
 
@@ -1815,8 +1842,8 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
   if (store.get('stripeSubscriptionId') && Date.now() - lastCheck > 10 * 60 * 1000) {
     try { await checkSubscriptionStatus(true); } catch (_) {}
   }
-  // Block AI usage for unlicensed users
-  if (!isLicensed()) return { error: 'Subscription required. Please subscribe to use SilentGPT.' };
+  // Block AI usage until users choose free Lite or paid Pro.
+  if (!isAppUnlocked()) return { error: 'Choose Lite or Pro to use SilentGPT.' };
   // Track usage analytics
   trackUsage(mode || 'answer');
 
@@ -1975,12 +2002,7 @@ function isPaidPremiumSubscription(sub, customerEmail) {
 }
 
 function isLicensed() {
-  if (!store) initStore();
-  if (isAdmin()) return true;
-  return store.get('licenseValid') === true &&
-    store.get('membershipTier') === 'premium' &&
-    store.get('subscriptionStatus') === 'active' &&
-    !!store.get('stripeSubscriptionId');
+  return hasProAccess();
 }
 
 function trialDaysLeft() {
@@ -2004,7 +2026,7 @@ function showActivate() {
     ...minSize,
     resizable: true, minimizable: true, maximizable: true,
     title: 'Activate SilentGPT',
-    backgroundColor: '#050505',
+    backgroundColor: '#020403',
     titleBarStyle: 'hiddenInset',
     show: false,
     webPreferences: {
@@ -2019,7 +2041,7 @@ function showActivate() {
   activateWin.once('ready-to-show', () => { activateWin.show(); activateWin.focus(); });
   activateWin.on('closed', () => {
     activateWin = null;
-    if (isLicensed()) {
+    if (isAppUnlocked()) {
       if (process.platform === 'darwin') app.dock?.hide();
     } else {
       // Don't quit — stay in tray so user can re-open via hotkey or tray menu
@@ -2038,16 +2060,29 @@ ipcMain.handle('accept-terms', () => {
   return { ok: true };
 });
 
+ipcMain.handle('start-free-lite', () => {
+  store.set('termsAccepted', true);
+  store.set('membershipTier', 'free');
+  store.set('licenseValid', false);
+  store.set('subscriptionStatus', store.get('stripeSubscriptionId') ? store.get('subscriptionStatus') : 'inactive');
+  PRO_ONLY_SETTING_KEYS.forEach((key) => store.set(key, false));
+  setImmediate(proceedAfterActivation);
+  return { ok: true, tier: 'free' };
+});
+
 // Admin master keys defined at top of file
 
-function proceedAfterLicense() {
-  // Close activate window (the closed handler will check isLicensed and hide dock)
+function proceedAfterActivation() {
+  // Close activate window (the closed handler will hide dock when access is available)
   if (activateWin) { activateWin.close(); activateWin = null; }
-  // Now that user is licensed, create overlay and bind hotkeys
+  // Lite and Pro both get the core app; Pro-only stealth features are gated separately.
   if (!overlayWin) makeOverlay();
   bindKeys();
-  // Tour already happened before payment — just hide dock and run
   if (process.platform === 'darwin') app.dock?.hide();
+}
+
+function proceedAfterLicense() {
+  proceedAfterActivation();
 }
 
 // Admin key validation (still works for admin access)
@@ -2126,7 +2161,7 @@ ipcMain.handle('open-checkout-window', async (_ev, url, sessionId) => {
     ...minSize,
     resizable: true, minimizable: false, maximizable: false,
     title: 'SilentGPT — Subscribe',
-    backgroundColor: '#050505',
+    backgroundColor: '#020403',
     webPreferences: { nodeIntegration: false, contextIsolation: true }
   });
 
@@ -2167,7 +2202,7 @@ ipcMain.handle('open-checkout-window', async (_ev, url, sessionId) => {
 
   checkoutWin.on('closed', () => {
     checkoutWin = null;
-    if (process.platform === 'darwin' && isLicensed()) app.dock?.hide();
+    if (process.platform === 'darwin' && isAppUnlocked()) app.dock?.hide();
 
     // Notify activate window that checkout closed without success
     if (!checkoutSucceeded && activateWin && !activateWin.isDestroyed()) {
@@ -2335,7 +2370,7 @@ async function checkSubscriptionStatus(force = false) {
     console.warn('Subscription check failed:', err.message);
     // If Stripe cannot confirm payment, do not grant access beyond the last
     // successfully verified active premium state.
-    if (!isLicensed()) {
+    if (!hasProAccess()) {
       store.set('licenseValid', false);
       store.set('membershipTier', 'free');
     }
@@ -2344,7 +2379,8 @@ async function checkSubscriptionStatus(force = false) {
 
 ipcMain.handle('get-license-status', () => {
   return {
-    licensed: isLicensed(),
+    licensed: isAppUnlocked(),
+    proAccess: hasProAccess(),
     hasKey: !!store.get('licenseKey'),
     licenseValid: store.get('licenseValid'),
     trialActive: store.get('trialStarted') > 0 && trialDaysLeft() > 0,
@@ -2352,7 +2388,7 @@ ipcMain.handle('get-license-status', () => {
     email: store.get('licenseEmail') || '',
     subscriptionId: store.get('stripeSubscriptionId') || '',
     subscriptionStatus: store.get('subscriptionStatus') || 'inactive',
-    membershipTier: store.get('membershipTier') || 'free'
+    membershipTier: hasProAccess() ? 'premium' : 'free'
   };
 });
 
@@ -2361,11 +2397,11 @@ ipcMain.handle('get-license-status', () => {
 ipcMain.handle('get-subscription-info', async () => {
   const subId = store.get('stripeSubscriptionId');
   const info = {
-    active: isLicensed(),
+    active: hasProAccess(),
     email: store.get('licenseEmail') || store.get('authEmail') || '',
     subscriptionId: subId || '',
     status: store.get('subscriptionStatus') || 'inactive',
-    membershipTier: store.get('membershipTier') || 'free',
+    membershipTier: hasProAccess() ? 'premium' : 'free',
     cancelAtPeriodEnd: false,
     currentPeriodEnd: null,
     isAdmin: ADMIN_KEYS.includes(store.get('licenseKey'))
@@ -2469,7 +2505,7 @@ function showAuth() {
     ...bounds,
     resizable: false, minimizable: false, maximizable: false,
     title: 'SilentGPT — Sign In',
-    backgroundColor: '#050505',
+    backgroundColor: '#020403',
     titleBarStyle: 'hiddenInset',
     show: false,
     webPreferences: {
@@ -2593,7 +2629,7 @@ ipcMain.on('auth-done', () => {
   // After auth, show tour first, then payment
   if (!store.get('onboardingDone')) {
     showWelcome();
-  } else if (!isLicensed()) {
+  } else if (!isAppUnlocked()) {
     showActivate();
   }
 });
@@ -2613,7 +2649,7 @@ function showWelcome() {
     ...bounds,
     resizable: false, minimizable: false, maximizable: false,
     title: 'Welcome to SilentGPT',
-    backgroundColor: '#050505',
+    backgroundColor: '#020403',
     titleBarStyle: 'hiddenInset',
     show: false,
     webPreferences: {
@@ -2637,8 +2673,8 @@ ipcMain.on('welcome-done', () => {
   store.set('onboardingDone', true);
   if (welcomeWin) { welcomeWin.close(); welcomeWin = null; }
 
-  // After tour, require payment if not licensed
-  if (!isLicensed()) {
+  // After tour, let users choose free Lite or paid Pro if app access is not unlocked.
+  if (!isAppUnlocked()) {
     showActivate();
   } else {
     if (process.platform === 'darwin') app.dock?.hide();
@@ -3255,8 +3291,8 @@ app.whenReady().then(async () => {
   // Tray is always available (for Quit, Settings, etc.)
   makeTray();
 
-  // Only create overlay and bind hotkeys if user is fully licensed
-  if (isLicensed()) {
+  // Create overlay and bind hotkeys for free Lite and paid Pro users.
+  if (isAppUnlocked()) {
     if (isLockdown()) {
       // In lockdown mode: delay overlay creation so SEB/lockdown browsers finish
       // their startup process scan before we create any windows.
@@ -3272,12 +3308,12 @@ app.whenReady().then(async () => {
   // Start screen capture detection — hides overlay during screen recording/sharing
   initScreenCaptureDetection();
 
-  // Flow: Auth → Welcome Tour → Payment → App
+  // Flow: Auth → Welcome Tour → Lite/Pro choice → App
   if (!store.get('authDone')) {
     showAuth();
   } else if (!store.get('onboardingDone')) {
     showWelcome();
-  } else if (!isLicensed()) {
+  } else if (!isAppUnlocked()) {
     showActivate();
   } else {
     if (process.platform === 'darwin') app.dock?.hide();
@@ -3287,17 +3323,15 @@ app.whenReady().then(async () => {
   setInterval(async () => {
     try {
       await checkSubscriptionStatus(true); // force=true bypasses cooldown
-      // If subscription was revoked, destroy overlay and unregister keys
-      if (!isLicensed() && !ADMIN_KEYS.includes(store.get('licenseKey'))) {
-        globalShortcut.unregisterAll();
-        if (overlayWin && !overlayWin.isDestroyed()) { overlayWin.hide(); if (overlayWin._silentgptAllowClose) overlayWin._silentgptAllowClose(); overlayWin.close(); overlayWin = null; overlayUp = false; }
-        if (pinnedWin && !pinnedWin.isDestroyed()) { pinnedWin.close(); pinnedWin = null; }
-        showActivate();
+      // If a Pro subscription was revoked, downgrade to Lite and disable Pro-only stealth features.
+      if (!hasProAccess() && !ADMIN_KEYS.includes(store.get('licenseKey'))) {
+        PRO_ONLY_SETTING_KEYS.forEach((key) => store.set(key, false));
+        if (overlayWin) overlayWin.webContents.send('load-settings', sanitizedSettings());
       }
     } catch (_) {}
   }, 10 * 60 * 1000);
 
-  app.on('activate', () => { if (isLicensed() && !overlayWin) makeOverlay(); });
+  app.on('activate', () => { if (isAppUnlocked() && !overlayWin) makeOverlay(); });
 });
 
 app.on('window-all-closed', () => {});
