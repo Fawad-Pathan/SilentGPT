@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Zap Flashcards</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0a0a12;color:#e2e2e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;user-select:none;overflow:hidden}
+.header{position:fixed;top:0;left:0;right:0;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;z-index:10}
+.header h1{font-size:16px;font-weight:600;color:#999;letter-spacing:0.5px}
+.header .controls{display:flex;gap:8px}
+.header button{padding:6px 14px;border:1px solid rgba(255,255,255,0.15);border-radius:8px;background:rgba(255,255,255,0.06);color:#ccc;font-size:12px;cursor:pointer;transition:all .15s}
+.header button:hover{background:rgba(255,255,255,0.12);color:#fff;border-color:rgba(255,255,255,0.25)}
+.progress{font-size:14px;color:#888;margin-bottom:24px}
+.card-container{perspective:1000px;width:min(700px,85vw);height:min(420px,55vh)}
+.card{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.5s ease;cursor:pointer}
+.card.flipped{transform:rotateY(180deg)}
+.card-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 40px rgba(0,0,0,0.4)}
+.card-front{background:linear-gradient(145deg,#14142a,#1a1a2e)}
+.card-back{background:linear-gradient(145deg,#0f1f2e,#0a1a28);transform:rotateY(180deg)}
+.card-label{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#facc15;margin-bottom:16px;font-weight:600}
+.card-text{font-size:22px;line-height:1.5;color:#e8e8ee;max-height:280px;overflow-y:auto}
+.card-back .card-text{font-size:18px;color:#b8d4e3}
+.nav{display:flex;gap:16px;margin-top:32px;align-items:center}
+.nav button{width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#ccc;font-size:20px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center}
+.nav button:hover{background:rgba(255,255,255,0.12);color:#fff;transform:scale(1.05)}
+.nav button:disabled{opacity:0.3;cursor:not-allowed;transform:none}
+.hint{position:fixed;bottom:24px;color:#555;font-size:12px;text-align:center}
+.dots{display:flex;gap:6px;margin:0 16px}
+.dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.15);transition:all .2s}
+.dot.active{background:#facc15;transform:scale(1.2)}
+.dot.done{background:rgba(250,204,21,0.4)}
+.empty{text-align:center;color:#666;font-size:18px;padding:40px}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>ZAP FLASHCARDS</h1>
+  <div class="controls">
+    <button id="shuffle-btn">Shuffle</button>
+    <button id="fullscreen-btn">Fullscreen</button>
+  </div>
+</div>
+
+<div class="progress" id="progress">Loading...</div>
+<div class="card-container" id="card-container">
+  <div class="card" id="card">
+    <div class="card-face card-front">
+      <div class="card-label">Question</div>
+      <div class="card-text" id="front-text"></div>
+    </div>
+    <div class="card-face card-back">
+      <div class="card-label">Answer</div>
+      <div class="card-text" id="back-text"></div>
+    </div>
+  </div>
+</div>
+<div class="nav">
+  <button id="prev-btn">&#8592;</button>
+  <div class="dots" id="dots"></div>
+  <button id="next-btn">&#8594;</button>
+</div>
+<div class="hint">Space to flip &middot; Arrow keys to navigate &middot; F to fullscreen</div>
+
+<script>
+var cards=[], idx=0, flipped=false;
+var card=document.getElementById('card');
+var frontText=document.getElementById('front-text');
+var backText=document.getElementById('back-text');
+var progress=document.getElementById('progress');
+var dots=document.getElementById('dots');
+var prevBtn=document.getElementById('prev-btn');
+var nextBtn=document.getElementById('next-btn');
+
+function parseCards(raw){
+  // Parse numbered flashcards: "1. **Q:** ... **A:** ..." or "**Q:** ... → **A:** ..."
+  var result=[];
+  // Split by numbered items
+  var lines=raw.split('\n');
+  var currentQ='', currentA='', inA=false;
+  for(var i=0;i<lines.length;i++){
+    var line=lines[i].trim();
+    // Match Q: pattern
+    var qMatch=line.match(/\*?\*?Q:\*?\*?\s*(.*)/i);
+    var aMatch=line.match(/\*?\*?A:\*?\*?\s*(.*)/i);
+    if(qMatch){
+      // Save previous card
+      if(currentQ&&currentA) result.push({q:currentQ.trim(),a:currentA.trim()});
+      currentQ=qMatch[1].replace(/\*+/g,'').replace(/→.*$/,'').trim();
+      currentA='';inA=false;
+    } else if(aMatch){
+      currentA=aMatch[1].replace(/\*+/g,'').trim();
+      inA=true;
+    } else if(inA&&line){
+      currentA+=' '+line.replace(/\*+/g,'').trim();
+    }
+  }
+  // Don't forget last card
+  if(currentQ&&currentA) result.push({q:currentQ.trim(),a:currentA.trim()});
+  // Fallback: if parsing failed, try splitting by double newlines
+  if(result.length===0){
+    var chunks=raw.split(/\n\n+/);
+    for(var j=0;j<chunks.length;j++){
+      var c=chunks[j].trim();
+      if(c.length>10){
+        var parts=c.split(/[→\n]/);
+        if(parts.length>=2){
+          result.push({q:parts[0].replace(/^\d+[\.\)]\s*/,'').replace(/\*+/g,'').trim(), a:parts.slice(1).join(' ').replace(/\*+/g,'').trim()});
+        }
+      }
+    }
+  }
+  return result;
+}
+
+function renderCard(){
+  if(!cards.length) return;
+  flipped=false;
+  card.classList.remove('flipped');
+  frontText.textContent=cards[idx].q;
+  backText.textContent=cards[idx].a;
+  progress.textContent='Card '+(idx+1)+' of '+cards.length;
+  prevBtn.disabled=(idx===0);
+  nextBtn.disabled=(idx===cards.length-1);
+  // Update dots
+  var dotEls=dots.children;
+  for(var i=0;i<dotEls.length;i++){
+    dotEls[i].className='dot'+(i===idx?' active':(i<idx?' done':''));
+  }
+}
+
+function buildDots(){
+  dots.innerHTML='';
+  for(var i=0;i<cards.length;i++){
+    var d=document.createElement('div');
+    d.className='dot'+(i===0?' active':'');
+    d.setAttribute('data-i',i);
+    d.addEventListener('click',function(){idx=parseInt(this.getAttribute('data-i'));renderCard()});
+    dots.appendChild(d);
+  }
+}
+
+function flip(){flipped=!flipped;card.classList.toggle('flipped')}
+function prev(){if(idx>0){idx--;renderCard()}}
+function next(){if(idx<cards.length-1){idx++;renderCard()}}
+
+card.addEventListener('click',flip);
+prevBtn.addEventListener('click',prev);
+nextBtn.addEventListener('click',next);
+
+document.getElementById('shuffle-btn').addEventListener('click',function(){
+  for(var i=cards.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=cards[i];cards[i]=cards[j];cards[j]=t}
+  idx=0;renderCard();
+});
+
+document.getElementById('fullscreen-btn').addEventListener('click',function(){
+  if(document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen();
+});
+
+document.addEventListener('keydown',function(e){
+  if(e.key===' '||e.key==='Enter'){e.preventDefault();flip()}
+  else if(e.key==='ArrowLeft') prev();
+  else if(e.key==='ArrowRight') next();
+  else if(e.key==='f'||e.key==='F'){
+    if(document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen();
+  }
+});
+
+// Receive cards from main process
+if(window.zap && window.zap.onLoadCards){
+  window.zap.onLoadCards(function(raw){
+    cards=parseCards(raw);
+    if(cards.length===0){
+      progress.textContent='No flashcards parsed';
+      frontText.textContent='Could not parse flashcards from the response.';
+      return;
+    }
+    buildDots();
+    renderCard();
+  });
+}
+</script>
+</body>
+</html>

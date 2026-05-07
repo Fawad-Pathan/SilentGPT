@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zap Overlay</title>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<style>
+  :root {
+    --accent: #facc15;
+    --accent-hover: #eab308;
+    --bg: rgba(28,28,30,0.72);
+    --bg-solid: rgba(28,28,30,0.92);
+    --glass: rgba(44,44,46,0.55);
+    --glass-border: rgba(255,255,255,0.18);
+    --glass-glow: rgba(255,255,255,0.06);
+    --text: #f5f5f7;
+    --text-muted: rgba(255,255,255,0.65);
+    --text-dim: rgba(255,255,255,0.35);
+    --border: rgba(255,255,255,0.14);
+    --border-hover: rgba(255,255,255,0.25);
+    --font-size: 14px;
+    --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    --radius: 16px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100vw;height:100vh;overflow:hidden;background:transparent;font-family:var(--font-family);font-size:var(--font-size);color:var(--text);user-select:none;cursor:crosshair}
+
+  #capture-layer{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;background:transparent}
+
+  #selection{position:fixed;border:2px solid var(--accent);background:rgba(250,204,21,0.06);z-index:10;display:none;pointer-events:none}
+  #selection-label{position:absolute;bottom:-24px;right:0;background:var(--bg-solid);color:var(--text-dim);padding:2px 6px;border-radius:3px;font-size:10px}
+
+  #mode-bar{display:none}
+
+  #mode-indicator{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:100;font-size:11px;font-weight:600;color:var(--accent);background:var(--glass);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid var(--glass-border);border-radius:20px;padding:5px 16px;text-transform:uppercase;letter-spacing:.8px;animation:fadeUp .3s ease-out .1s both;box-shadow:0 4px 24px rgba(0,0,0,0.25),inset 0 1px 0 var(--glass-glow)}
+
+  #instructions{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:100;text-align:center;font-size:12px;color:var(--text-dim);background:var(--glass);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid var(--glass-border);border-radius:14px;padding:8px 18px;animation:fadeUp .3s ease-out .1s both;box-shadow:0 4px 24px rgba(0,0,0,0.2),inset 0 1px 0 var(--glass-glow)}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(6px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+  #instructions kbd{padding:1px 4px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:3px;font-family:inherit;font-size:10px;color:var(--text-muted)}
+
+  #response-panel{position:fixed;z-index:200;display:none;width:440px;max-height:60vh;background:var(--glass);backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);border:1px solid var(--glass-border);border-radius:var(--radius);overflow:hidden;animation:panelIn .3s cubic-bezier(.16,1,.3,1);box-shadow:0 24px 80px rgba(0,0,0,.45),0 0 0 0.5px rgba(255,255,255,0.1),inset 0 1px 0 var(--glass-glow)}
+  @keyframes panelIn{from{opacity:0;transform:translateY(10px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+  #response-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);cursor:move;background:rgba(255,255,255,0.03)}
+  #response-header .mode-label{font-size:12px;font-weight:600;color:var(--accent);letter-spacing:.3px}
+  #response-header .actions{display:flex;gap:5px}
+  #response-header .actions button{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);padding:4px 10px;border-radius:8px;font-size:11px;font-family:inherit;cursor:pointer;transition:all .15s;backdrop-filter:blur(10px)}
+  #response-header .actions button:hover{background:rgba(255,255,255,0.12);color:var(--text);border-color:rgba(255,255,255,0.2)}
+
+  #response-body{padding:14px;overflow-y:auto;max-height:calc(60vh - 44px);line-height:1.6;font-size:var(--font-size)}
+  #response-body.loading{display:flex;align-items:center;justify-content:center;min-height:60px}
+
+  .spinner{display:inline-flex;gap:4px;align-items:center}
+  .spinner .dot{width:5px;height:5px;background:var(--accent);border-radius:50%;animation:bounce 1.2s infinite}
+  .spinner .dot:nth-child(2){animation-delay:.15s}
+  .spinner .dot:nth-child(3){animation-delay:.3s}
+  @keyframes bounce{0%,80%,100%{transform:scale(.5);opacity:.3}40%{transform:scale(1);opacity:1}}
+
+  #response-body p{margin:6px 0}
+  #response-body code{background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;font-family:'SF Mono','Fira Code',monospace;font-size:.9em}
+  #response-body pre{background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:6px;padding:10px;overflow-x:auto;margin:8px 0}
+  #response-body pre code{background:none;padding:0;font-size:12px}
+  #response-body ul,#response-body ol{padding-left:18px;margin:6px 0}
+  #response-body li{margin:3px 0}
+  #response-body strong{color:var(--accent)}
+  .error-msg{color:#ef4444;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:6px;padding:10px;font-size:12px}
+
+  #text-input-bar{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:100;display:none;width:450px}
+  #text-input-bar input{width:100%;padding:13px 18px;background:var(--glass);backdrop-filter:blur(50px) saturate(180%);-webkit-backdrop-filter:blur(50px) saturate(180%);border:1px solid var(--glass-border);border-radius:14px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:all .2s;box-shadow:0 8px 32px rgba(0,0,0,0.25),inset 0 1px 0 var(--glass-glow)}
+  #text-input-bar input:focus{border-color:var(--accent);box-shadow:0 8px 32px rgba(0,0,0,0.25),0 0 0 3px rgba(250,204,21,0.12),inset 0 1px 0 var(--glass-glow)}
+  #text-input-bar input::placeholder{color:var(--text-dim)}
+
+  #drip-type-panel{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:300;display:none;width:520px;background:var(--glass);backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);border:1px solid var(--glass-border);border-radius:var(--radius);box-shadow:0 24px 80px rgba(0,0,0,.45),inset 0 1px 0 var(--glass-glow);animation:panelIn .3s cubic-bezier(.16,1,.3,1);overflow:hidden}
+  #drip-type-panel .dt-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
+  #drip-type-panel .dt-header h3{font-size:14px;font-weight:600;color:var(--accent);margin:0}
+  #drip-type-panel .dt-header .dt-close{background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:3px 8px;border-radius:5px;font-size:11px;font-family:inherit;cursor:pointer;transition:all .12s}
+  #drip-type-panel .dt-header .dt-close:hover{background:rgba(255,255,255,0.06);color:var(--text)}
+  #drip-type-panel .dt-body{padding:18px}
+  #drip-type-panel .dt-desc{font-size:12px;color:var(--text-dim);margin-bottom:14px;line-height:1.5}
+  #drip-type-panel textarea{width:100%;height:160px;padding:12px 14px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none;resize:vertical;line-height:1.6;transition:border-color .15s}
+  #drip-type-panel textarea:focus{border-color:var(--accent)}
+  #drip-type-panel textarea::placeholder{color:var(--text-dim)}
+  #drip-type-panel .dt-footer{padding:14px 18px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  #drip-type-panel .dt-footer .dt-hint{font-size:11px;color:var(--text-dim)}
+  #drip-type-panel .dt-footer .dt-start{padding:9px 22px;border:none;border-radius:8px;background:var(--accent);color:#000;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .12s}
+  #drip-type-panel .dt-footer .dt-start:hover{background:var(--accent-hover)}
+  #drip-type-panel .dt-footer .dt-start:disabled{opacity:.4;cursor:not-allowed}
+
+  #dt-pencil-btn{padding:9px 16px;border:1px solid var(--glass-border);border-radius:8px;background:rgba(255,255,255,0.06);color:var(--text-muted);font-family:inherit;font-size:12px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
+  #dt-pencil-btn:hover{background:rgba(255,255,255,0.12);color:var(--text);border-color:rgba(255,255,255,0.25)}
+  #dt-pencil-btn:disabled{opacity:.4;cursor:not-allowed}
+  #dt-pencil-btn .pencil-icon{font-size:14px}
+
+  #settings-btn{position:fixed;top:12px;right:14px;z-index:100;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:var(--glass);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid var(--glass-border);border-radius:10px;color:var(--text-dim);font-size:14px;cursor:pointer;transition:all .15s;box-shadow:0 2px 12px rgba(0,0,0,0.2),inset 0 1px 0 var(--glass-glow)}
+  #settings-btn:hover{color:var(--text);background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.25)}
+
+  ::-webkit-scrollbar{width:5px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:3px}
+</style>
+</head>
+<body>
+
+<div id="capture-layer"></div>
+<div id="selection"><div id="selection-label"></div></div>
+<div id="mode-indicator">Answer</div>
+<button id="open-app-btn" title="Open Zap App" style="position:fixed;top:12px;right:52px;z-index:100;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:var(--glass);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid var(--glass-border);border-radius:10px;color:var(--text-dim);font-size:14px;cursor:pointer;transition:all .15s;box-shadow:0 2px 12px rgba(0,0,0,0.2),inset 0 1px 0 var(--glass-glow)">&#9889;</button>
+<button id="settings-btn" title="Settings">&#9881;</button>
+<div id="instructions">Drag to select &middot; <kbd>Tab</kbd> type question &middot; <kbd>Esc</kbd> close</div>
+<button id="add-capture-btn" title="Capture another screen to include" style="position:fixed;bottom:28px;right:20px;z-index:100;display:none;width:36px;height:36px;align-items:center;justify-content:center;background:var(--glass);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid var(--glass-border);border-radius:10px;color:var(--accent);font-size:18px;font-weight:700;cursor:pointer;transition:all .15s;box-shadow:0 2px 12px rgba(0,0,0,0.2),inset 0 1px 0 var(--glass-glow)">+</button>
+<div id="capture-count" style="position:fixed;bottom:36px;right:8px;z-index:101;display:none;min-width:18px;height:18px;line-height:18px;text-align:center;background:var(--accent);color:#000;font-size:10px;font-weight:700;border-radius:9px;padding:0 4px;pointer-events:none"></div>
+<div id="text-input-bar"><input type="text" id="text-input" placeholder="Type your question..." autocomplete="off" /></div>
+
+<div id="response-panel">
+  <div id="response-header">
+    <span class="mode-label" id="response-mode-text">Answer</span>
+    <div class="actions">
+      <button id="stay-btn" title="Pin answer in a floating window">Stay</button>
+      <button id="paste-btn" title="Copy answer and paste into your app">Paste</button>
+      <button id="copy-btn">Copy</button>
+      <button id="close-response-btn">Close</button>
+    </div>
+  </div>
+  <div id="response-body"></div>
+</div>
+
+<div id="drip-type-panel">
+  <div class="dt-header">
+    <h3>Drip Type</h3>
+    <button class="dt-close" id="dt-close-btn">Close</button>
+  </div>
+  <div class="dt-body">
+    <div class="dt-desc">Paste the text you want typed below. Zap will hide, switch to your previous app, and type it out character by character — like a real human, complete with natural speed variation and occasional typos that get corrected.</div>
+    <textarea id="dt-textarea" placeholder="Paste or type your text here..."></textarea>
+  </div>
+  <div class="dt-footer">
+    <button id="dt-pencil-btn" title="Auto-draft: reads your screen and generates a response"><span class="pencil-icon">&#9998;</span> Auto Draft</button>
+    <span class="dt-hint">Overlay will hide &amp; typing starts</span>
+    <button class="dt-start" id="dt-start-btn">Start Typing</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var currentMode='answer', isSelecting=false, selStart=null, selRect=null, capture=null, captures=[], settings={}, textMode=false, dripTypeActive=false;
+
+  var $=function(id){return document.getElementById(id)};
+  var layer=$('capture-layer'), sel=$('selection'), selLbl=$('selection-label');
+  var modeInd=$('mode-indicator'), instr=$('instructions');
+  var resPanel=$('response-panel'), resBody=$('response-body'), resModeText=$('response-mode-text');
+  var copyBtn=$('copy-btn'), pasteBtn=$('paste-btn'), closeResBtn=$('close-response-btn'), stayBtn=$('stay-btn');
+  var addCaptureBtn=$('add-capture-btn'), captureCount=$('capture-count');
+  var inputBar=$('text-input-bar'), inputEl=$('text-input');
+  var dtPanel=$('drip-type-panel'), dtArea=$('dt-textarea'), dtStart=$('dt-start-btn'), dtClose=$('dt-close-btn'), dtPencil=$('dt-pencil-btn');
+
+  window.zap.onScreenCaptured(function(u){capture=u;if(captures.length===0&&u)captures=[u];updateCaptureUI()});
+
+  window.zap.onLoadSettings(function(s){
+    settings=s;
+    var r=document.documentElement;
+    if(s.accentColor) r.style.setProperty('--accent',s.accentColor);
+    if(s.fontSize)    r.style.setProperty('--font-size',s.fontSize+'px');
+    if(s.fontFamily)  r.style.setProperty('--font-family',s.fontFamily);
+    if(s.borderRadius)r.style.setProperty('--radius',s.borderRadius+'px');
+    var op=(s.overlayOpacity!=null?s.overlayOpacity:0)/10;
+    layer.style.background=op>0?'rgba(0,0,0,'+op+')':'transparent';
+
+    // Clear Screen mode: hide ALL UI chrome (mode indicator, instructions, buttons)
+    // Overlay is completely invisible — only the response panel appears after drag-select
+    if(s.clearScreen){
+      modeInd.style.display='none';
+      instr.style.display='none';
+      $('settings-btn').style.display='none';
+      $('open-app-btn').style.display='none';
+    }else{
+      modeInd.style.display='';
+      // instructions restored below if needed
+      $('settings-btn').style.display='';
+      $('open-app-btn').style.display='';
+    }
+
+    // Stealth mode: auto-open text input since screen capture is disabled
+    if(s.lockdownMode && currentMode!=='driptype'){
+      textMode=true;
+      inputBar.style.display='block';
+      instr.innerHTML='Type your question and press <kbd>Enter</kbd> &middot; <kbd>Esc</kbd> close';
+      setTimeout(function(){inputEl.focus()},150);
+    }
+  });
+
+  window.zap.onSetMode(function(m){setMode(m)});
+
+  // Instant Answer — full screen capture → AI, no drag/selection needed
+  window.zap.onInstantAnswer(function(){
+    if(!capture) return;
+    instr.style.display='none';
+    sel.style.display='none';
+    selRect=null; // No selection = sends full screen
+    processRequest();
+  });
+
+  // Self-destruct armed/disarmed visual feedback
+  window.zap.onSelfDestructArmed(function(){
+    var msg=document.createElement('div');
+    msg.id='sd-armed-msg';
+    msg.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(220,38,38,0.95);color:#fff;padding:16px 32px;border-radius:12px;font-size:18px;font-weight:700;z-index:999999;text-align:center;backdrop-filter:blur(8px);pointer-events:none';
+    msg.innerHTML='💀 SELF-DESTRUCT ARMED<br><span style="font-size:13px;font-weight:400;opacity:0.85">Press again within 3s to confirm</span>';
+    document.body.appendChild(msg);
+  });
+  window.zap.onSelfDestructDisarmed(function(){
+    var el=document.getElementById('sd-armed-msg');
+    if(el)el.remove();
+  });
+
+  // Listen for autopilot results pushed from main process (e.g. accessibility error)
+  window.zap.onAutopilotResult(function(result){ showAutopilotResults(result); });
+
+  // Screen share stealth: show small indicator when overlay is hidden from recordings
+  window.zap.onScreenShareStatus(function(hidden){
+    var badge=document.getElementById('stealth-badge');
+    if(!badge){
+      badge=document.createElement('div');
+      badge.id='stealth-badge';
+      badge.style.cssText='position:fixed;top:8px;right:8px;z-index:9999;padding:4px 10px;border-radius:12px;font-size:10px;font-weight:600;background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.2);pointer-events:none;transition:opacity .3s';
+      document.body.appendChild(badge);
+    }
+    if(hidden){
+      badge.textContent='Stealth Active';
+      badge.style.opacity='1';badge.style.display='block';
+    } else {
+      badge.style.opacity='0';
+      setTimeout(function(){badge.style.display='none'},300);
+    }
+  });
+
+  var labels={answer:'Answer',simple:'Simple',translate:'Translate',solve:'Solve',essay:'Essay',code:'Code',research:'Research',email:'Email',flashcards:'Flashcards',driptype:'Drip Type',autopilot:'Autopilot'};
+  function setMode(m){
+    currentMode=m;
+    disableClickThrough();  // reset click-through so drag works on new mode
+    resPanel.style.display='none';resPanel.style.transform='';resetSel();
+    if(m!=='autopilot') modeInd.textContent=labels[m]||m;
+    if(m==='driptype') showDT(); else hideDT();
+    // Autopilot: auto-capture full screen immediately — no drag needed
+    if(m==='autopilot'){
+      instr.style.display='none';
+      // Wait for screen capture to arrive, then auto-process
+      var waitCount=0;
+      var waitForCapture=setInterval(function(){
+        waitCount++;
+        if(capture||waitCount>20){
+          clearInterval(waitForCapture);
+          if(capture) runAutopilotSilent();
+          else{ resPanel.style.display='flex';resPanel.style.flexDirection='column';posPanel();resBody.className='';resBody.innerHTML='<div class="error-msg">No screen capture available. Try again.</div>'; }
+        }
+      },150);
+    }
+  }
+
+  function showDT(){
+    dtPanel.style.display='block';
+    instr.style.display='none';
+    resPanel.style.display='none';
+    sel.style.display='none';
+    setTimeout(function(){dtArea.focus()},100);
+  }
+
+  function hideDT(){dtPanel.style.display='none';dtArea.value=''}
+
+  dtClose.addEventListener('click',function(){hideDT();setMode('answer');instr.style.display=''});
+
+  dtStart.addEventListener('click',async function(){
+    var txt=dtArea.value;
+    if(!txt.trim())return;
+    dtStart.disabled=true;
+    dtStart.textContent='Starting...';
+    dripTypeActive=true;
+    await new Promise(function(r){setTimeout(r,500)});
+    hideDT();
+    try{
+      var res=await window.zap.dripType(txt);
+      if(res&&res.error){console.error('Drip type error:',res.error)}
+    }catch(err){console.error('Drip type failed:',err)}
+    dripTypeActive=false;
+    dtStart.disabled=false;
+    dtStart.textContent='Start Typing';
+  });
+
+  // Strip markdown formatting so drip-typed text looks like natural human writing
+  function cleanForDrip(text){
+    if(!text)return text;
+    var t=text;
+    // Remove headers (### Header → Header)
+    t=t.replace(/^#{1,6}\s+/gm,'');
+    // Remove bold/italic markers (**bold**, *italic*, __bold__, _italic_)
+    t=t.replace(/\*{1,3}([^*]+?)\*{1,3}/g,'$1');
+    t=t.replace(/_{1,3}([^_]+?)_{1,3}/g,'$1');
+    // Remove strikethrough (~~text~~)
+    t=t.replace(/~~([^~]+?)~~/g,'$1');
+    // Remove inline code backticks (`code`)
+    t=t.replace(/`([^`]+?)`/g,'$1');
+    // Remove code block fences (```lang ... ```)
+    t=t.replace(/```[\s\S]*?```/g,function(m){return m.replace(/```\w*\n?/g,'').replace(/```/g,'')});
+    // Remove bullet points (- item, * item) → just the text
+    t=t.replace(/^[\s]*[-*+]\s+/gm,'');
+    // Remove numbered list markers (1. item) → just the text
+    t=t.replace(/^\s*\d+\.\s+/gm,'');
+    // Remove blockquote markers (> text → text)
+    t=t.replace(/^>\s?/gm,'');
+    // Remove horizontal rules (--- or ***)
+    t=t.replace(/^[-*_]{3,}\s*$/gm,'');
+    // Remove markdown links [text](url) → text
+    t=t.replace(/\[([^\]]+?)\]\([^)]+?\)/g,'$1');
+    // Remove image syntax ![alt](url)
+    t=t.replace(/!\[([^\]]*?)\]\([^)]+?\)/g,'$1');
+    // Collapse multiple blank lines into one
+    t=t.replace(/\n{3,}/g,'\n\n');
+    return t.trim();
+  }
+
+  // Auto Draft — reads screen, sends to AI, populates textarea
+  dtPencil.addEventListener('click',async function(){
+    dtPencil.disabled=true;
+    dtPencil.innerHTML='<span class="pencil-icon">&#8987;</span> Reading...';
+    try{
+      var img=null, ocr=null;
+      // Use existing screen capture
+      if(capture){
+        // OCR the full screen capture
+        if(typeof Tesseract!=='undefined'){
+          try{var r=await Tesseract.recognize(capture,'eng',{logger:function(){}});ocr=r.data.text?.trim()}catch(_){}
+        }
+      }
+      var compImg=capture?await compressImg(capture):null;
+      var res=await window.zap.aiRequest({mode:'answer',text:ocr||'Look at the screen and write a detailed, natural response to whatever question or prompt is visible. Write as if you are a student answering. If there is math, read all notation from the image carefully — exponents, fractions, integrals, subscripts. Show your work.',imageDataUrl:compImg,region:null,language:settings.language});
+      if(res.error){
+        dtPencil.innerHTML='<span class="pencil-icon">&#9998;</span> Auto Draft';
+        dtPencil.disabled=false;
+        dtArea.value='Error: '+res.error;
+        return;
+      }
+      dtArea.value=cleanForDrip(res.result||'');
+    }catch(err){
+      dtArea.value='Error: '+err.message;
+    }
+    dtPencil.innerHTML='<span class="pencil-icon">&#9998;</span> Auto Draft';
+    dtPencil.disabled=false;
+    dtArea.focus();
+  });
+
+  // Open App button
+  $('open-app-btn').addEventListener('click',function(e){e.stopPropagation();window.zap.openApp()});
+
+  layer.addEventListener('mousedown',function(e){
+    if(e.button!==0||textMode)return;
+    if(currentMode==='driptype'||currentMode==='autopilot'||dripTypeActive)return;
+    if(resPanel.style.display==='flex')return;
+    if(settings.lockdownMode)return; // No screen capture in lockdown — drag is disabled
+    isSelecting=true;
+    selStart={x:e.clientX,y:e.clientY};
+    sel.style.display='block';
+    sel.style.left=e.clientX+'px';
+    sel.style.top=e.clientY+'px';
+    sel.style.width='0';
+    sel.style.height='0';
+    instr.style.display='none';
+  });
+
+  document.addEventListener('mousemove',function(e){
+    if(!isSelecting)return;
+    var x=Math.min(e.clientX,selStart.x), y=Math.min(e.clientY,selStart.y);
+    var w=Math.abs(e.clientX-selStart.x), h=Math.abs(e.clientY-selStart.y);
+    sel.style.left=x+'px'; sel.style.top=y+'px';
+    sel.style.width=w+'px'; sel.style.height=h+'px';
+    selLbl.textContent=w+'x'+h;
+  });
+
+  document.addEventListener('mouseup',function(){
+    if(!isSelecting)return;
+    isSelecting=false;
+    var w=parseInt(sel.style.width), h=parseInt(sel.style.height);
+    if(w<10||h<10){sel.style.display='none';instr.style.display='';return}
+    selRect={x:parseInt(sel.style.left),y:parseInt(sel.style.top),width:w,height:h};
+    setTimeout(function(){processRequest()},300);
+  });
+
+  function resetSel(){sel.style.display='none';selRect=null;instr.style.display='';captures=capture?[capture]:[];addCaptureBtn.style.display='none';captureCount.style.display='none'}
+
+  document.addEventListener('keydown',function(e){
+    if(e.target===dtArea&&e.key!=='Escape')return;
+    if(e.key==='Tab'){
+      e.preventDefault();
+      if(currentMode==='driptype')return;
+      textMode=!textMode;
+      inputBar.style.display=textMode?'block':'none';
+      if(textMode){inputEl.focus();instr.style.display='none'}
+      else{instr.style.display='';inputEl.value=''}
+    }
+    if(e.key==='Escape'){
+      if(dtPanel.style.display==='block'){hideDT();setMode('answer');instr.style.display=''}
+      else if(resPanel.style.display==='flex'){disableClickThrough();resPanel.style.display='none';resPanel.style.transform='';resetSel()}
+      else if(textMode){textMode=false;inputBar.style.display='none';inputEl.value='';instr.style.display=''}
+      else{disableClickThrough();window.zap.hideOverlay()}
+    }
+    if(e.key==='Enter'&&textMode&&inputEl.value.trim()) processRequest(inputEl.value.trim());
+    if((e.ctrlKey||e.metaKey)&&e.key==='c'&&resPanel.style.display==='flex'){
+      window.zap.copyToClipboard(resBody.innerText);
+      copyBtn.textContent='Copied!';
+      setTimeout(function(){copyBtn.textContent='Copy'},1200);
+    }
+  });
+
+  function applyGhostMode(){
+    var ghost=settings.ghostAnswer;
+    var hdr=$('response-header');
+    if(ghost){
+      resPanel.style.background='transparent';
+      resPanel.style.backdropFilter='none';
+      resPanel.style.webkitBackdropFilter='none';
+      resPanel.style.border='none';
+      resPanel.style.boxShadow='none';
+      resPanel.style.maxHeight='80vh';
+      resBody.style.textShadow='0 1px 6px rgba(0,0,0,0.9),0 0 2px rgba(0,0,0,0.7)';
+      resBody.style.maxHeight='calc(80vh)';
+      if(hdr)hdr.style.display='none';
+    }else{
+      resPanel.style.background='';resPanel.style.backdropFilter='';resPanel.style.webkitBackdropFilter='';
+      resPanel.style.border='';resPanel.style.boxShadow='';resPanel.style.maxHeight='';
+      resBody.style.textShadow='';resBody.style.maxHeight='';
+      if(hdr)hdr.style.display='';
+    }
+  }
+
+  async function processRequest(manual){
+    resModeText.textContent=currentMode.charAt(0).toUpperCase()+currentMode.slice(1);
+    resPanel.style.display='flex';
+    resPanel.style.flexDirection='column';
+    applyGhostMode();
+    posPanel();
+    resBody.className='loading';
+    resBody.innerHTML='<div class="spinner"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+
+    var img=null, ocr=manual||null, allImages=[];
+    if(capture&&selRect){
+      img=await cropImg(capture,selRect);
+      // Skip OCR — GPT-4o vision with detail:high reads the image far more accurately
+      // than Tesseract, and bad OCR text actively confuses the model
+      allImages=[img];
+    } else if(captures.length>0&&!manual){
+      // Multi-capture: compress and send all captured screens
+      for(var ci=0;ci<captures.length;ci++){
+        allImages.push(await compressImg(captures[ci]));
+      }
+      img=allImages[0]||null;
+    } else if(capture&&!manual){
+      img=await compressImg(capture);
+      allImages=[img];
+    }
+    // Hide add-capture button during request
+    addCaptureBtn.style.display='none';captureCount.style.display='none';
+    try{
+      var r=await window.zap.aiRequest({mode:currentMode,text:ocr||manual||null,imageDataUrl:img,images:allImages.length>1?allImages:undefined,region:selRect,language:settings.language});
+      if(r.error){resBody.className='';resBody.innerHTML='<div class="error-msg">'+esc(r.error)+'</div>';return}
+      if(currentMode==='autopilot'){handleAutopilotResponse(r.result);return}
+      resBody.className='';resBody.innerHTML=fmtMd(r.result);
+      // Mode-specific enhancements
+      if(currentMode==='flashcards'){
+        var fbtn=document.createElement('button');
+        fbtn.textContent='Study in Fullscreen';
+        fbtn.style.cssText='margin-top:14px;padding:10px 20px;background:#facc15;color:#000;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;display:block;width:100%';
+        fbtn.onmouseover=function(){this.style.background='#fbd948'};
+        fbtn.onmouseout=function(){this.style.background='#facc15'};
+        fbtn.onclick=function(){window.zap.openFlashcards(resBody.innerText)};
+        resBody.appendChild(fbtn);
+      }
+      pasteBtn.textContent=(currentMode==='email')?'Paste Reply':'Paste';
+      // Enable click-through: user can interact with exam below the overlay
+      enableClickThrough();
+    }catch(err){resBody.className='';resBody.innerHTML='<div class="error-msg">'+esc(err.message)+'</div>'}
+  }
+
+  // ── Click-Through: let user click on exam/app below the transparent overlay ──
+  function enableClickThrough(){
+    window.zap.setIgnoreMouseEvents(true,{forward:true});
+    // The response panel and input bar need to receive mouse events
+    [resPanel,inputBar,dtPanel].forEach(function(el){
+      if(!el) return;
+      el.addEventListener('mouseenter',function(){window.zap.setIgnoreMouseEvents(false)});
+      el.addEventListener('mouseleave',function(){window.zap.setIgnoreMouseEvents(true,{forward:true})});
+    });
+  }
+  function disableClickThrough(){
+    window.zap.setIgnoreMouseEvents(false);
+  }
+
+  // ── Autopilot Mode — fully automatic, no user interaction needed ──
+
+  async function handleAutopilotResponse(raw){
+    // Parse AI JSON response
+    var parsed;
+    try{
+      try{parsed=JSON.parse(raw)}catch(_){
+        var m=raw.match(/\{[\s\S]*\}/);
+        if(m)parsed=JSON.parse(m[0]); else throw new Error('No JSON found in AI response');
+      }
+      if(!parsed.fields||!parsed.fields.length){
+        resBody.className='';resBody.innerHTML='<div class="error-msg">No form fields detected on screen. Navigate to a quiz/form and press Alt+4 again.</div>';
+        return;
+      }
+    }catch(e){
+      resBody.className='';resBody.innerHTML='<div class="error-msg">Could not parse AI response: '+esc(e.message)+'</div>';
+      return;
+    }
+
+    // Show brief "Filling..." status while executing
+    resBody.className='';
+    resBody.innerHTML='<div style="text-align:center;padding:14px 0"><div style="font-size:14px;font-weight:600;color:#facc15">Filling...</div></div>';
+
+    try{
+      var result=await window.zap.autopilotExecute({fields:parsed.fields});
+      // Only show popup if there's an error — otherwise silently hide
+      if(result && (result.error || (result.filled||0)<(result.total||0))){
+        showAutopilotResults(result);
+      }else{
+        // Success — just hide the panel, no confirmation needed
+        resPanel.style.display='none';
+      }
+    }catch(err){
+      resBody.className='';resBody.innerHTML='<div class="error-msg">Execution error: '+esc(err.message)+'</div>';
+    }
+  }
+
+  function showAutopilotResults(result){
+    if(!result)return;
+    if(result.error==='accessibility_not_granted'){
+      resBody.className='';resBody.innerHTML='<div class="error-msg" style="text-align:center;padding:14px 0"><div style="font-size:28px;margin-bottom:8px">&#128274;</div><div style="font-size:13px;font-weight:600;color:#facc15;margin-bottom:6px">Accessibility Permission Required</div><div style="font-size:11px;color:rgba(255,255,255,0.55);line-height:1.5">Go to <b>System Settings → Privacy &amp; Security → Accessibility</b> and enable <b>Zap</b>. Then press Alt+4 to try again.</div></div>';
+      return;
+    }
+    var filled=result.filled||0, total=result.total||0;
+    var html='<div style="text-align:center;padding:10px 0 14px">';
+    html+='<div style="font-size:32px;margin-bottom:6px">'+(filled===total?'&#9989;':'&#9888;&#65039;')+'</div>';
+    html+='<div style="font-size:15px;font-weight:600;color:'+(filled===total?'#34d399':'#facc15')+'">Filled '+filled+' of '+total+' fields</div>';
+    html+='</div>';
+    if(result.results){
+      html+='<div style="max-height:180px;overflow-y:auto;margin-bottom:14px">';
+      result.results.forEach(function(r){
+        var icon=r.ok?'<span style="color:#34d399">&#10003;</span>':'<span style="color:#ef4444">&#10007;</span>';
+        var detail=r.ok?'':' <span style="color:rgba(239,68,68,0.7);font-size:10px">'+esc(r.reason||'failed')+'</span>';
+        html+='<div style="padding:5px 10px;font-size:12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,0.04)">'+icon+'<span style="color:rgba(255,255,255,0.6)">'+esc(r.label)+detail+'</span></div>';
+      });
+      html+='</div>';
+    }
+    html+='<div style="font-size:11px;color:rgba(255,255,255,0.35);text-align:center;margin-top:8px">Press <kbd style="padding:1px 5px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:3px;font-size:10px">Esc</kbd> to dismiss &middot; <kbd style="padding:1px 5px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:3px;font-size:10px">Alt+4</kbd> for next page</div>';
+    resBody.className='';resBody.innerHTML=html;
+  }
+
+  // Autopilot runs completely invisibly — hide overlay, do AI + fill, auto-return
+  async function runAutopilotSilent(){
+    // Hide overlay immediately so user sees nothing
+    window.zap.hideOverlay();
+
+    // Get screen capture and send to AI
+    var img=null;
+    if(capture) img=await compressImg(capture);
+    try{
+      var r=await window.zap.aiRequest({mode:'autopilot',text:null,imageDataUrl:img,region:null,language:settings.language});
+      if(r.error){
+        // Show error — bring overlay back
+        resPanel.style.display='flex';resPanel.style.flexDirection='column';
+        resPanel.style.left='50%';resPanel.style.top='50%';resPanel.style.transform='translate(-50%,-50%)';
+        resBody.className='';resBody.innerHTML='<div class="error-msg">'+esc(r.error)+'</div>';
+        return;
+      }
+      // Parse AI response
+      var parsed;
+      try{
+        try{parsed=JSON.parse(r.result)}catch(_){
+          var m2=r.result.match(/\{[\s\S]*\}/);
+          if(m2)parsed=JSON.parse(m2[0]); else throw new Error('No JSON found');
+        }
+        if(!parsed.fields||!parsed.fields.length){return}
+      }catch(e){return}
+
+      // Execute fills silently
+      var result=await window.zap.autopilotExecute({fields:parsed.fields});
+      // Only show UI if there was an error
+      if(result && (result.error || (result.filled||0)<(result.total||0))){
+        showAutopilotResults(result);
+      }
+      // Done — overlay stays hidden, user is back to normal screen
+    }catch(err){}
+    // Reset mode so next hotkey press works fresh
+    currentMode='answer';
+    modeInd.textContent='Answer';
+  }
+
+  function posPanel(){
+    if(selRect){
+      var x=selRect.x+selRect.width+12, y=selRect.y;
+      if(x+440>window.innerWidth)x=selRect.x-440-12;
+      if(x<10)x=10;
+      if(y+350>window.innerHeight)y=window.innerHeight-360;
+      resPanel.style.left=x+'px';resPanel.style.top=y+'px';resPanel.style.transform='';
+    }else{
+      resPanel.style.left='50%';resPanel.style.top='50%';resPanel.style.transform='translate(-50%,-50%)';
+    }
+  }
+
+  // Crop selection region — use PNG for small crops (preserves fine detail like exponents)
+  // Fall back to high-quality JPEG for large crops to stay within API size limits
+  function cropImg(url,r){
+    return new Promise(function(done){
+      var i=new Image();
+      i.onload=function(){
+        var c=document.createElement('canvas');
+        var sx=i.width/window.innerWidth, sy=i.height/window.innerHeight;
+        c.width=r.width*sx; c.height=r.height*sy;
+        c.getContext('2d').drawImage(i,r.x*sx,r.y*sy,r.width*sx,r.height*sy,0,0,c.width,c.height);
+        // Use PNG for crops up to 1600px — lossless, critical for text/math/code readability
+        // Use high-quality JPEG only for very large crops to keep file size under API limits
+        if(c.width<=1600&&c.height<=1600){
+          done(c.toDataURL('image/png'));
+        }else{
+          done(c.toDataURL('image/jpeg',0.95));
+        }
+      };
+      i.src=url;
+    });
+  }
+
+  // Compress full screenshot — higher cap and quality for better math/symbol readability
+  function compressImg(url){
+    return new Promise(function(done){
+      var i=new Image();
+      i.onload=function(){
+        var c=document.createElement('canvas');
+        var maxW=2560, scale=Math.min(1,maxW/i.width);
+        c.width=Math.round(i.width*scale);
+        c.height=Math.round(i.height*scale);
+        c.getContext('2d').drawImage(i,0,0,c.width,c.height);
+        done(c.toDataURL('image/jpeg',0.88));
+      };
+      i.src=url;
+    });
+  }
+
+  async function ocrImg(url){
+    if(typeof Tesseract==='undefined')return null;
+    try{var r=await Tesseract.recognize(url,'eng',{logger:function(){}});var t=r.data.text?.trim();return t&&t.length>2?t:null}catch(_){return null}
+  }
+
+  // Strip LaTeX commands so math is readable as plain text
+  function cleanLatex(t){
+    if(!t)return t;
+    // Remove display math delimiters: \[ \] and $$ $$
+    t=t.replace(/\\\[/g,'');t=t.replace(/\\\]/g,'');
+    t=t.replace(/\$\$([\s\S]*?)\$\$/g,'$1');
+    // Remove inline math delimiters: \( \) and single $
+    t=t.replace(/\\\(/g,'');t=t.replace(/\\\)/g,'');
+    t=t.replace(/\$([^$]+?)\$/g,'$1');
+    // \frac{a}{b} → a/b
+    t=t.replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g,'($1)/($2)');
+    // \sqrt{x} → sqrt(x), \sqrt[n]{x} → x^(1/n)
+    t=t.replace(/\\sqrt\[([^\]]+)\]\{([^}]*)\}/g,'$2^(1/$1)');
+    t=t.replace(/\\sqrt\{([^}]*)\}/g,'sqrt($1)');
+    // \left and \right — just remove them
+    t=t.replace(/\\left[\(\[\{|.]/g,function(m){var c=m.slice(-1);return c==='('||c==='['||c==='{'?c:''});
+    t=t.replace(/\\right[\)\]\}|.]/g,function(m){var c=m.slice(-1);return c===')'||c===']'||c==='}'?c:''});
+    // Common symbols
+    t=t.replace(/\\infty/g,'∞');t=t.replace(/\\pi/g,'π');t=t.replace(/\\theta/g,'θ');
+    t=t.replace(/\\alpha/g,'α');t=t.replace(/\\beta/g,'β');t=t.replace(/\\gamma/g,'γ');
+    t=t.replace(/\\delta/g,'δ');t=t.replace(/\\epsilon/g,'ε');t=t.replace(/\\lambda/g,'λ');
+    t=t.replace(/\\mu/g,'μ');t=t.replace(/\\sigma/g,'σ');t=t.replace(/\\omega/g,'ω');
+    t=t.replace(/\\phi/g,'φ');t=t.replace(/\\tau/g,'τ');
+    t=t.replace(/\\int/g,'∫');t=t.replace(/\\sum/g,'Σ');t=t.replace(/\\prod/g,'Π');
+    t=t.replace(/\\pm/g,'±');t=t.replace(/\\times/g,'×');t=t.replace(/\\div/g,'÷');
+    t=t.replace(/\\neq/g,'≠');t=t.replace(/\\leq/g,'≤');t=t.replace(/\\geq/g,'≥');
+    t=t.replace(/\\approx/g,'≈');t=t.replace(/\\rightarrow/g,'→');t=t.replace(/\\to/g,'→');
+    t=t.replace(/\\cdot/g,'·');t=t.replace(/\\ldots/g,'...');t=t.replace(/\\cdots/g,'...');
+    // Superscripts/subscripts: ^{xyz} → ^(xyz), _{xyz} → _(xyz)
+    t=t.replace(/\^{([^}]*)}/g,'^($1)');
+    t=t.replace(/_{([^}]*)}/g,'_($1)');
+    // Simple superscripts: ^2 ^3 ^n → ² ³ ^n
+    t=t.replace(/\^2(?!\()/g,'²');t=t.replace(/\^3(?!\()/g,'³');
+    // \text{...} → just the text
+    t=t.replace(/\\text\{([^}]*)\}/g,'$1');
+    t=t.replace(/\\mathrm\{([^}]*)\}/g,'$1');
+    t=t.replace(/\\mathbf\{([^}]*)\}/g,'$1');
+    // Remove \, \; \! \quad spacing commands
+    t=t.replace(/\\[,;!]\s?/g,' ');t=t.replace(/\\quad/g,' ');t=t.replace(/\\qquad/g,'  ');
+    // Remove any remaining \command that wasn't caught
+    t=t.replace(/\\([a-zA-Z]+)/g,function(_,cmd){return cmd});
+    // Clean up extra braces
+    t=t.replace(/\{([^{}]*)\}/g,'$1');
+    // Clean up double spaces
+    t=t.replace(/  +/g,' ');
+    return t;
+  }
+
+  function fmtMd(t){
+    if(!t)return'';
+    t=cleanLatex(t); // Strip LaTeX before rendering
+    var h=esc(t);
+    h=h.replace(/```(\w*)\n([\s\S]*?)```/g,'<pre><code>$2</code></pre>');
+    h=h.replace(/`([^`]+)`/g,'<code>$1</code>');
+    h=h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+    h=h.replace(/\*(.+?)\*/g,'<em>$1</em>');
+    h=h.replace(/^### (.+)$/gm,'<h3>$1</h3>');
+    h=h.replace(/^## (.+)$/gm,'<h2>$1</h2>');
+    h=h.replace(/^# (.+)$/gm,'<h1>$1</h1>');
+    h=h.replace(/^[\u2022\-\*] (.+)$/gm,'<li>$1</li>');
+    h=h.replace(/(<li>.*<\/li>)/gs,'<ul>$1</ul>');
+    h=h.replace(/\n\n/g,'</p><p>');
+    h='<p>'+h+'</p>';
+    h=h.replace(/<p><\/p>/g,'');
+    return h;
+  }
+
+  function esc(t){var d=document.createElement('div');d.appendChild(document.createTextNode(t));return d.innerHTML}
+
+  copyBtn.addEventListener('click',function(){
+    window.zap.copyToClipboard(resBody.innerText);
+    copyBtn.textContent='Copied!';
+    setTimeout(function(){copyBtn.textContent='Copy'},1200);
+  });
+
+  pasteBtn.addEventListener('click',function(){
+    var txt=resBody.innerText;
+    if(!txt) return;
+    window.zap.copyToClipboard(txt);
+    pasteBtn.textContent='Pasting...';
+    // Hide overlay and paste into the previous app
+    disableClickThrough();resPanel.style.display='none';resPanel.style.transform='';resetSel();
+    window.zap.pasteToScreen();
+    setTimeout(function(){pasteBtn.textContent='Paste'},1500);
+  });
+
+  closeResBtn.addEventListener('click',function(){disableClickThrough();resPanel.style.display='none';resPanel.style.transform='';resetSel()});
+
+  // Stay button — pin answer in a small floating window
+  stayBtn.addEventListener('click',function(){
+    var html=resBody.innerHTML;
+    if(!html)return;
+    stayBtn.textContent='Pinning...';
+    window.zap.pinAnswer(html);
+    setTimeout(function(){stayBtn.textContent='Stay';disableClickThrough();resPanel.style.display='none';resPanel.style.transform='';resetSel()},300);
+  });
+
+  // Multi-capture: "+" button to add another screen capture
+  addCaptureBtn.addEventListener('click',async function(){
+    addCaptureBtn.style.opacity='0.4';addCaptureBtn.style.pointerEvents='none';
+    try{
+      var img=await window.zap.recapture();
+      if(img){captures.push(img);capture=img;updateCaptureUI()}
+    }catch(_){}
+    addCaptureBtn.style.opacity='1';addCaptureBtn.style.pointerEvents='auto';
+  });
+
+  function updateCaptureUI(){
+    if(currentMode==='driptype'||currentMode==='autopilot'||settings.lockdownMode)return;
+    if(captures.length>0&&resPanel.style.display!=='flex'){
+      addCaptureBtn.style.display='flex';
+      if(captures.length>1){captureCount.textContent=captures.length;captureCount.style.display='block'}
+      else{captureCount.style.display='none'}
+    }else{
+      addCaptureBtn.style.display='none';captureCount.style.display='none';
+    }
+  }
+
+  $('settings-btn').addEventListener('click',function(e){e.stopPropagation();window.zap.openSettings()});
+
+  var dragging=false,dragOff=null;
+  $('response-header').addEventListener('mousedown',function(e){
+    dragging=true;dragOff={x:e.clientX-resPanel.offsetLeft,y:e.clientY-resPanel.offsetTop};
+    resPanel.style.transform='';e.preventDefault();
+  });
+  // Ghost mode: drag by response body when header is hidden
+  resBody.addEventListener('mousedown',function(e){
+    if(!settings.ghostAnswer)return;
+    dragging=true;dragOff={x:e.clientX-resPanel.offsetLeft,y:e.clientY-resPanel.offsetTop};
+    resPanel.style.transform='';e.preventDefault();
+  });
+  document.addEventListener('mousemove',function(e){if(!dragging)return;resPanel.style.left=(e.clientX-dragOff.x)+'px';resPanel.style.top=(e.clientY-dragOff.y)+'px'});
+  document.addEventListener('mouseup',function(){dragging=false});
+})();
+</script>
+</body>
+</html>

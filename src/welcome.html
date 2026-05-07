@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Welcome to Zap</title>
+<style>
+  :root{--accent:#4a6fa5;--accent-glow:#5b82bd;--accent-dim:#3a5a8a;--bg-deep:#0a0a12;--bg-card:rgba(18,18,35,0.85);--bg-input:rgba(10,10,22,0.9);--text:#f5f0e8;--text-muted:#b8b0a0;--text-dim:#6e6a60;--border:rgba(74,111,165,0.15);--border-card:rgba(74,111,165,0.12);--green:#6ec87a}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg-deep);background-image:radial-gradient(ellipse at 20% 0%,rgba(30,45,80,.4) 0%,transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(20,30,60,.3) 0%,transparent 60%),linear-gradient(180deg,#0a0a14 0%,#0d0d1c 40%,#0a0b16 100%);color:var(--text);font-family:'SF Pro Display',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;overflow:hidden;height:100vh;-webkit-app-region:drag}
+  button,a{-webkit-app-region:no-drag}
+
+  .slides{position:relative;width:100%;height:100vh}
+  .slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 56px;opacity:0;transform:translateX(40px);transition:opacity .4s,transform .4s;pointer-events:none}
+  .slide.active{opacity:1;transform:translateX(0);pointer-events:all}
+  .slide.exit{opacity:0;transform:translateX(-40px)}
+
+  .logo{width:72px;height:72px;background:linear-gradient(135deg,var(--accent),#3a5a8a);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--text);box-shadow:0 4px 28px rgba(74,111,165,.35);margin-bottom:14px}
+  .title{font-size:28px;font-weight:700;letter-spacing:-0.5px;margin-bottom:8px}
+  .title span{color:var(--accent-glow)}
+  .subtitle{font-size:15px;color:var(--text-muted);margin-bottom:36px;text-align:center;line-height:1.6;max-width:480px}
+
+  .features{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:520px;margin-bottom:32px}
+  .feat{background:var(--bg-card);border:1px solid var(--border-card);border-radius:14px;padding:18px;transition:border-color .2s,transform .2s;backdrop-filter:blur(20px)}
+  .feat:hover{border-color:rgba(74,111,165,.25);transform:translateY(-2px)}
+  .feat-icon{font-size:24px;margin-bottom:8px}
+  .feat-name{font-size:14px;font-weight:600;margin-bottom:4px;color:var(--text)}
+  .feat-desc{font-size:12px;color:var(--text-dim);line-height:1.4}
+
+  .hotkey-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:500px;margin-bottom:32px}
+  .hk{display:flex;align-items:center;gap:12px;background:var(--bg-card);border:1px solid var(--border-card);border-radius:12px;padding:14px 18px;backdrop-filter:blur(20px)}
+  .hk kbd{background:rgba(74,111,165,0.12);color:var(--accent-glow);border:1px solid rgba(74,111,165,0.2);padding:4px 10px;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;white-space:nowrap}
+  .hk span{font-size:13px;color:var(--text-muted)}
+
+  .demo-box{background:var(--bg-card);border:1px solid var(--border-card);border-radius:16px;padding:26px;width:100%;max-width:500px;margin-bottom:16px;text-align:center;backdrop-filter:blur(20px)}
+  .demo-box .demo-title{font-size:15px;font-weight:600;color:var(--accent-glow);margin-bottom:10px}
+  .demo-box .demo-text{font-size:13px;color:var(--text-muted);line-height:1.6}
+
+  .stealth-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.15);color:#22c55e;padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:18px}
+
+  .nav{position:fixed;bottom:32px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:18px;-webkit-app-region:no-drag}
+  .dots{display:flex;gap:7px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--text-dim);transition:all .2s}
+  .dot.active{background:var(--accent-glow);width:20px;border-radius:4px}
+  .nav-btn{padding:11px 30px;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
+  .nav-btn.primary{background:linear-gradient(135deg,var(--accent),#3a5a8a);color:var(--text);box-shadow:0 2px 12px rgba(74,111,165,.25)}
+  .nav-btn.primary:hover{box-shadow:0 4px 20px rgba(74,111,165,.4);transform:translateY(-1px)}
+  .nav-btn.secondary{background:transparent;border:1px solid var(--border);color:var(--text-muted)}
+  .nav-btn.secondary:hover{border-color:rgba(74,111,165,.3);color:var(--text)}
+  .nav-btn.launch{background:linear-gradient(135deg,var(--accent),#3a5a8a);color:var(--text);padding:13px 38px;font-size:15px;box-shadow:0 2px 16px rgba(74,111,165,.3)}
+  .nav-btn.launch:hover{box-shadow:0 4px 24px rgba(74,111,165,.45);transform:translateY(-1px)}
+
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .float{animation:float 3s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+  .pulse{animation:pulse 2s ease-in-out infinite}
+</style>
+</head>
+<body>
+
+<div class="slides">
+  <!-- Slide 0: Welcome -->
+  <div class="slide active" data-slide="0">
+    <div class="logo float">&#9889;</div>
+    <div class="title">Welcome to <span>Zap</span></div>
+    <div class="subtitle">The invisible AI overlay that lives on your screen. Answer questions, write essays, solve problems, generate code — all without leaving your current app.</div>
+    <div class="features">
+      <div class="feat"><div class="feat-icon">&#128269;</div><div class="feat-name">Answer</div><div class="feat-desc">Get instant AI answers about anything on your screen</div></div>
+      <div class="feat"><div class="feat-icon">&#127760;</div><div class="feat-name">Translate</div><div class="feat-desc">Translate any text to 35+ languages in one click</div></div>
+      <div class="feat"><div class="feat-icon">&#128640;</div><div class="feat-name">Autopilot</div><div class="feat-desc">Auto-fill quizzes and forms with correct answers</div></div>
+      <div class="feat"><div class="feat-icon">&#9000;&#65039;</div><div class="feat-name">Drip Type</div><div class="feat-desc">Types text like a human with natural typos and corrections</div></div>
+    </div>
+  </div>
+
+  <!-- Slide 1: New Modes -->
+  <div class="slide" data-slide="1">
+    <div class="title" style="font-size:24px;margin-bottom:8px">Powerful <span>Modes</span></div>
+    <div class="subtitle" style="margin-bottom:24px">Zap has 11 specialized AI modes to automate homework, emails, research, quizzes, and more.</div>
+    <div class="features">
+      <div class="feat"><div class="feat-icon">&#129518;</div><div class="feat-name">Solve</div><div class="feat-desc">Step-by-step solutions for math, physics, chemistry, and more</div></div>
+      <div class="feat"><div class="feat-icon">&#128221;</div><div class="feat-name">Essay</div><div class="feat-desc">Full essays with intro, body paragraphs, and conclusion</div></div>
+      <div class="feat"><div class="feat-icon">&#128187;</div><div class="feat-name">Code</div><div class="feat-desc">Write, debug, and explain code in any programming language</div></div>
+      <div class="feat"><div class="feat-icon">&#128218;</div><div class="feat-name">Research</div><div class="feat-desc">In-depth analysis with credible sources — toggle .edu/.org only</div></div>
+      <div class="feat"><div class="feat-icon">&#9993;&#65039;</div><div class="feat-name">Email</div><div class="feat-desc">Draft professional replies — paste them directly into your inbox</div></div>
+      <div class="feat"><div class="feat-icon">&#127183;</div><div class="feat-name">Flashcards</div><div class="feat-desc">Generate study cards and review them in a fullscreen study app</div></div>
+    </div>
+  </div>
+
+  <!-- Slide 2: Hotkeys -->
+  <div class="slide" data-slide="2">
+    <div class="title" style="font-size:24px;margin-bottom:8px">Your <span>Hotkeys</span></div>
+    <div class="subtitle" style="margin-bottom:24px">Zap is controlled entirely by keyboard shortcuts. No clicking around — just press and go.</div>
+    <div class="hotkey-grid">
+      <div class="hk"><kbd>Alt + 1</kbd><span>Answer</span></div>
+      <div class="hk"><kbd>Alt + 2</kbd><span>Translate</span></div>
+      <div class="hk"><kbd>Alt + 4</kbd><span>Autopilot</span></div>
+      <div class="hk"><kbd>Alt + 5</kbd><span>Drip Type</span></div>
+      <div class="hk"><kbd>Alt + 7</kbd><span>Solve</span></div>
+      <div class="hk"><kbd>Alt + 8</kbd><span>Essay</span></div>
+      <div class="hk"><kbd>Alt + 9</kbd><span>Code</span></div>
+      <div class="hk"><kbd>Ctrl/Cmd+Alt+1</kbd><span>Research</span></div>
+      <div class="hk"><kbd>Ctrl/Cmd+Alt+2</kbd><span>Email</span></div>
+      <div class="hk"><kbd>Ctrl/Cmd+Alt+3</kbd><span>Flashcards</span></div>
+    </div>
+    <div style="font-size:12px;color:var(--text-dim);text-align:center">All hotkeys are customizable in Settings</div>
+  </div>
+
+  <!-- Slide 3: How it works -->
+  <div class="slide" data-slide="3">
+    <div class="title" style="font-size:24px;margin-bottom:8px">How It <span>Works</span></div>
+    <div class="subtitle" style="margin-bottom:24px">Three simple steps to use Zap</div>
+    <div class="demo-box">
+      <div class="demo-title">Step 1: Activate</div>
+      <div class="demo-text">Press <strong style="color:var(--accent-glow)">Alt+1</strong> (or any mode hotkey). Zap captures your screen and shows an invisible overlay.</div>
+    </div>
+    <div class="demo-box">
+      <div class="demo-title">Step 2: Select</div>
+      <div class="demo-text">Drag to select any area on screen. Zap reads the text using OCR and sends it to AI. Or press <strong style="color:var(--accent-glow)">Tab</strong> to type a question manually.</div>
+    </div>
+    <div class="demo-box">
+      <div class="demo-title">Step 3: Get Results</div>
+      <div class="demo-text">The AI response appears instantly. Click <strong style="color:var(--accent-glow)">Paste</strong> to paste the answer into your app, <strong style="color:var(--accent-glow)">Copy</strong> to clipboard, or <strong style="color:var(--accent-glow)">Stay</strong> to pin the answer in a floating window while you type.</div>
+    </div>
+  </div>
+
+  <!-- Slide 4: Paste & Special Features -->
+  <div class="slide" data-slide="4">
+    <div class="title" style="font-size:24px;margin-bottom:8px">Powerful <span>Features</span></div>
+    <div class="subtitle" style="margin-bottom:24px">Zap doesn't just give you answers — it puts them right where you need them.</div>
+    <div class="demo-box">
+      <div class="demo-title">Paste to Screen</div>
+      <div class="demo-text">Every response has a <strong style="color:var(--accent-glow)">Paste</strong> button. Click it and Zap copies the answer, hides itself, and pastes directly into whatever app you're using.</div>
+    </div>
+    <div class="demo-box">
+      <div class="demo-title">Multi-Capture</div>
+      <div class="demo-text">Hit the <strong style="color:var(--accent-glow)">+</strong> button after your first capture to grab more screenshots. Zap sends all images to AI together for a complete answer across multiple tabs or pages.</div>
+    </div>
+    <div class="demo-box">
+      <div class="demo-title">Stay — Pinned Answers</div>
+      <div class="demo-text">Click <strong style="color:var(--accent-glow)">Stay</strong> to pin the answer in a small floating window. The overlay closes so you can read the answer while typing — fully invisible to screen recordings.</div>
+    </div>
+    <div class="demo-box">
+      <div class="demo-title">Flashcards & Research</div>
+      <div class="demo-text">Flashcards mode opens an interactive study app. Research mode gives you in-depth analysis — toggle <strong style="color:var(--accent-glow)">Credible Sources Only</strong> to restrict to .edu, .org, and .gov.</div>
+    </div>
+  </div>
+
+  <!-- Slide 5: Stealth & Launch -->
+  <div class="slide" data-slide="5">
+    <div class="stealth-badge"><span class="pulse">&#9679;</span> Stealth Mode Built-In</div>
+    <div class="title" style="font-size:24px;margin-bottom:8px">Truly <span>Undetectable</span></div>
+    <div class="subtitle" style="margin-bottom:24px">Zap runs silently in the background with no dock icon. When you dismiss the overlay, it disappears completely — but stays ready. Your hotkeys work globally, so you can summon Zap from any app instantly.</div>
+    <div class="demo-box">
+      <div class="demo-title">Ghost Answer</div>
+      <div class="demo-text">Enable <strong style="color:var(--accent-glow)">Ghost Answer</strong> in Appearance settings. The answer appears as raw floating text with no box, no background — just transparent text on screen. Maximum stealth.</div>
+    </div>
+    <div class="demo-box">
+      <div class="demo-title">Phantom Mode</div>
+      <div class="demo-text">Enable Phantom Mode to prevent screen recording software from capturing the overlay. Combined with Ghost Answer, Zap becomes virtually invisible.</div>
+    </div>
+    <div class="demo-box">
+      <div class="demo-title">Force Close</div>
+      <div class="demo-text">Need to update or something stuck? Use <strong style="color:var(--accent-glow)">Force Close</strong> in Settings → Updates to kill all Zap processes instantly — watchdog, overlay, everything.</div>
+    </div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn secondary" id="prev-btn" style="display:none">Back</button>
+  <div class="dots" id="dots"></div>
+  <button class="nav-btn primary" id="next-btn">Next</button>
+</div>
+
+<script>
+(function(){
+  var current = 0;
+  var total = document.querySelectorAll('.slide').length;
+  var slides = document.querySelectorAll('.slide');
+  var dots = document.getElementById('dots');
+  var prevBtn = document.getElementById('prev-btn');
+  var nextBtn = document.getElementById('next-btn');
+
+  for (var i = 0; i < total; i++) {
+    var d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    dots.appendChild(d);
+  }
+
+  function goTo(n) {
+    if (n < 0 || n >= total) return;
+    slides[current].classList.remove('active');
+    slides[current].classList.add('exit');
+    setTimeout(function(){ slides[current].classList.remove('exit'); current = n; update(); }, 100);
+    current = n;
+    update();
+  }
+
+  function update() {
+    slides.forEach(function(s, i) {
+      s.classList.remove('active', 'exit');
+      if (i === current) s.classList.add('active');
+    });
+    var allDots = dots.querySelectorAll('.dot');
+    allDots.forEach(function(d, i) {
+      d.className = 'dot' + (i === current ? ' active' : '');
+    });
+    prevBtn.style.display = current === 0 ? 'none' : '';
+    if (current === total - 1) {
+      nextBtn.textContent = 'Continue';
+      nextBtn.className = 'nav-btn launch';
+    } else {
+      nextBtn.textContent = 'Next';
+      nextBtn.className = 'nav-btn primary';
+    }
+  }
+
+  nextBtn.addEventListener('click', function() {
+    if (current === total - 1) {
+      window.zap.welcomeDone();
+    } else {
+      goTo(current + 1);
+    }
+  });
+
+  prevBtn.addEventListener('click', function() { goTo(current - 1); });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === 'Enter') {
+      if (current === total - 1) window.zap.welcomeDone();
+      else goTo(current + 1);
+    }
+    if (e.key === 'ArrowLeft') goTo(current - 1);
+    if (e.key === 'Escape') window.zap.welcomeDone();
+  });
+})();
+</script>
+</body>
+</html>

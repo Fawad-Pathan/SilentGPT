@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Activate Zap Pro</title>
+<style>
+  :root{--accent:#4a6fa5;--accent-glow:#5b82bd;--accent-dim:#3a5a8a;--bg-deep:#0a0a12;--bg-card:rgba(18,18,35,0.85);--bg-input:rgba(10,10,22,0.9);--text:#f5f0e8;--text-muted:#b8b0a0;--text-dim:#6e6a60;--border:rgba(74,111,165,0.15);--green:#6ec87a;--red:#ef4444;--orange:#f59e0b;--gold:#f59e0b}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg-deep);background-image:radial-gradient(ellipse at 20% 0%,rgba(30,45,80,.4) 0%,transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(20,30,60,.3) 0%,transparent 60%),linear-gradient(180deg,#0a0a14 0%,#0d0d1c 40%,#0a0b16 100%);color:var(--text);font-family:'SF Pro Display',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 20px;-webkit-app-region:drag;overflow-y:auto}
+  button,input,a,select,.plan-card,.billing-toggle,.legal-check{-webkit-app-region:no-drag}
+
+  .logo{width:58px;height:58px;background:linear-gradient(135deg,var(--accent),#3a5a8a);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--text);box-shadow:0 4px 28px rgba(74,111,165,.35);margin-bottom:10px}
+  .title{font-size:22px;font-weight:700;letter-spacing:-.3px}
+  .title span{color:var(--accent-glow)}
+  .subtitle{font-size:13px;color:var(--text-dim);margin:6px 0 18px;text-align:center}
+
+  /* Billing toggle */
+  .billing-toggle{display:flex;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px;position:relative;width:260px}
+  .billing-opt{flex:1;padding:9px;text-align:center;cursor:pointer;font-size:12.5px;font-weight:600;transition:all .2s;position:relative;z-index:1;color:var(--text-dim)}
+  .billing-opt.active{color:var(--text)}
+  .billing-opt .save-tag{font-size:9px;color:var(--green);font-weight:700;margin-left:3px}
+  .billing-slider{position:absolute;top:3px;bottom:3px;border-radius:8px;background:rgba(74,111,165,.18);border:1px solid rgba(74,111,165,.25);transition:all .25s cubic-bezier(.4,0,.2,1);z-index:0}
+
+  /* Plan cards */
+  .plans{display:flex;gap:10px;width:100%;max-width:560px;margin-bottom:16px}
+  .plan-card{flex:1;background:var(--bg-card);border:1.5px solid var(--border);border-radius:14px;padding:18px 12px 16px;text-align:center;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+  .plan-card:hover{border-color:rgba(74,111,165,.35);transform:translateY(-1px)}
+  .plan-card.selected{border-color:var(--accent-glow);box-shadow:0 0 20px rgba(74,111,165,.2)}
+  .plan-card.selected.ultimate-selected{border-color:var(--gold);box-shadow:0 0 20px rgba(245,158,11,.2)}
+  .plan-badge{display:inline-block;font-size:9px;font-weight:800;padding:3px 8px;border-radius:4px;letter-spacing:.8px;margin-bottom:8px;min-height:20px}
+  .badge-popular{background:rgba(245,158,11,.15);color:var(--gold)}
+  .badge-empty{visibility:hidden}
+  .plan-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px}
+  .plan-price{font-size:26px;font-weight:800;letter-spacing:-.5px;line-height:1}
+  .plan-price small{font-size:12px;font-weight:400;color:var(--text-muted)}
+  .plan-desc{font-size:11px;color:var(--text-dim);margin:6px 0 10px;min-height:16px}
+  .plan-features{text-align:left;font-size:11px;color:var(--text-muted);line-height:1.9}
+  .feat{display:flex;align-items:flex-start;gap:6px}
+  .feat .icon{flex-shrink:0;font-size:11px;margin-top:1px}
+  .feat .icon.yes{color:var(--green)}
+  .feat .icon.no{color:var(--text-dim);opacity:.4}
+  .feat.disabled{color:var(--text-dim);opacity:.5}
+
+  /* Email + subscribe */
+  .checkout-section{width:100%;max-width:380px}
+  .email-input{width:100%;padding:12px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;outline:none;transition:all .2s}
+  .email-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(74,111,165,.12)}
+  .email-input::placeholder{color:var(--text-dim)}
+
+  .subscribe-btn{width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),#3a5a8a);color:var(--text);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 2px 16px rgba(74,111,165,.3)}
+  .subscribe-btn:hover{box-shadow:0 4px 24px rgba(74,111,165,.45);transform:translateY(-1px)}
+  .subscribe-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+
+  .legal-check{display:flex;align-items:flex-start;gap:8px;margin-top:10px;padding:10px 12px;background:rgba(74,111,165,0.04);border:1px solid var(--border);border-radius:9px;cursor:pointer;transition:border-color .15s}
+  .legal-check:hover{border-color:rgba(74,111,165,0.3)}
+  .legal-check input[type="checkbox"]{width:16px;height:16px;margin-top:1px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+  .legal-check label{font-size:10.5px;color:var(--text-muted);line-height:1.5;cursor:pointer}
+  .legal-check label a{color:var(--accent-glow);text-decoration:none}
+  .legal-check label a:hover{color:var(--text)}
+
+  .stripe-badge{font-size:10px;color:var(--text-dim);margin-top:8px;text-align:center;display:flex;align-items:center;justify-content:center;gap:4px}
+
+  .status{font-size:12px;margin-top:8px;min-height:16px;text-align:center;transition:opacity .2s}
+  .status.error{color:var(--red)}
+  .status.success{color:var(--green)}
+  .status.warn{color:var(--orange)}
+  .status.info{color:var(--text-muted)}
+
+  /* Divider */
+  .divider{display:flex;align-items:center;gap:12px;margin:16px 0;width:100%;max-width:380px}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+  .divider span{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px}
+
+  /* Restore + Admin */
+  .alt-section{width:100%;max-width:380px;text-align:center}
+  .alt-link{font-size:11.5px;color:var(--text-dim);cursor:pointer;text-decoration:none;transition:color .15s;display:inline-block;margin:0 8px}
+  .alt-link:hover{color:var(--text-muted)}
+  .alt-panel{display:none;margin-top:10px;animation:fadeIn .2s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+
+  .alt-input{width:100%;padding:12px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:12.5px;outline:none;transition:all .2s}
+  .alt-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(74,111,165,.12)}
+  .alt-input::placeholder{color:var(--text-dim)}
+
+  .alt-btn{width:100%;padding:11px;border:1px solid var(--border);border-radius:10px;background:transparent;color:var(--text);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:8px}
+  .alt-btn:hover{border-color:var(--accent);color:var(--accent-glow)}
+  .alt-btn:disabled{opacity:0.4;cursor:not-allowed}
+
+  .footer-text{font-size:10px;color:var(--text-dim);margin-top:16px;text-align:center}
+</style>
+</head>
+<body>
+
+<div class="logo">&#9889;</div>
+<div class="title">Activate <span>Zap Pro</span></div>
+<div class="subtitle">Subscribe to unlock full access</div>
+
+<!-- Billing toggle -->
+<div class="billing-toggle" id="billing-toggle">
+  <div class="billing-slider" id="billing-slider"></div>
+  <div class="billing-opt active" id="opt-monthly" data-billing="monthly">Monthly</div>
+  <div class="billing-opt" id="opt-annual" data-billing="annual">Annual <span class="save-tag">Save 20%</span></div>
+</div>
+
+<!-- Plan cards -->
+<div class="plans" id="plans">
+  <!-- LITE -->
+  <div class="plan-card" data-tier="lite" id="card-lite">
+    <div class="plan-badge badge-empty">&nbsp;</div>
+    <div class="plan-name">Zap Lite</div>
+    <div class="plan-price" id="price-lite">$15<small>/mo</small></div>
+    <div class="plan-desc">Great for getting started.</div>
+    <div class="plan-features">
+      <div class="feat"><span class="icon yes">&#10003;</span> 25 selections per month</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Core AI modes</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Drip Type (basic)</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> 10 translation languages</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> macOS &amp; Windows</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Standard support</div>
+      <div class="feat disabled"><span class="icon no">&#10005;</span> Stealth Mode</div>
+      <div class="feat disabled"><span class="icon no">&#10005;</span> Phantom Mode</div>
+      <div class="feat disabled"><span class="icon no">&#10005;</span> Custom hotkeys</div>
+    </div>
+  </div>
+
+  <!-- PRO -->
+  <div class="plan-card selected" data-tier="pro" id="card-pro">
+    <div class="plan-badge badge-empty">&nbsp;</div>
+    <div class="plan-name">Zap Pro</div>
+    <div class="plan-price" id="price-pro">$25<small>/mo</small></div>
+    <div class="plan-desc">Full access. Cancel anytime.</div>
+    <div class="plan-features">
+      <div class="feat"><span class="icon yes">&#10003;</span> Unlimited selections</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> All 10 AI modes incl. Autopilot &amp; Flashcards</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Drip Type with Auto Draft</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> 35+ translation languages</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> macOS &amp; Windows</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Priority support</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Stealth Mode</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Phantom Mode — 100% undetectable</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Custom hotkeys &amp; appearance</div>
+    </div>
+  </div>
+
+  <!-- ULTIMATE -->
+  <div class="plan-card" data-tier="ultimate" id="card-ultimate">
+    <div class="plan-badge badge-popular">MOST POPULAR</div>
+    <div class="plan-name">Zap Ultimate</div>
+    <div class="plan-price" id="price-ultimate">$75<small>/mo</small></div>
+    <div class="plan-desc">The full Zap experience.</div>
+    <div class="plan-features">
+      <div class="feat"><span class="icon yes">&#10003;</span> Everything in Pro, plus:</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Works in restricted &amp; proctored browsers</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Multi-device license (up to 3)</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Early access to new features &amp; modes</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Custom AI model tuning</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Dedicated priority support</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Exclusive Discord role &amp; channel</div>
+    </div>
+  </div>
+</div>
+
+<!-- Email + checkout -->
+<div class="checkout-section">
+  <input type="email" class="email-input" id="email-input" placeholder="Enter your email address" autocomplete="email" spellcheck="false" />
+  <div class="legal-check" onclick="document.getElementById('legal-agree').click()">
+    <input type="checkbox" id="legal-agree" onclick="event.stopPropagation()" />
+    <label for="legal-agree" onclick="event.stopPropagation()">I agree to the <a href="#" id="link-terms">Terms of Use</a>, <a href="#" id="link-privacy">Privacy Policy</a>, and <a href="#" id="link-aup">Acceptable Use Policy</a>. I accept full liability for how I use this software.</label>
+  </div>
+  <button class="subscribe-btn" id="subscribe-btn">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+    Subscribe with Stripe
+  </button>
+  <div class="stripe-badge">&#128274; Secure payment via Stripe</div>
+  <div class="status" id="status"></div>
+</div>
+
+<!-- Divider -->
+<div class="divider"><span>or</span></div>
+
+<!-- Restore + Admin -->
+<div class="alt-section">
+  <a class="alt-link" id="restore-toggle" href="#">Already subscribed? Restore</a>
+  <a class="alt-link" id="admin-toggle" href="#">Have an admin key?</a>
+
+  <div class="alt-panel" id="restore-panel">
+    <input type="email" class="alt-input" id="restore-email" placeholder="Enter the email you subscribed with" autocomplete="email" spellcheck="false" />
+    <button class="alt-btn" id="restore-btn">Restore Subscription</button>
+  </div>
+
+  <div class="alt-panel" id="admin-panel">
+    <input type="text" class="alt-input" id="admin-key" placeholder="Enter admin key" autocomplete="off" spellcheck="false" />
+    <button class="alt-btn" id="admin-btn">Activate Key</button>
+  </div>
+</div>
+
+<div class="footer-text" id="footer-text">Subscribe here or directly at tryzap.net</div>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var emailInput = $('email-input');
+  var subscribeBtn = $('subscribe-btn');
+  var statusEl = $('status');
+  var legalCheckbox = $('legal-agree');
+  var pollTimer = null;
+
+  var selectedBilling = 'monthly';
+  var selectedTier = 'pro';
+
+  var pricing = {
+    lite:     { monthly: 15, annual: 12 },
+    pro:      { monthly: 25, annual: 20 },
+    ultimate: { monthly: 75, annual: 60 }
+  };
+
+  // ── Billing toggle ──
+  var billingSlider = $('billing-slider');
+  function updateBillingSlider() {
+    var active = document.querySelector('.billing-opt.active');
+    if (active && billingSlider) {
+      billingSlider.style.left = active.offsetLeft + 'px';
+      billingSlider.style.width = active.offsetWidth + 'px';
+    }
+  }
+  setTimeout(updateBillingSlider, 50);
+
+  function setBilling(b) {
+    selectedBilling = b;
+    $('opt-monthly').classList.toggle('active', b === 'monthly');
+    $('opt-annual').classList.toggle('active', b === 'annual');
+    updateBillingSlider();
+    updatePrices();
+  }
+  $('opt-monthly').addEventListener('click', function(){ setBilling('monthly'); });
+  $('opt-annual').addEventListener('click', function(){ setBilling('annual'); });
+
+  // ── Plan cards ──
+  function selectTier(tier) {
+    selectedTier = tier;
+    document.querySelectorAll('.plan-card').forEach(function(c) {
+      var isSel = c.dataset.tier === tier;
+      c.classList.toggle('selected', isSel);
+      c.classList.toggle('ultimate-selected', isSel && tier === 'ultimate');
+    });
+  }
+  document.querySelectorAll('.plan-card').forEach(function(c) {
+    c.addEventListener('click', function(){ selectTier(c.dataset.tier); });
+  });
+
+  function updatePrices() {
+    ['lite','pro','ultimate'].forEach(function(tier) {
+      var p = pricing[tier][selectedBilling];
+      $('price-' + tier).innerHTML = '$' + p + '<small>/mo</small>';
+    });
+  }
+
+  // ── Pre-fill email ──
+  window.zap.getSettings().then(function(s) {
+    if (s.authEmail && !emailInput.value) emailInput.value = s.authEmail;
+  }).catch(function(){});
+
+  // ── Check existing license ──
+  window.zap.getLicenseStatus().then(function(s) {
+    if (s.licenseValid && s.hasKey && s.licensed) {
+      subscribeBtn.textContent = 'Already Subscribed';
+      subscribeBtn.disabled = true;
+      emailInput.disabled = true;
+      emailInput.value = s.email || '';
+      $('footer-text').textContent = 'You can close this window.';
+    } else if (s.licenseValid && s.hasKey && !s.licensed) {
+      subscribeBtn.textContent = 'Already Subscribed';
+      subscribeBtn.disabled = true;
+      emailInput.disabled = true;
+      emailInput.value = s.email || '';
+      $('footer-text').innerHTML = 'Please accept the terms above to continue.';
+      var acceptBtn = document.createElement('button');
+      acceptBtn.className = 'subscribe-btn';
+      acceptBtn.textContent = 'Accept & Continue';
+      acceptBtn.style.marginTop = '10px';
+      acceptBtn.addEventListener('click', async function() {
+        if (!legalCheckbox.checked) { showStatus('You must agree to the Terms, Privacy Policy, and Acceptable Use Policy.', 'error'); return; }
+        await window.zap.acceptTerms();
+        showStatus('Terms accepted! Zap is ready.', 'success');
+        acceptBtn.textContent = 'Done!';
+        acceptBtn.disabled = true;
+        $('footer-text').textContent = 'You can close this window.';
+      });
+      subscribeBtn.parentNode.insertBefore(acceptBtn, subscribeBtn.nextSibling);
+    }
+  });
+
+  // ── Checkout cancelled ──
+  window.zap.onCheckoutCancelled(function() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    resetToRetry('Checkout was not completed. Ready to try again.');
+  });
+
+  function showStatus(msg, type) {
+    statusEl.textContent = msg;
+    statusEl.className = 'status ' + (type || '');
+  }
+  function resetToRetry(msg) {
+    showStatus(msg, 'warn');
+    subscribeBtn.disabled = false;
+    subscribeBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Try Again';
+  }
+
+  // ── Restore toggle ──
+  $('restore-toggle').addEventListener('click', function(e) {
+    e.preventDefault();
+    var p = $('restore-panel'); var a = $('admin-panel');
+    a.style.display = 'none';
+    p.style.display = p.style.display === 'block' ? 'none' : 'block';
+    if (p.style.display === 'block') $('restore-email').focus();
+  });
+
+  // ── Admin toggle ──
+  $('admin-toggle').addEventListener('click', function(e) {
+    e.preventDefault();
+    var p = $('admin-panel'); var r = $('restore-panel');
+    r.style.display = 'none';
+    p.style.display = p.style.display === 'block' ? 'none' : 'block';
+    if (p.style.display === 'block') $('admin-key').focus();
+  });
+
+  // ── Restore subscription ──
+  $('restore-btn').addEventListener('click', async function() {
+    var email = $('restore-email').value.trim();
+    if (!email || !email.includes('@')) { showStatus('Please enter a valid email.', 'error'); return; }
+    if (!legalCheckbox.checked) { showStatus('Please agree to the terms first.', 'error'); return; }
+
+    $('restore-btn').disabled = true;
+    $('restore-btn').textContent = 'Checking...';
+    showStatus('', '');
+
+    try {
+      var session = await window.zap.createCheckoutSession(email, selectedBilling);
+      if (session.error) { showStatus(session.error, 'error'); $('restore-btn').disabled = false; $('restore-btn').textContent = 'Restore Subscription'; return; }
+      await window.zap.openCheckoutWindow(session.url, session.sessionId);
+      showStatus('Complete verification in the popup...', 'info');
+
+      var attempts = 0;
+      pollTimer = setInterval(async function() {
+        attempts++;
+        try {
+          var s = await window.zap.getLicenseStatus();
+          if (s.licenseValid) {
+            clearInterval(pollTimer); pollTimer = null;
+            await window.zap.acceptTerms();
+            showStatus('Subscription restored!', 'success');
+            $('restore-btn').textContent = 'Restored!';
+            $('footer-text').textContent = 'You can close this window.';
+          } else if (attempts > 30) {
+            clearInterval(pollTimer); pollTimer = null;
+            showStatus('Could not verify. Please try again.', 'warn');
+            $('restore-btn').disabled = false;
+            $('restore-btn').textContent = 'Restore Subscription';
+          }
+        } catch(_){}
+      }, 2000);
+    } catch(err) {
+      showStatus(err.message || 'Failed. Please try again.', 'error');
+      $('restore-btn').disabled = false;
+      $('restore-btn').textContent = 'Restore Subscription';
+    }
+  });
+
+  // ── Admin key ──
+  $('admin-btn').addEventListener('click', async function() {
+    if (!legalCheckbox.checked) { showStatus('Please agree to the terms first.', 'error'); return; }
+    var key = $('admin-key').value.trim();
+    if (!key) { showStatus('Please enter a key.', 'error'); return; }
+
+    $('admin-btn').disabled = true;
+    $('admin-btn').textContent = 'Validating...';
+    showStatus('', '');
+
+    try {
+      var result = await window.zap.validateLicense(key);
+      if (result.valid) {
+        await window.zap.acceptTerms();
+        showStatus('Activated!', 'success');
+        $('admin-btn').textContent = 'Activated!';
+        $('footer-text').textContent = 'You can close this window.';
+      } else {
+        showStatus(result.error || 'Invalid key.', 'error');
+        $('admin-btn').disabled = false;
+        $('admin-btn').textContent = 'Activate Key';
+      }
+    } catch(err) {
+      showStatus('Activation failed. Please try again.', 'error');
+      $('admin-btn').disabled = false;
+      $('admin-btn').textContent = 'Activate Key';
+    }
+  });
+  $('admin-key').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('admin-btn').click(); });
+
+  // ── Legal links ──
+  $('link-terms').addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); window.zap.openExternal('https://tryzap.net/terms'); });
+  $('link-privacy').addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); window.zap.openExternal('https://tryzap.net/privacy'); });
+  $('link-aup').addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); window.zap.openExternal('https://tryzap.net/acceptable-use'); });
+
+  // ── Subscribe ──
+  subscribeBtn.addEventListener('click', async function() {
+    if (!legalCheckbox.checked) { showStatus('You must agree to the Terms, Privacy Policy, and Acceptable Use Policy.', 'error'); return; }
+    var email = emailInput.value.trim();
+    if (!email || !email.includes('@')) { showStatus('Please enter a valid email address.', 'error'); emailInput.focus(); return; }
+
+    subscribeBtn.disabled = true;
+    subscribeBtn.innerHTML = '<span>Opening checkout...</span>';
+    showStatus('', '');
+
+    try {
+      var session = await window.zap.createCheckoutSession(email, selectedBilling);
+      if (session.error) { resetToRetry(session.error); return; }
+
+      await window.zap.openCheckoutWindow(session.url, session.sessionId);
+      subscribeBtn.innerHTML = '<span>Complete payment in the popup...</span>';
+      showStatus('Waiting for payment...', 'info');
+
+      var attempts = 0;
+      pollTimer = setInterval(async function() {
+        attempts++;
+        try {
+          var s = await window.zap.getLicenseStatus();
+          if (s.licenseValid) {
+            clearInterval(pollTimer); pollTimer = null;
+            await window.zap.acceptTerms();
+            showStatus('Subscription activated!', 'success');
+            subscribeBtn.innerHTML = 'Activated!';
+            $('footer-text').textContent = 'You can close this window.';
+          } else if (attempts > 30) {
+            clearInterval(pollTimer); pollTimer = null;
+            resetToRetry('Payment not detected. Please try again.');
+          }
+        } catch(_){}
+      }, 2000);
+    } catch(err) {
+      resetToRetry(err.message || 'Failed to create checkout session.');
+    }
+  });
+  emailInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') subscribeBtn.click(); });
+})();
+</script>
+</body>
+</html>

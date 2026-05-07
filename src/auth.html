@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zap — Sign In</title>
+<style>
+  :root{--accent:#4a6fa5;--accent-glow:#5b82bd;--accent-dim:#3a5a8a;--bg-deep:#0a0a12;--bg-card:rgba(18,18,35,0.85);--bg-input:rgba(10,10,22,0.9);--text:#f5f0e8;--text-muted:#b8b0a0;--text-dim:#6e6a60;--border:rgba(74,111,165,0.15);--border-card:rgba(74,111,165,0.12);--green:#6ec87a;--red:#ef4444}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg-deep);background-image:radial-gradient(ellipse at 20% 0%,rgba(30,45,80,.4) 0%,transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(20,30,60,.3) 0%,transparent 60%),linear-gradient(180deg,#0a0a14 0%,#0d0d1c 40%,#0a0b16 100%);color:var(--text);font-family:'SF Pro Display',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;-webkit-app-region:drag}
+  .auth-container{width:420px;-webkit-app-region:no-drag}
+  .logo-section{text-align:center;margin-bottom:36px}
+  .logo{width:72px;height:72px;background:linear-gradient(135deg,var(--accent),#3a5a8a);border-radius:20px;display:inline-flex;align-items:center;justify-content:center;font-size:34px;color:var(--text);box-shadow:0 4px 28px rgba(74,111,165,.35);margin-bottom:16px}
+  .logo-section h1{font-size:26px;font-weight:700;letter-spacing:-.5px;margin-bottom:6px}
+  .logo-section p{font-size:14px;color:var(--text-dim);line-height:1.5}
+  .auth-card{background:var(--bg-card);border:1px solid var(--border-card);border-radius:18px;padding:32px 28px;backdrop-filter:blur(20px)}
+  .tabs{display:flex;gap:2px;margin-bottom:28px;background:rgba(74,111,165,.06);border-radius:12px;padding:4px}
+  .tab{flex:1;padding:12px;border:none;background:transparent;color:var(--text-dim);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border-radius:10px;transition:all .2s;text-align:center}
+  .tab:hover{color:var(--text-muted)}
+  .tab.active{color:var(--text);background:rgba(74,111,165,.15);box-shadow:0 1px 4px rgba(0,0,0,.15)}
+  .form{display:none}
+  .form.active{display:block}
+  .field{margin-bottom:20px}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+  .field input{width:100%;padding:14px 16px;background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s}
+  .field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(74,111,165,.12)}
+  .field input::placeholder{color:var(--text-dim)}
+  .btn-primary{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--accent),#3a5a8a);color:var(--text);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;box-shadow:0 2px 16px rgba(74,111,165,.3);letter-spacing:.2px;margin-top:8px}
+  .btn-primary:hover{box-shadow:0 4px 24px rgba(74,111,165,.45);transform:translateY(-1px)}
+  .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .status{text-align:center;font-size:13px;margin-top:16px;min-height:20px;transition:color .2s}
+  .status.error{color:var(--red)}
+  .status.success{color:var(--green)}
+  .footer{text-align:center;margin-top:24px;font-size:12px;color:var(--text-dim);line-height:1.6}
+  .footer a{color:var(--accent-glow);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
+  .password-toggle{position:relative}
+  .password-toggle input{padding-right:44px}
+  .password-toggle .toggle-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:15px;padding:2px}
+  .password-toggle .toggle-eye:hover{color:var(--text-muted)}
+</style>
+</head>
+<body>
+
+<div class="auth-container">
+  <div class="logo-section">
+    <div class="logo">&#9889;</div>
+    <h1>Welcome to Zap</h1>
+    <p>AI-powered screen overlay for instant answers</p>
+  </div>
+
+  <div class="auth-card">
+    <div class="tabs">
+      <button class="tab active" id="tab-signup">Sign Up</button>
+      <button class="tab" id="tab-signin">Sign In</button>
+    </div>
+
+    <!-- Sign Up Form -->
+    <div class="form active" id="form-signup">
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" id="signup-name" placeholder="Your name" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label>Email Address</label>
+        <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="password-toggle">
+          <input type="password" id="signup-password" placeholder="Create a password" autocomplete="off" />
+          <button class="toggle-eye" tabindex="-1" onclick="togglePw('signup-password',this)">&#128065;</button>
+        </div>
+      </div>
+      <button class="btn-primary" id="signup-btn">Create Account</button>
+      <div class="status" id="signup-status"></div>
+    </div>
+
+    <!-- Sign In Form -->
+    <div class="form" id="form-signin">
+      <div class="field">
+        <label>Email Address</label>
+        <input type="email" id="signin-email" placeholder="you@example.com" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="password-toggle">
+          <input type="password" id="signin-password" placeholder="Your password" autocomplete="off" />
+          <button class="toggle-eye" tabindex="-1" onclick="togglePw('signin-password',this)">&#128065;</button>
+        </div>
+      </div>
+      <button class="btn-primary" id="signin-btn">Sign In</button>
+      <div class="status" id="signin-status"></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    By continuing, you agree to Zap's <a href="#">Terms of Service</a><br>and <a href="#">Privacy Policy</a>
+  </div>
+</div>
+
+<script>
+(function(){
+  var tabSignup = document.getElementById('tab-signup');
+  var tabSignin = document.getElementById('tab-signin');
+  var formSignup = document.getElementById('form-signup');
+  var formSignin = document.getElementById('form-signin');
+
+  tabSignup.addEventListener('click', function(){
+    tabSignup.classList.add('active'); tabSignin.classList.remove('active');
+    formSignup.classList.add('active'); formSignin.classList.remove('active');
+  });
+  tabSignin.addEventListener('click', function(){
+    tabSignin.classList.add('active'); tabSignup.classList.remove('active');
+    formSignin.classList.add('active'); formSignup.classList.remove('active');
+  });
+
+  document.getElementById('signup-btn').addEventListener('click', async function(){
+    var name = document.getElementById('signup-name').value.trim();
+    var email = document.getElementById('signup-email').value.trim();
+    var password = document.getElementById('signup-password').value;
+    var status = document.getElementById('signup-status');
+
+    if (!name) { status.className='status error'; status.textContent='Please enter your name.'; return; }
+    if (!email || !email.includes('@')) { status.className='status error'; status.textContent='Please enter a valid email.'; return; }
+    if (password.length < 6) { status.className='status error'; status.textContent='Password must be at least 6 characters.'; return; }
+
+    this.disabled = true;
+    this.textContent = 'Creating account...';
+    status.className = 'status'; status.textContent = '';
+
+    try {
+      var result = await window.zap.authSignup({ name: name, email: email, password: password });
+      if (result.success) {
+        status.className = 'status success';
+        status.textContent = 'Account created! Setting up...';
+        setTimeout(function(){ window.zap.authDone(); }, 800);
+      } else {
+        status.className = 'status error';
+        status.textContent = result.error || 'Could not create account.';
+        this.disabled = false;
+        this.textContent = 'Create Account';
+      }
+    } catch(e) {
+      status.className = 'status error';
+      status.textContent = 'Something went wrong. Please try again.';
+      this.disabled = false;
+      this.textContent = 'Create Account';
+    }
+  });
+
+  document.getElementById('signin-btn').addEventListener('click', async function(){
+    var email = document.getElementById('signin-email').value.trim();
+    var password = document.getElementById('signin-password').value;
+    var status = document.getElementById('signin-status');
+
+    if (!email || !email.includes('@')) { status.className='status error'; status.textContent='Please enter a valid email.'; return; }
+    if (!password) { status.className='status error'; status.textContent='Please enter your password.'; return; }
+
+    this.disabled = true;
+    this.textContent = 'Signing in...';
+    status.className = 'status'; status.textContent = '';
+
+    try {
+      var result = await window.zap.authSignin({ email: email, password: password });
+      if (result.success) {
+        status.className = 'status success';
+        status.textContent = 'Welcome back!';
+        setTimeout(function(){ window.zap.authDone(); }, 800);
+      } else {
+        status.className = 'status error';
+        status.textContent = result.error || 'Invalid email or password.';
+        this.disabled = false;
+        this.textContent = 'Sign In';
+      }
+    } catch(e) {
+      status.className = 'status error';
+      status.textContent = 'Something went wrong. Please try again.';
+      this.disabled = false;
+      this.textContent = 'Sign In';
+    }
+  });
+
+  document.querySelectorAll('#form-signup input').forEach(function(el){
+    el.addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('signup-btn').click(); });
+  });
+  document.querySelectorAll('#form-signin input').forEach(function(el){
+    el.addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('signin-btn').click(); });
+  });
+})();
+
+function togglePw(id, btn) {
+  var el = document.getElementById(id);
+  if (el.type === 'password') { el.type = 'text'; btn.textContent = '\u25C9'; }
+  else { el.type = 'password'; btn.textContent = '\uD83D\uDC41'; }
+}
+</script>
+</body>
+</html>

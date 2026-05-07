@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zap Settings</title>
+<style>
+  :root{--accent:#4a6fa5;--accent-glow:#5b82bd;--accent-dim:#3a5a8a;--bg-deep:#0a0a12;--bg:#0f0f1a;--bg-card:rgba(18,18,35,0.85);--bg-card-hover:rgba(24,24,45,0.9);--bg-input:rgba(10,10,22,0.9);--text:#f5f0e8;--text-muted:#b8b0a0;--text-dim:#6e6a60;--border:rgba(74,111,165,0.15);--border-card:rgba(74,111,165,0.12);--glow:rgba(74,111,165,0.08)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg-deep);background-image:radial-gradient(ellipse at 20% 0%,rgba(30,45,80,.4) 0%,transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(20,30,60,.3) 0%,transparent 60%),linear-gradient(180deg,#0a0a14 0%,#0d0d1c 40%,#0a0b16 100%);color:var(--text);font-family:'SF Pro Display',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;padding:0;overflow-y:auto;min-height:100vh;-webkit-app-region:drag}
+  .header{padding:28px 32px 0;display:flex;align-items:center;gap:14px}
+  .header .logo{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--accent-dim));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--text);box-shadow:0 2px 12px rgba(74,111,165,.25);letter-spacing:-.5px}
+  .header h1{font-size:20px;font-weight:600;color:var(--text);letter-spacing:-.3px}
+  .header .version{font-size:11px;color:var(--text-dim);background:rgba(74,111,165,.1);padding:3px 10px;border-radius:6px;border:1px solid rgba(74,111,165,.1);font-weight:500}
+  .header .update-badge{display:none;font-size:11px;color:#fff;background:linear-gradient(135deg,#34d399,#059669);padding:4px 12px;border-radius:6px;font-weight:600;cursor:pointer;border:none;font-family:inherit;-webkit-app-region:no-drag;animation:update-pulse 2s ease-in-out infinite;transition:all .2s}
+  .header .update-badge:hover{box-shadow:0 2px 12px rgba(52,211,153,.4);transform:translateY(-1px)}
+  @keyframes update-pulse{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,.3)}50%{box-shadow:0 0 8px 3px rgba(52,211,153,.15)}}
+  .tabs{display:flex;gap:2px;padding:20px 32px 0;-webkit-app-region:no-drag}
+  .tab{padding:10px 18px;border:none;background:transparent;color:var(--text-dim);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;border-radius:8px;transition:all .2s}
+  .tab:hover{color:var(--text-muted);background:rgba(74,111,165,.06)}
+  .tab.active{color:var(--text);background:rgba(74,111,165,.12)}
+  .content{padding:20px 32px 28px;-webkit-app-region:no-drag}
+  .tab-panel{display:none}.tab-panel.active{display:block}
+  .card{background:var(--bg-card);border:1px solid var(--border-card);border-radius:14px;padding:20px 22px;margin-bottom:16px;backdrop-filter:blur(20px);transition:border-color .2s}
+  .card:hover{border-color:rgba(74,111,165,.22)}
+  .card-title{font-size:11px;font-weight:600;color:var(--accent-glow);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+  .card-title::before{content:'';width:3px;height:12px;background:var(--accent);border-radius:2px}
+  .field{margin-bottom:18px}.field:last-child{margin-bottom:0}
+  .field label{display:block;font-size:13px;color:var(--text);margin-bottom:8px;font-weight:500}
+  .field .hint{font-size:11px;color:var(--text-dim);margin-top:6px;line-height:1.4}
+  input[type="text"],input[type="password"],input[type="number"],input[type="url"],select{width:100%;padding:11px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s}
+  input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(74,111,165,.12)}
+  input::placeholder{color:var(--text-dim)}
+  select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%236e6a60' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;cursor:pointer}
+  select option{background:#14142a;color:var(--text)}
+  input[type="color"]{width:44px;height:44px;border:2px solid var(--border);border-radius:10px;background:none;cursor:pointer;padding:3px}
+  input[type="range"]{width:100%;height:6px;-webkit-appearance:none;appearance:none;background:rgba(74,111,165,.15);border-radius:3px;outline:none}
+  input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--accent);border-radius:50%;cursor:pointer;box-shadow:0 2px 8px rgba(74,111,165,.35);transition:transform .15s}
+  input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(74,111,165,.06)}
+  .toggle-row:last-child{border-bottom:none}
+  .toggle-info{flex:1}
+  .toggle-info .toggle-label{font-size:14px;font-weight:500;color:var(--text)}
+  .toggle-info .toggle-desc{font-size:12px;color:var(--text-dim);margin-top:3px;line-height:1.4}
+  .toggle{width:46px;height:26px;background:rgba(74,111,165,.15);border-radius:13px;position:relative;cursor:pointer;transition:background .25s;flex-shrink:0;margin-left:16px}
+  .toggle.active{background:var(--accent);box-shadow:0 0 12px rgba(74,111,165,.3)}
+  .toggle .thumb{width:20px;height:20px;background:var(--text);border-radius:50%;position:absolute;top:3px;left:3px;transition:transform .25s cubic-bezier(.4,0,.2,1);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+  .toggle.active .thumb{transform:translateX(20px)}
+  .color-row{display:flex;align-items:center;gap:14px}
+  .color-row span{font-size:12px;color:var(--text-muted);font-family:'SF Mono','Fira Code',monospace}
+  .slider-row{display:flex;align-items:center;gap:14px}
+  .slider-row input[type="range"]{flex:1}
+  .slider-value{font-size:12px;color:var(--text-muted);min-width:40px;text-align:right;font-family:'SF Mono','Fira Code',monospace;font-variant-numeric:tabular-nums;background:rgba(74,111,165,.08);padding:4px 8px;border-radius:6px}
+  .hotkey-field{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(74,111,165,.06)}
+  .hotkey-field:last-child{border-bottom:none}
+  .hotkey-label{font-size:14px;font-weight:500;color:var(--text);display:flex;align-items:center;gap:8px}
+  .hotkey-label .mode-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .hotkey-input-wrap{display:flex;align-items:center;gap:8px}
+  .hotkey-input-wrap input{width:140px;padding:8px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'SF Mono','Fira Code',monospace;font-size:12px;text-align:center;outline:none;transition:border-color .2s;cursor:pointer}
+  .hotkey-input-wrap input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(74,111,165,.12)}
+  .hotkey-input-wrap input.recording{border-color:#e07040;box-shadow:0 0 0 3px rgba(224,112,64,.15);animation:pulse-border 1.5s infinite}
+  @keyframes pulse-border{0%,100%{box-shadow:0 0 0 3px rgba(224,112,64,.1)}50%{box-shadow:0 0 0 3px rgba(224,112,64,.25)}}
+  .info-callout{background:rgba(74,111,165,.06);border:1px solid rgba(74,111,165,.1);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:16px}
+  .save-bar{padding:18px 32px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;align-items:center;gap:12px;background:linear-gradient(180deg,rgba(10,10,18,.95),rgba(10,10,18,1));position:sticky;bottom:0;-webkit-app-region:no-drag;backdrop-filter:blur(20px)}
+  .btn{padding:10px 24px;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;border:none;letter-spacing:.2px}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent-dim));color:var(--text);box-shadow:0 2px 12px rgba(74,111,165,.25)}
+  .btn-primary:hover{box-shadow:0 4px 20px rgba(74,111,165,.35);transform:translateY(-1px)}
+  .btn-secondary{background:rgba(74,111,165,.08);color:var(--text-muted);border:1px solid var(--border)}
+  .btn-secondary:hover{background:rgba(74,111,165,.14);color:var(--text)}
+  .save-status{font-size:13px;color:#6ec87a;align-self:center;opacity:0;transition:opacity .3s;font-weight:500;padding:6px 14px;background:rgba(110,200,122,0.1);border-radius:8px;border:1px solid rgba(110,200,122,0.2)}
+  .save-status.visible{opacity:1}
+  .update-card{text-align:center;padding:30px 22px}
+  .update-card .update-version{font-size:28px;font-weight:700;color:var(--text);margin-bottom:6px}
+  .update-card .update-label{font-size:13px;color:var(--text-dim);margin-bottom:20px}
+  .update-card .btn-update{padding:12px 32px;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;border:none;background:linear-gradient(135deg,#34d399,#059669);color:#fff;box-shadow:0 2px 12px rgba(52,211,153,.25)}
+  .update-card .btn-update:hover{box-shadow:0 4px 20px rgba(52,211,153,.4);transform:translateY(-1px)}
+  .update-card .btn-update:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .update-card .update-status{font-size:12px;color:var(--text-dim);margin-top:14px}
+  ::-webkit-scrollbar{width:5px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:rgba(74,111,165,.2);border-radius:3px}
+  ::-webkit-scrollbar-thumb:hover{background:rgba(74,111,165,.35)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">&#9889;</div>
+  <h1>Zap</h1>
+  <span class="version">v...</span>
+  <button class="update-badge" id="header-update-btn">Update Available</button>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="home">Home</button>
+  <button class="tab" data-tab="general">General</button>
+  <button class="tab" data-tab="appearance">Appearance</button>
+  <button class="tab" data-tab="hotkeys">Hotkeys</button>
+  <button class="tab" data-tab="subscription">Subscription</button>
+  <button class="tab" data-tab="support">Support</button>
+  <button class="tab" data-tab="whatsnew">What's New</button>
+  <button class="tab" data-tab="updates">Updates</button>
+</div>
+
+<div class="content">
+
+  <div class="tab-panel active" id="tab-home">
+    <div class="card" style="text-align:center;padding:30px 22px 24px">
+      <div style="font-size:44px;margin-bottom:8px;filter:drop-shadow(0 0 20px rgba(74,111,165,0.4))">&#9889;</div>
+      <div style="font-size:22px;font-weight:700;margin-bottom:4px">Welcome to <span style="color:var(--accent-glow)">Zap</span></div>
+      <div style="font-size:13px;color:var(--text-dim);margin-bottom:20px">The invisible AI overlay that lives on your screen</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:left">
+        <div style="background:rgba(74,111,165,0.06);border:1px solid rgba(74,111,165,0.1);border-radius:10px;padding:12px">
+          <div style="font-size:16px;margin-bottom:2px">&#128269;</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Answer</div>
+          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">Instant AI answers</div>
+        </div>
+        <div style="background:rgba(74,111,165,0.06);border:1px solid rgba(74,111,165,0.1);border-radius:10px;padding:12px">
+          <div style="font-size:16px;margin-bottom:2px">&#129518;</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Solve</div>
+          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">Step-by-step solutions</div>
+        </div>
+        <div style="background:rgba(74,111,165,0.06);border:1px solid rgba(74,111,165,0.1);border-radius:10px;padding:12px">
+          <div style="font-size:16px;margin-bottom:2px">&#128221;</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Essay</div>
+          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">Full essays on any topic</div>
+        </div>
+        <div style="background:rgba(74,111,165,0.06);border:1px solid rgba(74,111,165,0.1);border-radius:10px;padding:12px">
+          <div style="font-size:16px;margin-bottom:2px">&#128187;</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Code</div>
+          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">Write & debug code</div>
+        </div>
+        <div style="background:rgba(74,111,165,0.06);border:1px solid rgba(74,111,165,0.1);border-radius:10px;padding:12px">
+          <div style="font-size:16px;margin-bottom:2px">&#128218;</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Research</div>
+          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">Credible source analysis</div>
+        </div>
+        <div style="background:rgba(74,111,165,0.06);border:1px solid rgba(74,111,165,0.1);border-radius:10px;padding:12px">
+          <div style="font-size:16px;margin-bottom:2px">&#127760;</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Translate</div>
+          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">35+ languages</div>
+        </div>
+        <div style="background:rgba(74,111,165,0.06);border:1px solid rgba(74,111,165,0.1);border-radius:10px;padding:12px">
+          <div style="font-size:16px;margin-bottom:2px">&#9993;&#65039;</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Email</div>
+          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">Draft & paste replies</div>
+        </div>
+        <div style="background:rgba(74,111,165,0.06);border:1px solid rgba(74,111,165,0.1);border-radius:10px;padding:12px">
+          <div style="font-size:16px;margin-bottom:2px">&#127183;</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Flashcards</div>
+          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">Fullscreen study cards</div>
+        </div>
+        <div style="background:rgba(74,111,165,0.06);border:1px solid rgba(74,111,165,0.1);border-radius:10px;padding:12px">
+          <div style="font-size:16px;margin-bottom:2px">&#128640;</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Autopilot</div>
+          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">Auto-fill quizzes & forms</div>
+        </div>
+        <div style="background:rgba(74,111,165,0.06);border:1px solid rgba(74,111,165,0.1);border-radius:10px;padding:12px">
+          <div style="font-size:16px;margin-bottom:2px">&#9000;&#65039;</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Drip Type</div>
+          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">Human-like typing</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Quick Start</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid rgba(74,111,165,0.06)">
+          <div style="width:28px;height:28px;background:rgba(74,111,165,0.12);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--accent-glow);flex-shrink:0">1</div>
+          <div><div style="font-size:13px;font-weight:500">Press <kbd style="background:rgba(74,111,165,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:12px;font-weight:600;border:1px solid rgba(74,111,165,0.2)">Alt+1</kbd> to activate</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">Opens the overlay on your screen</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid rgba(74,111,165,0.06)">
+          <div style="width:28px;height:28px;background:rgba(74,111,165,0.12);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--accent-glow);flex-shrink:0">2</div>
+          <div><div style="font-size:13px;font-weight:500">Drag to select any area</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">Or press Tab to type a question</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;padding:10px 0">
+          <div style="width:28px;height:28px;background:rgba(74,111,165,0.12);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--accent-glow);flex-shrink:0">3</div>
+          <div><div style="font-size:13px;font-weight:500">Get instant AI results</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">Click Paste to insert into your app, Copy, or Esc to dismiss</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:16px 22px">
+      <div class="card-title">Actions</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-secondary" id="replay-tour-btn" style="flex:1;min-width:120px">&#127891; Replay Tour</button>
+        <button class="btn btn-secondary" id="home-settings-btn" style="flex:1;min-width:120px">&#9881;&#65039; Settings</button>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:8px 0">
+      <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.15);color:#22c55e;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:600">&#9679; Phantom Mode — Undetectable by screen capture</div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-general">
+    <div class="card">
+      <div class="card-title">Features</div>
+      <div class="toggle-row">
+        <div class="toggle-info"><div class="toggle-label">Phantom Mode</div><div class="toggle-desc">Overlay is invisible to screenshots, recordings, and screen shares</div></div>
+        <div class="toggle" id="toggle-phantom" data-key="phantomMode"><div class="thumb"></div></div>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info"><div class="toggle-label">Invisible Overlay</div><div class="toggle-desc">Overlay background is fully transparent — content floats over your screen</div></div>
+        <div class="toggle" id="toggle-invisible" data-key="invisibleOverlay"><div class="thumb"></div></div>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info"><div class="toggle-label">Auto Engine</div><div class="toggle-desc">Automatically selects the best AI model for your query</div></div>
+        <div class="toggle" id="toggle-autoengine" data-key="autoEngine"><div class="thumb"></div></div>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info"><div class="toggle-label">Simple Mode</div><div class="toggle-desc">Only shows the final answer — no explanation, steps, or reasoning</div></div>
+        <div class="toggle" id="toggle-simple" data-key="simpleMode"><div class="thumb"></div></div>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info"><div class="toggle-label">Start at Login</div><div class="toggle-desc">Launch Zap automatically when your computer starts</div></div>
+        <div class="toggle" id="toggle-startup" data-key="startAtLogin"><div class="thumb"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Research Settings</div>
+      <div class="toggle-row" style="border-bottom:none">
+        <div class="toggle-info">
+          <div class="toggle-label">Credible Sources Only</div>
+          <div class="toggle-desc">Research mode uses only .edu, .org, .gov sources — no commercial sites</div>
+        </div>
+        <div class="toggle" id="toggle-credible" data-key="credibleSourcesOnly"><div class="thumb"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">AI Context</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:10px;line-height:1.5">Give the AI custom instructions that apply to every request. For example: "I'm taking a Spanish test, only respond in Spanish" or "I'm in AP Chemistry, show work step by step."</div>
+      <textarea id="setting-aiContext" rows="3" style="width:100%;padding:10px 12px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none;resize:vertical;line-height:1.5;transition:border-color .15s" placeholder="e.g. You are helping me with a Spanish test. Only write in Spanish. Use words for numbers (uno, dos) not digits."></textarea>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Autopilot Settings</div>
+      <div class="field">
+        <label>Delay Between Questions</label>
+        <div class="slider-row">
+          <input type="range" id="autopilotDelay" min="200" max="3000" step="100" value="800">
+          <span class="slider-value" id="autopilotDelay-val">800ms</span>
+        </div>
+        <div class="hint">Base delay (ms) between filling each question. Higher = slower and more human-like.</div>
+      </div>
+      <div class="field">
+        <label>Random Variation</label>
+        <div class="slider-row">
+          <input type="range" id="autopilotDelayRandom" min="0" max="2000" step="100" value="500">
+          <span class="slider-value" id="autopilotDelayRandom-val">500ms</span>
+        </div>
+        <div class="hint">Random time added on top of the base delay. Makes timing unpredictable and natural.</div>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">Humanize Behavior</div>
+          <div class="toggle-desc">Adds occasional longer pauses that mimic reading and thinking between questions</div>
+        </div>
+        <div class="toggle" id="toggle-apHumanize" data-key="autopilotHumanize"><div class="thumb"></div></div>
+      </div>
+      <div class="toggle-row" style="border-bottom:none">
+        <div class="toggle-info">
+          <div class="toggle-label">Auto-Scroll to Question</div>
+          <div class="toggle-desc">Scrolls each question into view before answering it — useful for long forms</div>
+        </div>
+        <div class="toggle" id="toggle-apScrollTo" data-key="autopilotScrollTo"><div class="thumb"></div></div>
+      </div>
+    </div>
+
+    <div class="card" style="border-color:rgba(239,68,68,0.2)">
+      <div class="card-title" style="color:#f87171">Stealth Mode</div>
+      <div class="toggle-row" style="border-bottom:none">
+        <div class="toggle-info">
+          <div class="toggle-label">Enable Stealth Mode</div>
+          <div class="toggle-desc">Stay completely invisible and undetectable while using Zap</div>
+        </div>
+        <div class="toggle" id="toggle-lockdown" data-key="lockdownMode"><div class="thumb"></div></div>
+      </div>
+      <div id="lockdown-details" style="display:none;margin-top:14px;border-top:1px solid rgba(239,68,68,0.1);padding-top:14px">
+        <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.12);border-radius:10px;padding:14px 16px;margin-bottom:14px">
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px">How to use Stealth Mode:</div>
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.8">
+            <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:6px">
+              <span style="background:rgba(239,68,68,0.15);color:#f87171;padding:1px 8px;border-radius:4px;font-weight:700;font-size:11px;flex-shrink:0">1</span>
+              <span>Enable Stealth Mode and press <strong style="color:var(--text)">Save Settings</strong></span>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:6px">
+              <span style="background:rgba(239,68,68,0.15);color:#f87171;padding:1px 8px;border-radius:4px;font-weight:700;font-size:11px;flex-shrink:0">2</span>
+              <span>Open Zap and <strong style="color:var(--text)">activate the overlay</strong> (Alt+1 or your hotkey)</span>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:6px">
+              <span style="background:rgba(239,68,68,0.15);color:#f87171;padding:1px 8px;border-radius:4px;font-weight:700;font-size:11px;flex-shrink:0">3</span>
+              <span><strong style="color:var(--text)">Then</strong> open the app you want to use Zap with</span>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:6px">
+              <span style="background:rgba(239,68,68,0.15);color:#f87171;padding:1px 8px;border-radius:4px;font-weight:700;font-size:11px;flex-shrink:0">4</span>
+              <span>Use <strong style="color:var(--text)">stealth hotkeys</strong> to control Zap (see below)</span>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start">
+              <span style="background:rgba(239,68,68,0.15);color:#f87171;padding:1px 8px;border-radius:4px;font-weight:700;font-size:11px;flex-shrink:0">5</span>
+              <span>When done, press Escape to hide the overlay</span>
+            </div>
+          </div>
+        </div>
+        <div style="background:rgba(74,111,165,0.06);border:1px solid rgba(74,111,165,0.1);border-radius:10px;padding:14px 16px;margin-bottom:14px">
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px">Stealth Hotkeys (active in Stealth Mode)</div>
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.8">
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Toggle Overlay</span><kbd style="background:rgba(74,111,165,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(74,111,165,0.2)">Ctrl+Shift+Z</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Answer Mode</span><kbd style="background:rgba(74,111,165,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(74,111,165,0.2)">Ctrl+Shift+A</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Simple Mode</span><kbd style="background:rgba(74,111,165,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(74,111,165,0.2)">Ctrl+Shift+S</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Translate</span><kbd style="background:rgba(74,111,165,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(74,111,165,0.2)">Ctrl+Shift+T</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Drip Type</span><kbd style="background:rgba(74,111,165,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(74,111,165,0.2)">Ctrl+Shift+D</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Stop Drip</span><kbd style="background:rgba(74,111,165,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(74,111,165,0.2)">Ctrl+Shift+X</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Solve</span><kbd style="background:rgba(74,111,165,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(74,111,165,0.2)">Ctrl+Shift+V</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Essay</span><kbd style="background:rgba(74,111,165,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(74,111,165,0.2)">Ctrl+Shift+E</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Code</span><kbd style="background:rgba(74,111,165,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(74,111,165,0.2)">Ctrl+Shift+C</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Research</span><kbd style="background:rgba(74,111,165,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(74,111,165,0.2)">Ctrl+Shift+F</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Email</span><kbd style="background:rgba(74,111,165,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(74,111,165,0.2)">Ctrl+Shift+W</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Flashcards</span><kbd style="background:rgba(74,111,165,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(74,111,165,0.2)">Ctrl+Shift+Q</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Autopilot</span><kbd style="background:rgba(74,111,165,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(74,111,165,0.2)">Ctrl+Shift+P</kbd></div>
+          </div>
+        </div>
+        <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.12);border-radius:10px;padding:12px 16px">
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.6">
+            <strong style="color:#f59e0b">Important:</strong> Stealth Mode uses native OS-level screen capture that works through Safe Exam Browser, Respondus, and other lockdown browsers. Screen capture, cursor drag, and all hotkeys work normally. If native capture fails on your system, press Tab to type your question manually.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Translation</div>
+      <div class="field">
+        <label>Default Language</label>
+        <select id="setting-language">
+          <option value="Spanish">Spanish</option><option value="French">French</option><option value="German">German</option>
+          <option value="Italian">Italian</option><option value="Portuguese">Portuguese</option><option value="Japanese">Japanese</option>
+          <option value="Korean">Korean</option><option value="Chinese (Simplified)">Chinese (Simplified)</option>
+          <option value="Chinese (Traditional)">Chinese (Traditional)</option><option value="Arabic">Arabic</option>
+          <option value="Hindi">Hindi</option><option value="Russian">Russian</option><option value="Turkish">Turkish</option>
+          <option value="Dutch">Dutch</option><option value="Polish">Polish</option><option value="Swedish">Swedish</option>
+          <option value="Norwegian">Norwegian</option><option value="Danish">Danish</option><option value="Finnish">Finnish</option>
+          <option value="Thai">Thai</option><option value="Vietnamese">Vietnamese</option><option value="Indonesian">Indonesian</option>
+          <option value="Malay">Malay</option><option value="Filipino">Filipino</option><option value="Czech">Czech</option>
+          <option value="Romanian">Romanian</option><option value="Ukrainian">Ukrainian</option><option value="Greek">Greek</option>
+          <option value="Hebrew">Hebrew</option><option value="Hungarian">Hungarian</option><option value="Bengali">Bengali</option>
+          <option value="Tamil">Tamil</option><option value="Urdu">Urdu</option><option value="Swahili">Swahili</option>
+          <option value="English">English</option>
+        </select>
+        <div class="hint">Used for Translate mode — supports 35 languages</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Drip Type</div>
+      <div class="field">
+        <label>Start Delay</label>
+        <div class="slider-row"><input type="range" id="setting-dripDelay" min="1" max="30" step="1" /><span class="slider-value" id="drip-delay-value">10s</span></div>
+        <div class="hint">Seconds to wait before typing starts after you press Start. Gives you time to click into the target app.</div>
+      </div>
+      <div class="field">
+        <label>Words Per Minute</label>
+        <div class="slider-row"><input type="range" id="setting-dripWPM" min="15" max="120" step="5" /><span class="slider-value" id="drip-wpm-value">45</span></div>
+        <div class="hint">Average typing speed. Real humans type 30-60 WPM. Speed naturally varies per character.</div>
+      </div>
+      <div class="field">
+        <label>Natural Mistakes</label>
+        <div class="slider-row"><input type="range" id="setting-typoRate" min="0" max="0.20" step="0.01" /><span class="slider-value" id="typo-rate-value">6%</span></div>
+        <div class="hint">How often to make realistic typos (wrong nearby key) that get corrected with backspace</div>
+      </div>
+      <div class="field">
+        <label>Thinking Pauses</label>
+        <div class="slider-row"><input type="range" id="setting-dripPauseChance" min="0" max="0.15" step="0.01" /><span class="slider-value" id="drip-pause-value">3%</span></div>
+        <div class="hint">Chance of a 1-3 second "thinking" pause mid-sentence — like pausing to consider the next word</div>
+      </div>
+      <div class="field">
+        <label>Burst Typing</label>
+        <div class="slider-row"><input type="range" id="setting-dripBurstChance" min="0" max="0.25" step="0.01" /><span class="slider-value" id="drip-burst-value">8%</span></div>
+        <div class="hint">Chance of briefly speeding up — like quickly typing a familiar word or phrase</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-appearance">
+    <div class="card">
+      <div class="card-title">Theme</div>
+      <div class="field">
+        <label>Accent Color</label>
+        <div class="color-row"><input type="color" id="setting-accentColor" value="#facc15" /><span id="accent-hex">#facc15</span></div>
+      </div>
+      <div class="field">
+        <label>Font Size</label>
+        <div class="slider-row"><input type="range" id="setting-fontSize" min="10" max="22" step="1" /><span class="slider-value" id="fontsize-value">14px</span></div>
+      </div>
+      <div class="field">
+        <label>Border Radius</label>
+        <div class="slider-row"><input type="range" id="setting-borderRadius" min="0" max="24" step="1" /><span class="slider-value" id="radius-value">12px</span></div>
+      </div>
+      <div class="field">
+        <label>Overlay Opacity</label>
+        <div class="slider-row"><input type="range" id="setting-overlayOpacity" min="0" max="10" step="1" /><span class="slider-value" id="opacity-value">0</span></div>
+        <div class="hint">0 = invisible, 10 = fully darkened overlay</div>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">Ghost Answer</div>
+          <div class="toggle-desc">Show answer text only — no background, no box, no border. Maximum stealth.</div>
+        </div>
+        <div class="toggle" id="toggle-ghostAnswer" data-key="ghostAnswer"><div class="thumb"></div></div>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">Clear Screen</div>
+          <div class="toggle-desc">Hide all overlay UI (mode indicator, instructions, buttons). Only the response panel shows after you drag-select.</div>
+        </div>
+        <div class="toggle" id="toggle-clearScreen" data-key="clearScreen"><div class="thumb"></div></div>
+      </div>
+      <div class="field">
+        <label>Font Family</label>
+        <select id="setting-fontFamily">
+          <option value="system-ui, -apple-system, sans-serif">System Default</option>
+          <option value="'Inter', sans-serif">Inter</option>
+          <option value="'SF Pro Display', sans-serif">SF Pro</option>
+          <option value="'Segoe UI', sans-serif">Segoe UI</option>
+          <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+          <option value="'Fira Code', monospace">Fira Code</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-hotkeys">
+    <div class="info-callout">Click any hotkey field, then press your desired key combination to record it. These shortcuts work system-wide — even when Zap is in the background.</div>
+
+    <div class="card">
+      <div class="card-title">Overlay</div>
+      <div class="hotkey-field">
+        <div class="hotkey-label"><span class="mode-dot" style="background:var(--text-muted)"></span>Toggle Overlay</div>
+        <div class="hotkey-input-wrap"><input type="text" id="hk-hotkey" readonly value="Alt+3" data-setting="hotkey" /></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Mode Shortcuts</div>
+      <div class="hotkey-field">
+        <div class="hotkey-label"><span class="mode-dot" style="background:#60a5fa"></span>Answer</div>
+        <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyAnswer" readonly value="Alt+1" data-setting="hotkeyAnswer" /></div>
+      </div>
+      <div class="hotkey-field">
+        <div class="hotkey-label"><span class="mode-dot" style="background:#facc15"></span>Simple</div>
+        <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeySimple" readonly value="Alt+6" data-setting="hotkeySimple" /></div>
+      </div>
+      <div class="hotkey-field">
+        <div class="hotkey-label"><span class="mode-dot" style="background:#34d399"></span>Translate</div>
+        <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyTranslate" readonly value="Alt+2" data-setting="hotkeyTranslate" /></div>
+      </div>
+      <div class="hotkey-field">
+        <div class="hotkey-label"><span class="mode-dot" style="background:#f59e0b"></span>Autopilot</div>
+        <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyAutopilot" readonly value="Alt+4" data-setting="hotkeyAutopilot" /></div>
+      </div>
+      <div class="hotkey-field">
+        <div class="hotkey-label"><span class="mode-dot" style="background:#f87171"></span>Drip Type</div>
+        <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyDripType" readonly value="Alt+5" data-setting="hotkeyDripType" /></div>
+      </div>
+      <div class="hotkey-field">
+        <div class="hotkey-label"><span class="mode-dot" style="background:#ef4444"></span>Stop Drip Type</div>
+        <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyStopDrip" readonly value="Alt+0" data-setting="hotkeyStopDrip" /></div>
+      </div>
+      <div class="hotkey-field">
+        <div class="hotkey-label"><span class="mode-dot" style="background:#fb923c"></span>Solve</div>
+        <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeySolve" readonly value="Alt+7" data-setting="hotkeySolve" /></div>
+      </div>
+      <div class="hotkey-field">
+        <div class="hotkey-label"><span class="mode-dot" style="background:#a78bfa"></span>Essay</div>
+        <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyEssay" readonly value="Alt+8" data-setting="hotkeyEssay" /></div>
+      </div>
+      <div class="hotkey-field">
+        <div class="hotkey-label"><span class="mode-dot" style="background:#22d3ee"></span>Code</div>
+        <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyCode" readonly value="Alt+9" data-setting="hotkeyCode" /></div>
+      </div>
+      <div class="hotkey-field">
+        <div class="hotkey-label"><span class="mode-dot" style="background:#4ade80"></span>Research</div>
+        <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyResearch" readonly value="CmdOrCtrl+Alt+1" data-setting="hotkeyResearch" /></div>
+      </div>
+      <div class="hotkey-field">
+        <div class="hotkey-label"><span class="mode-dot" style="background:#f472b6"></span>Email</div>
+        <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyEmail" readonly value="CmdOrCtrl+Alt+2" data-setting="hotkeyEmail" /></div>
+      </div>
+      <div class="hotkey-field">
+        <div class="hotkey-label"><span class="mode-dot" style="background:#facc15"></span>Flashcards</div>
+        <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyFlashcards" readonly value="CmdOrCtrl+Alt+3" data-setting="hotkeyFlashcards" /></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">App</div>
+      <div class="hotkey-field">
+        <div class="hotkey-label"><span class="mode-dot" style="background:var(--accent-glow)"></span>Open Zap App</div>
+        <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyApp" readonly value="Alt+M" data-setting="hotkeyApp" /></div>
+      </div>
+      <div class="hotkey-field">
+        <div class="hotkey-label"><span class="mode-dot" style="background:#dc2626"></span>Self-Destruct</div>
+        <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeySelfDestruct" readonly value="Cmd+Alt+Shift+Backspace" data-setting="hotkeySelfDestruct" /></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Overlay Controls</div>
+      <div class="hotkey-field">
+        <div class="hotkey-label">Close Overlay</div>
+        <div class="hotkey-input-wrap"><input type="text" readonly value="Escape" style="opacity:.5;cursor:default" /></div>
+      </div>
+      <div class="hotkey-field">
+        <div class="hotkey-label">Type a Question</div>
+        <div class="hotkey-input-wrap"><input type="text" readonly value="Tab" style="opacity:.5;cursor:default" /></div>
+      </div>
+      <div class="hotkey-field">
+        <div class="hotkey-label">Copy Response</div>
+        <div class="hotkey-input-wrap"><input type="text" readonly value="Cmd+C" style="opacity:.5;cursor:default" /></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-subscription">
+    <div class="card" id="sub-loading" style="text-align:center;padding:30px">
+      <div style="font-size:13px;color:var(--text-dim)">Loading subscription info...</div>
+    </div>
+    <div class="card" id="sub-error" style="display:none;text-align:center;padding:24px">
+      <div style="font-size:28px;margin-bottom:8px">&#9888;&#65039;</div>
+      <div style="font-size:14px;color:var(--text);font-weight:600;margin-bottom:6px">Could not load subscription info</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:16px;line-height:1.5">Check your internet connection and try again.</div>
+      <button class="btn btn-secondary" id="sub-retry-btn">Retry</button>
+    </div>
+    <div id="sub-content" style="display:none">
+      <div class="card">
+        <div class="card-title" style="justify-content:space-between;align-items:center">
+          <span>Subscription Status</span>
+          <button class="btn btn-secondary" id="sub-refresh-btn" style="padding:5px 12px;font-size:11px;margin:0">Refresh</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+          <div id="sub-status-badge" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600"></div>
+        </div>
+        <div class="toggle-row" style="border-bottom:none;padding:8px 0">
+          <div class="toggle-info"><div class="toggle-label">Email</div><div class="toggle-desc" id="sub-email" style="font-family:'SF Mono','Fira Code',monospace;font-size:12px">—</div></div>
+        </div>
+        <div class="toggle-row" style="border-bottom:none;padding:8px 0">
+          <div class="toggle-info"><div class="toggle-label">Plan</div><div class="toggle-desc" id="sub-plan">Monthly Subscription</div></div>
+        </div>
+        <div class="toggle-row" style="border-bottom:none;padding:8px 0" id="sub-renews-row">
+          <div class="toggle-info"><div class="toggle-label" id="sub-renews-label">Renews</div><div class="toggle-desc" id="sub-renews">—</div></div>
+        </div>
+      </div>
+
+      <div class="card" id="sub-pastdue-card" style="display:none;border-color:rgba(239,68,68,0.3)">
+        <div class="card-title" style="color:#ef4444">&#9888; Payment Failed</div>
+        <div style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:14px">
+          Your last payment failed. Please update your payment method to keep your subscription active. If not resolved, your access will be revoked.
+        </div>
+        <button class="btn btn-primary" id="sub-update-card-btn" style="width:100%;background:linear-gradient(135deg,#ef4444,#dc2626)">Update Payment Method</button>
+      </div>
+
+      <div class="card" id="sub-actions-card">
+        <div class="card-title">Manage</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-secondary" id="sub-billing-btn" style="flex:1;min-width:140px">Manage Billing</button>
+          <button class="btn btn-secondary" id="sub-cancel-btn" style="flex:1;min-width:140px;color:#ef4444;border-color:rgba(239,68,68,0.3)">Cancel Subscription</button>
+        </div>
+        <div id="sub-action-status" style="font-size:12px;margin-top:12px;text-align:center;min-height:18px"></div>
+      </div>
+
+      <div class="card" id="sub-cancelled-card" style="display:none">
+        <div class="card-title">Subscription Cancelled</div>
+        <div style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:14px">
+          Your subscription will remain active until <strong id="sub-cancel-date" style="color:var(--text)"></strong>. After that, you'll lose access.
+        </div>
+        <button class="btn btn-primary" id="sub-reactivate-btn" style="width:100%">Reactivate Subscription</button>
+        <div id="sub-reactivate-status" style="font-size:12px;margin-top:10px;text-align:center;min-height:18px"></div>
+      </div>
+
+      <div class="card" id="sub-inactive-card" style="display:none">
+        <div class="card-title">No Active Subscription</div>
+        <div style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:14px" id="sub-inactive-text">
+          You don't have an active subscription. Subscribe to unlock full access to Zap.
+        </div>
+        <button class="btn btn-primary" id="sub-subscribe-btn" style="width:100%">Subscribe Now</button>
+      </div>
+
+      <div class="card" id="sub-admin-card" style="display:none">
+        <div class="card-title">Admin Access</div>
+        <div style="font-size:13px;color:var(--text-muted);line-height:1.6">
+          You're using an admin key. No subscription management needed.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-support">
+    <div class="card">
+      <div class="card-title">Submit a Ticket</div>
+      <div class="field">
+        <label>Subject</label>
+        <input type="text" id="ticket-subject" placeholder="Brief description of your issue" />
+      </div>
+      <div class="field">
+        <label>Description</label>
+        <textarea id="ticket-description" placeholder="Describe the issue in detail..." style="width:100%;min-height:120px;padding:11px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none;resize:vertical;transition:border-color .2s"></textarea>
+      </div>
+      <div class="field">
+        <label>Email (optional)</label>
+        <input type="text" id="ticket-email" placeholder="Your email for follow-up" />
+      </div>
+      <button class="btn btn-primary" id="submit-ticket-btn" style="width:100%;margin-top:4px">Submit Ticket</button>
+      <div id="ticket-status" style="font-size:12px;margin-top:10px;text-align:center;min-height:18px"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Your Tickets</div>
+      <div id="user-tickets-list" style="font-size:13px;color:var(--text-dim)">Loading...</div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-whatsnew">
+    <div class="card" id="changelog-loading" style="text-align:center;padding:30px">
+      <div style="font-size:13px;color:var(--text-dim)">Loading changelog...</div>
+    </div>
+    <div id="changelog-list"></div>
+  </div>
+
+  <div class="tab-panel" id="tab-updates">
+    <div class="card update-card">
+      <div class="update-version" id="current-version">v...</div>
+      <div class="update-label">Current Version</div>
+      <button class="btn-update" id="check-update-btn">Check for Updates</button>
+      <div class="update-status" id="update-status"></div>
+    </div>
+    <div class="card" id="update-downloads" style="display:none">
+      <div class="card-title">Download Update</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px">Choose your platform:</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div id="dl-mac" style="display:none">
+          <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">macOS (Apple Silicon)</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary dl-btn" id="dl-mac-dmg" style="flex:1;font-size:12px;padding:9px 12px">DMG Installer</button>
+            <button class="btn btn-secondary dl-btn" id="dl-mac-zip" style="flex:1;font-size:12px;padding:9px 12px">ZIP Archive</button>
+          </div>
+        </div>
+        <div id="dl-win" style="display:none">
+          <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;margin-top:8px">Windows (x64)</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary dl-btn" id="dl-win-exe" style="flex:1;font-size:12px;padding:9px 12px">EXE Installer</button>
+            <button class="btn btn-secondary dl-btn" id="dl-win-zip" style="flex:1;font-size:12px;padding:9px 12px">ZIP Archive</button>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:12px">
+        <a id="dl-release-link" href="#" style="font-size:11px;color:var(--text-dim);text-decoration:underline;cursor:pointer">View release notes on GitHub</a>
+      </div>
+    </div>
+    <div class="card" style="border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.04)">
+      <div class="card-title" style="color:#ef4444">Force Close</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:12px;line-height:1.5">Immediately kills Zap and all related processes (overlay, watchdog, pinned windows). Useful before installing an update or if something gets stuck.</div>
+      <button class="btn" id="force-close-btn" style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-weight:600;width:100%;padding:10px;font-size:13px;cursor:pointer;border-radius:8px;transition:all .15s" onmouseover="this.style.background='rgba(239,68,68,0.22)'" onmouseout="this.style.background='rgba(239,68,68,0.12)'">Force Close Zap</button>
+    </div>
+  </div>
+</div>
+
+<div class="save-bar">
+  <span class="save-status" id="save-status">Settings saved!</span>
+  <button class="btn btn-secondary" id="reset-btn">Reset</button>
+  <button class="btn btn-primary" id="save-btn">Save Settings</button>
+</div>
+
+<script>
+(function(){
+  var tabs=document.querySelectorAll('.tab'), panels=document.querySelectorAll('.tab-panel');
+  tabs.forEach(function(t){t.addEventListener('click',function(){
+    tabs.forEach(function(x){x.classList.remove('active')});
+    panels.forEach(function(x){x.classList.remove('active')});
+    t.classList.add('active');
+    document.getElementById('tab-'+t.dataset.tab).classList.add('active');
+  })});
+
+  async function loadSettings(){
+    var s=await window.zap.getSettings();
+    document.querySelectorAll('.toggle').forEach(function(tog){
+      var k=tog.dataset.key;
+      if(k){if(s[k])tog.classList.add('active');else tog.classList.remove('active')}
+    });
+    ['language','accentColor','fontSize','borderRadius','fontFamily','dripWPM','dripDelay','typoRate','dripPauseChance','dripBurstChance','overlayOpacity','aiContext'].forEach(function(f){
+      var el=document.getElementById('setting-'+f);
+      if(el&&s[f]!==undefined)el.value=s[f];
+    });
+    // Autopilot sliders (no 'setting-' prefix)
+    ['autopilotDelay','autopilotDelayRandom'].forEach(function(f){
+      var el=document.getElementById(f);
+      if(el&&s[f]!==undefined)el.value=s[f];
+    });
+    ['hotkey','hotkeyAnswer','hotkeySimple','hotkeyTranslate','hotkeyAutopilot','hotkeyDripType','hotkeyStopDrip','hotkeySolve','hotkeyEssay','hotkeyCode','hotkeyResearch','hotkeyEmail','hotkeyFlashcards','hotkeyApp','hotkeySelfDestruct'].forEach(function(f){
+      var el=document.getElementById('hk-'+f);
+      if(el&&s[f])el.value=s[f];
+    });
+    updateVals();
+    // Show lockdown details if lockdown mode is active
+    var ldToggle=document.getElementById('toggle-lockdown');
+    var ldDetails=document.getElementById('lockdown-details');
+    if(ldToggle&&ldDetails)ldDetails.style.display=ldToggle.classList.contains('active')?'block':'none';
+  }
+
+  function updateVals(){
+    var ac=document.getElementById('setting-accentColor'),ah=document.getElementById('accent-hex');
+    var fs=document.getElementById('setting-fontSize'),fv=document.getElementById('fontsize-value');
+    var br=document.getElementById('setting-borderRadius'),rv=document.getElementById('radius-value');
+    var oo=document.getElementById('setting-overlayOpacity'),ov=document.getElementById('opacity-value');
+    // dripSpeed removed — using WPM now
+    var tr=document.getElementById('setting-typoRate'),tv=document.getElementById('typo-rate-value');
+    var dw=document.getElementById('setting-dripWPM'),dwv=document.getElementById('drip-wpm-value');
+    var dd=document.getElementById('setting-dripDelay'),ddv=document.getElementById('drip-delay-value');
+    var dp=document.getElementById('setting-dripPauseChance'),dpv=document.getElementById('drip-pause-value');
+    var db=document.getElementById('setting-dripBurstChance'),dbv=document.getElementById('drip-burst-value');
+    if(ac&&ah)ah.textContent=ac.value;
+    if(fs&&fv)fv.textContent=fs.value+'px';
+    if(br&&rv)rv.textContent=br.value+'px';
+    if(oo&&ov)ov.textContent=oo.value+'/10';
+    // dripSpeed display removed
+    if(tr&&tv)tv.textContent=Math.round(parseFloat(tr.value)*100)+'%';
+    if(dw&&dwv)dwv.textContent=dw.value+' WPM';
+    if(dd&&ddv)ddv.textContent=dd.value+'s';
+    if(dp&&dpv)dpv.textContent=Math.round(parseFloat(dp.value)*100)+'%';
+    if(db&&dbv)dbv.textContent=Math.round(parseFloat(db.value)*100)+'%';
+    // Autopilot sliders
+    var apd=document.getElementById('autopilotDelay'),apdv=document.getElementById('autopilotDelay-val');
+    var apr=document.getElementById('autopilotDelayRandom'),aprv=document.getElementById('autopilotDelayRandom-val');
+    if(apd&&apdv)apdv.textContent=apd.value+'ms';
+    if(apr&&aprv)aprv.textContent=apr.value+'ms';
+  }
+
+  ['setting-fontSize','setting-borderRadius','setting-overlayOpacity','setting-accentColor','setting-typoRate','setting-dripWPM','setting-dripDelay','setting-dripPauseChance','setting-dripBurstChance','autopilotDelay','autopilotDelayRandom'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.addEventListener('input',updateVals);
+  });
+
+  document.querySelectorAll('.toggle').forEach(function(tog){
+    tog.addEventListener('click',function(){
+      tog.classList.toggle('active');
+      // Show/hide lockdown details when lockdown toggle changes
+      if(tog.id==='toggle-lockdown'){
+        var details=document.getElementById('lockdown-details');
+        if(details)details.style.display=tog.classList.contains('active')?'block':'none';
+      }
+    });
+  });
+
+  var activeHK=null;
+  document.querySelectorAll('.hotkey-field input[data-setting]').forEach(function(inp){
+    inp.addEventListener('click',function(){
+      if(activeHK&&activeHK!==inp)activeHK.classList.remove('recording');
+      if(activeHK===inp){inp.classList.remove('recording');activeHK=null;return}
+      inp.classList.add('recording');inp.value='';activeHK=inp;
+    });
+  });
+
+  document.addEventListener('keydown',function(e){
+    if(!activeHK)return;
+    e.preventDefault();e.stopPropagation();
+    var p=[];
+    if(e.metaKey)p.push('Command');if(e.ctrlKey)p.push('Control');if(e.shiftKey)p.push('Shift');if(e.altKey)p.push('Alt');
+    var k=e.key;
+    if(!['Control','Shift','Alt','Meta'].includes(k)){
+      p.push(k.length===1?k.toUpperCase():k);
+      activeHK.value=p.join('+');activeHK.classList.remove('recording');activeHK=null;
+    }
+  });
+
+  function gather(){
+    return {
+      lockdownMode:document.getElementById('toggle-lockdown').classList.contains('active'),
+      phantomMode:document.getElementById('toggle-phantom').classList.contains('active'),
+      invisibleOverlay:document.getElementById('toggle-invisible').classList.contains('active'),
+      autoEngine:document.getElementById('toggle-autoengine').classList.contains('active'),
+      simpleMode:document.getElementById('toggle-simple').classList.contains('active'),
+      credibleSourcesOnly:document.getElementById('toggle-credible').classList.contains('active'),
+      startAtLogin:document.getElementById('toggle-startup').classList.contains('active'),
+      autopilotDelay:parseInt(document.getElementById('autopilotDelay').value)||800,
+      autopilotDelayRandom:parseInt(document.getElementById('autopilotDelayRandom').value)||500,
+      autopilotHumanize:document.getElementById('toggle-apHumanize').classList.contains('active'),
+      autopilotScrollTo:document.getElementById('toggle-apScrollTo').classList.contains('active'),
+      language:document.getElementById('setting-language').value,
+      aiContext:(document.getElementById('setting-aiContext').value||'').trim(),
+      accentColor:document.getElementById('setting-accentColor').value,
+      fontSize:parseInt(document.getElementById('setting-fontSize').value),
+      borderRadius:parseInt(document.getElementById('setting-borderRadius').value),
+      overlayOpacity:parseInt(document.getElementById('setting-overlayOpacity').value)||0,
+      ghostAnswer:document.getElementById('toggle-ghostAnswer').classList.contains('active'),
+      clearScreen:document.getElementById('toggle-clearScreen').classList.contains('active'),
+      fontFamily:document.getElementById('setting-fontFamily').value,
+      dripSpeed:40,
+      dripWPM:parseInt(document.getElementById('setting-dripWPM').value)||45,
+      dripDelay:parseInt(document.getElementById('setting-dripDelay').value)||10,
+      typoRate:parseFloat(document.getElementById('setting-typoRate').value)||0.06,
+      dripPauseChance:parseFloat(document.getElementById('setting-dripPauseChance').value)||0.03,
+      dripBurstChance:parseFloat(document.getElementById('setting-dripBurstChance').value)||0.08,
+      hotkey:document.getElementById('hk-hotkey').value||'Alt+3',
+      hotkeyAnswer:document.getElementById('hk-hotkeyAnswer').value||'Alt+1',
+      hotkeySimple:document.getElementById('hk-hotkeySimple').value||'Alt+6',
+      hotkeyTranslate:document.getElementById('hk-hotkeyTranslate').value||'Alt+2',
+      hotkeyAutopilot:document.getElementById('hk-hotkeyAutopilot').value||'Alt+4',
+      hotkeyDripType:document.getElementById('hk-hotkeyDripType').value||'Alt+5',
+      hotkeyStopDrip:document.getElementById('hk-hotkeyStopDrip').value||'Alt+0',
+      hotkeySolve:document.getElementById('hk-hotkeySolve').value||'Alt+7',
+      hotkeyEssay:document.getElementById('hk-hotkeyEssay').value||'Alt+8',
+      hotkeyCode:document.getElementById('hk-hotkeyCode').value||'Alt+9',
+      hotkeyResearch:document.getElementById('hk-hotkeyResearch').value||'CmdOrCtrl+Alt+1',
+      hotkeyEmail:document.getElementById('hk-hotkeyEmail').value||'CmdOrCtrl+Alt+2',
+      hotkeyFlashcards:document.getElementById('hk-hotkeyFlashcards').value||'CmdOrCtrl+Alt+3',
+      hotkeyApp:document.getElementById('hk-hotkeyApp').value||'Alt+M',
+      hotkeySelfDestruct:document.getElementById('hk-hotkeySelfDestruct').value||'CmdOrCtrl+Shift+Backspace'
+    };
+  }
+
+  document.getElementById('save-btn').addEventListener('click',function(){window.zap.saveSettings(gather());showSaved()});
+
+  document.getElementById('reset-btn').addEventListener('click',function(){
+    window.zap.saveSettings({accentColor:'#facc15',fontSize:14,fontFamily:'system-ui, -apple-system, sans-serif',borderRadius:12,hotkey:'Alt+3',hotkeyAnswer:'Alt+1',hotkeySimple:'Alt+6',hotkeyTranslate:'Alt+2',hotkeyAutopilot:'Alt+4',hotkeyDripType:'Alt+5',hotkeyStopDrip:'Alt+0',hotkeySolve:'Alt+7',hotkeyEssay:'Alt+8',hotkeyCode:'Alt+9',hotkeyResearch:'CmdOrCtrl+Alt+1',hotkeyEmail:'CmdOrCtrl+Alt+2',hotkeyFlashcards:'CmdOrCtrl+Alt+3',hotkeyApp:'Alt+M',hotkeySelfDestruct:'CmdOrCtrl+Alt+Shift+Backspace',language:'Spanish',phantomMode:false,invisibleOverlay:true,autoEngine:true,simpleMode:false,lockdownMode:false,credibleSourcesOnly:false,dripSpeed:40,dripWPM:45,dripDelay:10,typoRate:0.06,dripPauseChance:0.03,dripBurstChance:0.08,overlayOpacity:0});
+    loadSettings();showSaved();
+  });
+
+  function showSaved(){var s=document.getElementById('save-status');s.classList.add('visible');setTimeout(function(){s.classList.remove('visible')},2500)}
+
+  window.zap.onSettingsSaved(function(){showSaved()});
+
+  // Update check
+  var updateBtn=document.getElementById('check-update-btn');
+  var updateStatus=document.getElementById('update-status');
+  if(updateBtn){
+    updateBtn.addEventListener('click',async function(){
+      updateBtn.disabled=true;
+      updateBtn.textContent='Checking...';
+      updateStatus.textContent='';
+      document.getElementById('update-downloads').style.display='none';
+      try{
+        var r=await window.zap.checkForUpdates();
+        if(r.upToDate){
+          updateStatus.textContent='You are up to date!';
+          updateStatus.style.color='#6ec87a';
+        }else{
+          updateStatus.innerHTML='Version <strong style="color:var(--text)">v'+r.latest+'</strong> is available!';
+          updateStatus.style.color='#34d399';
+
+          // Show platform download buttons
+          var dlPanel=document.getElementById('update-downloads');
+          dlPanel.style.display='block';
+          var dl=r.downloads||{};
+
+          // macOS section
+          var macSection=document.getElementById('dl-mac');
+          if(dl.macDmg||dl.macZip){
+            macSection.style.display='block';
+            var macDmgBtn=document.getElementById('dl-mac-dmg');
+            var macZipBtn=document.getElementById('dl-mac-zip');
+            if(dl.macDmg){macDmgBtn.style.display='';macDmgBtn.onclick=function(){window.zap.openExternal(dl.macDmg)}}else{macDmgBtn.style.display='none'}
+            if(dl.macZip){macZipBtn.style.display='';macZipBtn.onclick=function(){window.zap.openExternal(dl.macZip)}}else{macZipBtn.style.display='none'}
+          }else{macSection.style.display='none'}
+
+          // Windows section
+          var winSection=document.getElementById('dl-win');
+          if(dl.winExe||dl.winZip){
+            winSection.style.display='block';
+            var winExeBtn=document.getElementById('dl-win-exe');
+            var winZipBtn=document.getElementById('dl-win-zip');
+            if(dl.winExe){winExeBtn.style.display='';winExeBtn.onclick=function(){window.zap.openExternal(dl.winExe)}}else{winExeBtn.style.display='none'}
+            if(dl.winZip){winZipBtn.style.display='';winZipBtn.onclick=function(){window.zap.openExternal(dl.winZip)}}else{winZipBtn.style.display='none'}
+          }else{winSection.style.display='none'}
+
+          // Release notes link
+          var rlLink=document.getElementById('dl-release-link');
+          if(r.releaseUrl){rlLink.style.display='';rlLink.onclick=function(e){e.preventDefault();window.zap.openExternal(r.releaseUrl)}}else{rlLink.style.display='none'}
+        }
+      }catch(e){
+        updateStatus.textContent='Could not check for updates.';
+        updateStatus.style.color='#ef4444';
+      }
+      updateBtn.textContent='Check for Updates';
+      updateBtn.disabled=false;
+    });
+  }
+
+  // Load version dynamically and check for updates
+  (async function(){
+    try{
+      var v=await window.zap.getAppVersion();
+      document.querySelector('.version').textContent='v'+v;
+      document.getElementById('current-version').textContent='v'+v;
+      // Auto-check for updates silently
+      try{
+        var r=await window.zap.checkForUpdates();
+        if(r&&!r.upToDate&&r.latest){
+          var btn=document.getElementById('header-update-btn');
+          btn.textContent='Update v'+r.latest;
+          btn.style.display='inline-block';
+          btn.addEventListener('click',function(){
+            // Switch to updates tab
+            tabs.forEach(function(x){x.classList.remove('active')});
+            panels.forEach(function(x){x.classList.remove('active')});
+            document.querySelector('[data-tab="updates"]').classList.add('active');
+            document.getElementById('tab-updates').classList.add('active');
+            // Auto-trigger the update check
+            document.getElementById('check-update-btn').click();
+          });
+        }
+      }catch(_){}
+    }catch(_){}
+  })();
+
+  // Home tab buttons
+  var replayBtn=document.getElementById('replay-tour-btn');
+  if(replayBtn)replayBtn.addEventListener('click',function(){ window.zap.replayTour(); });
+  var homeSettingsBtn=document.getElementById('home-settings-btn');
+  if(homeSettingsBtn)homeSettingsBtn.addEventListener('click',function(){
+    tabs.forEach(function(x){x.classList.remove('active')});
+    panels.forEach(function(x){x.classList.remove('active')});
+    document.querySelector('[data-tab="general"]').classList.add('active');
+    document.getElementById('tab-general').classList.add('active');
+  });
+
+  // Force Close button
+  var forceCloseBtn=document.getElementById('force-close-btn');
+  if(forceCloseBtn)forceCloseBtn.addEventListener('click',function(){
+    forceCloseBtn.textContent='Closing...';
+    forceCloseBtn.style.opacity='0.5';
+    forceCloseBtn.disabled=true;
+    window.zap.forceClose();
+  });
+
+  // Changelog loading
+  var changelogLoaded=false;
+  function loadChangelog(){
+    if(changelogLoaded)return;
+    changelogLoaded=true;
+    window.zap.getChangelog().then(function(releases){
+      var loading=document.getElementById('changelog-loading');
+      var list=document.getElementById('changelog-list');
+      if(loading)loading.style.display='none';
+      if(!releases||releases.length===0){
+        list.innerHTML='<div class="card" style="text-align:center;padding:20px"><div style="font-size:13px;color:var(--text-dim)">No releases found</div></div>';
+        return;
+      }
+      var html='';
+      releases.forEach(function(r){
+        var bodyHtml=r.body.replace(/^## /gm,'<strong style="color:var(--accent-glow)">').replace(/\n(?=<strong)/g,'</strong>\n').replace(/^- \*\*(.*?)\*\*/gm,'<span style="color:var(--text)">$1</span>').replace(/^- /gm,'<span style="color:var(--text-dim);margin-left:4px">&#8226; </span>').replace(/\n/g,'<br>');
+        html+='<div class="card" style="padding:18px 22px">';
+        html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
+        html+='<div style="font-size:16px;font-weight:700;color:var(--text)">v'+r.version+'</div>';
+        html+='<div style="font-size:11px;color:var(--text-dim);background:rgba(74,111,165,0.08);padding:3px 10px;border-radius:6px">'+r.date+'</div>';
+        html+='</div>';
+        html+='<div style="font-size:12px;color:var(--text-muted);line-height:1.7">'+bodyHtml+'</div>';
+        html+='</div>';
+      });
+      list.innerHTML=html;
+    }).catch(function(){
+      var loading=document.getElementById('changelog-loading');
+      if(loading)loading.innerHTML='<div style="font-size:13px;color:var(--text-dim)">Could not load changelog</div>';
+    });
+  }
+
+  // Load changelog when What's New tab is clicked
+  tabs.forEach(function(t){
+    t.addEventListener('click',function(){
+      if(t.dataset.tab==='whatsnew')loadChangelog();
+    });
+  });
+
+  // Support ticket submission
+  var submitBtn=document.getElementById('submit-ticket-btn');
+  var isAdminUser=false;
+  window.zap.isAdmin().then(function(v){isAdminUser=v});
+
+  if(submitBtn){
+    submitBtn.addEventListener('click',async function(){
+      var subj=document.getElementById('ticket-subject').value.trim();
+      var desc=document.getElementById('ticket-description').value.trim();
+      var email=document.getElementById('ticket-email').value.trim();
+      var status=document.getElementById('ticket-status');
+      if(!subj||!desc){status.style.color='#ef4444';status.textContent='Please fill in subject and description.';return}
+      submitBtn.disabled=true;submitBtn.textContent='Submitting...';
+      try{
+        var r=await window.zap.submitTicket({subject:subj,description:desc,email:email});
+        if(r.success){
+          var msg='Ticket submitted! ID: '+r.ticketId;
+          if(r.offline) msg+=' (saved locally — will sync when online)';
+          status.style.color='#6ec87a';status.textContent=msg;
+          document.getElementById('ticket-subject').value='';
+          document.getElementById('ticket-description').value='';
+          loadUserTickets();
+        }else{status.style.color='#ef4444';status.textContent=r.error||'Failed to submit ticket.'}
+      }catch(e){status.style.color='#ef4444';status.textContent='Error submitting ticket.'}
+      submitBtn.disabled=false;submitBtn.textContent='Submit Ticket';
+    });
+  }
+
+  function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+  function loadUserTickets(){
+    var el=document.getElementById('user-tickets-list');
+    el.innerHTML='<div style="text-align:center;color:var(--text-dim);padding:8px">Loading tickets...</div>';
+    window.zap.getTickets().then(function(tickets){
+      if(!tickets||tickets.length===0){el.textContent='No tickets submitted yet.';return}
+      var html='';
+      tickets.forEach(function(t){
+        var statusColors={'open':'#f59e0b','in-progress':'#3b82f6','resolved':'#6ec87a','closed':'#ef4444','wont-fix':'#6b7280'};
+        var statusColor=statusColors[t.status]||'#f59e0b';
+        html+='<div style="padding:12px 0;border-bottom:1px solid rgba(74,111,165,0.06)" data-ticket-id="'+(t.ghNumber||t.id)+'">';
+        html+='<div style="display:flex;align-items:center;justify-content:space-between">';
+        html+='<div style="font-size:14px;font-weight:500;color:var(--text)">'+esc(t.subject)+'</div>';
+        html+='<div style="font-size:10px;font-weight:600;text-transform:uppercase;color:'+statusColor+';background:'+statusColor+'15;padding:3px 8px;border-radius:4px">'+esc(t.status)+'</div>';
+        html+='</div>';
+        // Meta line: date + ticket number
+        var meta='';
+        if(t.createdAt) meta+=new Date(t.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
+        if(t.ghNumber) meta+=' &middot; #'+t.ghNumber;
+        html+='<div style="font-size:11px;color:var(--text-dim);margin-top:4px">'+meta+'</div>';
+        // Show email + description for admin
+        if(isAdminUser&&t.email){
+          html+='<div style="font-size:11px;color:var(--text-dim);margin-top:2px">'+esc(t.email)+'</div>';
+        }
+        if(isAdminUser&&t.description){
+          html+='<div style="font-size:12px;color:var(--text-muted);margin-top:6px;line-height:1.5;white-space:pre-wrap">'+esc(t.description)+'</div>';
+        }
+        // Admin reply (visible to everyone)
+        if(t.adminReply){
+          html+='<div style="margin-top:8px;padding:8px 12px;background:rgba(107,142,35,0.08);border-left:3px solid #6ec87a;border-radius:0 6px 6px 0;font-size:12px;color:var(--text-muted);line-height:1.5">';
+          html+='<div style="font-size:10px;font-weight:600;color:#6ec87a;margin-bottom:4px">ADMIN REPLY</div>';
+          html+=esc(t.adminReply);
+          html+='</div>';
+        }
+        // Admin controls
+        if(isAdminUser&&t.ghNumber){
+          html+='<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">';
+          html+='<select class="admin-status-select" data-id="'+t.ghNumber+'" style="padding:4px 8px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;font-family:inherit">';
+          var opts=['open','in-progress','resolved','wont-fix'];
+          opts.forEach(function(o){html+='<option value="'+o+'"'+(t.status===o?' selected':'')+'>'+o+'</option>'});
+          html+='</select>';
+          html+='<input type="text" class="admin-reply-input" data-id="'+t.ghNumber+'" placeholder="Reply to user..." style="flex:1;min-width:120px;padding:4px 8px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;font-family:inherit" />';
+          html+='<button class="admin-update-btn btn btn-primary" data-id="'+t.ghNumber+'" style="padding:4px 12px;font-size:11px;border-radius:6px">Update</button>';
+          html+='</div>';
+        }
+        html+='</div>';
+      });
+      el.innerHTML=html;
+
+      // Bind admin update buttons
+      if(isAdminUser){
+        el.querySelectorAll('.admin-update-btn').forEach(function(btn){
+          btn.addEventListener('click',async function(){
+            var id=btn.dataset.id;
+            var row=btn.closest('[data-ticket-id]');
+            var sel=row.querySelector('.admin-status-select');
+            var inp=row.querySelector('.admin-reply-input');
+            btn.disabled=true;btn.textContent='Saving...';
+            try{
+              var r=await window.zap.updateTicketStatus({ticketId:id,status:sel.value,reply:inp.value.trim()});
+              if(r.success){btn.textContent='Saved!';inp.value='';setTimeout(function(){loadUserTickets()},800)}
+              else{btn.textContent='Error';setTimeout(function(){btn.textContent='Update';btn.disabled=false},1500)}
+            }catch(_){btn.textContent='Error';setTimeout(function(){btn.textContent='Update';btn.disabled=false},1500)}
+          });
+        });
+      }
+    }).catch(function(){el.textContent='Failed to load tickets.'});
+  }
+
+  tabs.forEach(function(t){
+    t.addEventListener('click',function(){
+      if(t.dataset.tab==='support')loadUserTickets();
+    });
+  });
+
+  // Subscription tab
+  function loadSubscription(forceRefresh){
+    // Reset UI visibility
+    document.getElementById('sub-loading').style.display='block';
+    document.getElementById('sub-error').style.display='none';
+    document.getElementById('sub-content').style.display='none';
+
+    // Reset all conditional cards
+    var resetCards=['sub-actions-card','sub-cancelled-card','sub-admin-card','sub-pastdue-card','sub-inactive-card'];
+    resetCards.forEach(function(id){document.getElementById(id).style.display='none'});
+
+    window.zap.getSubscriptionInfo().then(function(info){
+      document.getElementById('sub-loading').style.display='none';
+      document.getElementById('sub-error').style.display='none';
+      document.getElementById('sub-content').style.display='block';
+
+      var badge=document.getElementById('sub-status-badge');
+      var emailEl=document.getElementById('sub-email');
+      var renewsEl=document.getElementById('sub-renews');
+      var renewsLabel=document.getElementById('sub-renews-label');
+      var renewsRow=document.getElementById('sub-renews-row');
+
+      emailEl.textContent=info.email||'—';
+      renewsLabel.textContent='Renews';
+      renewsRow.style.display='';
+      renewsEl.textContent='—';
+
+      if(info.isAdmin){
+        badge.style.background='rgba(74,111,165,0.12)';badge.style.color='var(--accent-glow)';badge.textContent='Admin';
+        document.getElementById('sub-admin-card').style.display='block';renewsRow.style.display='none';
+        return;
+      }
+
+      if(info.status==='active'&&!info.cancelAtPeriodEnd){
+        badge.style.background='rgba(34,197,94,0.1)';badge.style.color='#22c55e';badge.textContent='\u25CF Active';
+        document.getElementById('sub-actions-card').style.display='block';
+      }else if(info.cancelAtPeriodEnd){
+        badge.style.background='rgba(245,158,11,0.1)';badge.style.color='#f59e0b';badge.textContent='\u25CF Cancelling';
+        document.getElementById('sub-cancelled-card').style.display='block';
+        document.getElementById('sub-cancel-date').textContent=info.currentPeriodEnd||'end of billing period';
+        renewsLabel.textContent='Access until';
+      }else if(info.status==='past_due'){
+        badge.style.background='rgba(239,68,68,0.1)';badge.style.color='#ef4444';badge.textContent='\u25CF Past Due';
+        document.getElementById('sub-pastdue-card').style.display='block';
+      }else if(info.status==='trialing'){
+        badge.style.background='rgba(96,165,250,0.1)';badge.style.color='#60a5fa';badge.textContent='\u25CF Trial';
+        document.getElementById('sub-actions-card').style.display='block';
+      }else if(info.status==='canceled'){
+        badge.style.background='rgba(239,68,68,0.1)';badge.style.color='#ef4444';badge.textContent='\u25CF Cancelled';
+        document.getElementById('sub-inactive-card').style.display='block';
+        document.getElementById('sub-inactive-text').textContent='Your subscription has been cancelled. Subscribe again to regain access.';
+        renewsRow.style.display='none';
+      }else{
+        // inactive / never subscribed / unknown
+        badge.style.background='rgba(110,106,96,0.1)';badge.style.color='var(--text-dim)';badge.textContent='\u25CF Inactive';
+        document.getElementById('sub-inactive-card').style.display='block';
+        document.getElementById('sub-inactive-text').textContent="You don't have an active subscription. Subscribe to unlock full access to Zap.";
+        renewsRow.style.display='none';
+      }
+
+      if(info.currentPeriodEnd)renewsEl.textContent=info.currentPeriodEnd;
+    }).catch(function(){
+      document.getElementById('sub-loading').style.display='none';
+      document.getElementById('sub-error').style.display='block';
+      document.getElementById('sub-content').style.display='none';
+    });
+  }
+
+  // Refresh button
+  var refreshBtn=document.getElementById('sub-refresh-btn');
+  if(refreshBtn)refreshBtn.addEventListener('click',function(){
+    refreshBtn.disabled=true;refreshBtn.textContent='...';
+    loadSubscription(true);
+    setTimeout(function(){refreshBtn.disabled=false;refreshBtn.textContent='Refresh'},1500);
+  });
+
+  // Retry button (shown on error)
+  var retryBtn=document.getElementById('sub-retry-btn');
+  if(retryBtn)retryBtn.addEventListener('click',function(){ loadSubscription(true); });
+
+  // Cancel subscription
+  var cancelBtn=document.getElementById('sub-cancel-btn');
+  if(cancelBtn)cancelBtn.addEventListener('click',async function(){
+    var status=document.getElementById('sub-action-status');
+    if(!confirm('Cancel your subscription? You\'ll keep access until the end of your billing period.'))return;
+    cancelBtn.disabled=true;cancelBtn.textContent='Cancelling...';status.textContent='';
+    try{
+      var r=await window.zap.cancelSubscription();
+      if(r.success){
+        status.style.color='#f59e0b';status.textContent='Subscription will cancel at end of period.';
+        setTimeout(function(){loadSubscription(true)},800);
+      }else{status.style.color='#ef4444';status.textContent=r.error||'Failed to cancel.';}
+    }catch(e){status.style.color='#ef4444';status.textContent='Error cancelling.';}
+    cancelBtn.disabled=false;cancelBtn.textContent='Cancel Subscription';
+  });
+
+  // Reactivate subscription
+  var reactBtn=document.getElementById('sub-reactivate-btn');
+  if(reactBtn)reactBtn.addEventListener('click',async function(){
+    var status=document.getElementById('sub-reactivate-status');
+    reactBtn.disabled=true;reactBtn.textContent='Reactivating...';status.textContent='';
+    try{
+      var r=await window.zap.reactivateSubscription();
+      if(r.success){
+        status.style.color='#6ec87a';status.textContent='Subscription reactivated!';
+        setTimeout(function(){loadSubscription(true)},800);
+      }else{status.style.color='#ef4444';status.textContent=r.error||'Failed to reactivate.';}
+    }catch(e){status.style.color='#ef4444';status.textContent='Error reactivating.';}
+    reactBtn.disabled=false;reactBtn.textContent='Reactivate Subscription';
+  });
+
+  // Manage billing portal
+  var billingBtn=document.getElementById('sub-billing-btn');
+  if(billingBtn)billingBtn.addEventListener('click',async function(){
+    billingBtn.disabled=true;billingBtn.textContent='Opening...';
+    try{
+      var r=await window.zap.createBillingPortal();
+      if(r.url){
+        window.zap.openExternal(r.url);
+      }else{
+        document.getElementById('sub-action-status').style.color='#ef4444';
+        document.getElementById('sub-action-status').textContent=r.error||'Could not open billing.';
+      }
+    }catch(e){
+      document.getElementById('sub-action-status').style.color='#ef4444';
+      document.getElementById('sub-action-status').textContent='Network error. Check your connection.';
+    }
+    billingBtn.disabled=false;billingBtn.textContent='Manage Billing';
+  });
+
+  // Update payment method (past_due) — opens billing portal
+  var updateCardBtn=document.getElementById('sub-update-card-btn');
+  if(updateCardBtn)updateCardBtn.addEventListener('click',async function(){
+    updateCardBtn.disabled=true;updateCardBtn.textContent='Opening...';
+    try{
+      var r=await window.zap.createBillingPortal();
+      if(r.url){window.zap.openExternal(r.url);}
+    }catch(e){}
+    updateCardBtn.disabled=false;updateCardBtn.textContent='Update Payment Method';
+  });
+
+  // Subscribe now (inactive/cancelled) — opens activate window
+  var subscribeBtn=document.getElementById('sub-subscribe-btn');
+  if(subscribeBtn)subscribeBtn.addEventListener('click',function(){
+    window.zap.openSettings&&window.close&&window.close();
+  });
+
+  // Load subscription when tab clicked
+  var subFirstLoad=false;
+  tabs.forEach(function(t){
+    t.addEventListener('click',function(){
+      if(t.dataset.tab==='subscription'&&!subFirstLoad){subFirstLoad=true;loadSubscription();}
+    });
+  });
+
+  loadSettings();
+})();
+</script>
+</body>
+</html>
