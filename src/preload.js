@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer, clipboard } = require('electron');
 
-contextBridge.exposeInMainWorld('zap', {
+contextBridge.exposeInMainWorld('silentgpt', {
   hideOverlay:    ()       => ipcRenderer.send('hide-overlay'),
   openSettings:   ()       => ipcRenderer.send('open-settings'),
   openApp:        ()       => ipcRenderer.send('open-app'),

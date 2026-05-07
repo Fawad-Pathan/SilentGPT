@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zap — Sign In</title>
+<title>SilentGPT — Sign In</title>
 <style>
   :root{--accent:#4a6fa5;--accent-glow:#5b82bd;--accent-dim:#3a5a8a;--bg-deep:#0a0a12;--bg-card:rgba(18,18,35,0.85);--bg-input:rgba(10,10,22,0.9);--text:#f5f0e8;--text-muted:#b8b0a0;--text-dim:#6e6a60;--border:rgba(74,111,165,0.15);--border-card:rgba(74,111,165,0.12);--green:#6ec87a;--red:#ef4444}
   *{margin:0;padding:0;box-sizing:border-box}
@@ -45,7 +45,7 @@
 <div class="auth-container">
   <div class="logo-section">
     <div class="logo">&#9889;</div>
-    <h1>Welcome to Zap</h1>
+    <h1>Welcome to SilentGPT</h1>
     <p>AI-powered screen overlay for instant answers</p>
   </div>
 
@@ -95,7 +95,7 @@
   </div>
 
   <div class="footer">
-    By continuing, you agree to Zap's <a href="#">Terms of Service</a><br>and <a href="#">Privacy Policy</a>
+    By continuing, you agree to SilentGPT's <a href="#">Terms of Service</a><br>and <a href="#">Privacy Policy</a>
   </div>
 </div>
 
@@ -130,11 +130,11 @@
     status.className = 'status'; status.textContent = '';
 
     try {
-      var result = await window.zap.authSignup({ name: name, email: email, password: password });
+      var result = await window.silentgpt.authSignup({ name: name, email: email, password: password });
       if (result.success) {
         status.className = 'status success';
         status.textContent = 'Account created! Setting up...';
-        setTimeout(function(){ window.zap.authDone(); }, 800);
+        setTimeout(function(){ window.silentgpt.authDone(); }, 800);
       } else {
         status.className = 'status error';
         status.textContent = result.error || 'Could not create account.';
@@ -162,11 +162,11 @@
     status.className = 'status'; status.textContent = '';
 
     try {
-      var result = await window.zap.authSignin({ email: email, password: password });
+      var result = await window.silentgpt.authSignin({ email: email, password: password });
       if (result.success) {
         status.className = 'status success';
         status.textContent = 'Welcome back!';
-        setTimeout(function(){ window.zap.authDone(); }, 800);
+        setTimeout(function(){ window.silentgpt.authDone(); }, 800);
       } else {
         status.className = 'status error';
         status.textContent = result.error || 'Invalid email or password.';

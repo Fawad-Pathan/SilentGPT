@@ -1,11 +1,11 @@
 {
-  "name": "zap",
+  "name": "silentgpt",
   "version": "3.29.3",
-  "description": "Zap — AI Screen Overlay",
+  "description": "SilentGPT — AI Screen Overlay",
   "main": "src/main.js",
   "author": {
-    "name": "Zap",
-    "email": "support@tryzap.net"
+    "name": "SilentGPT",
+    "email": "support@trysilentgpt.net"
   },
   "license": "MIT",
   "dependencies": {

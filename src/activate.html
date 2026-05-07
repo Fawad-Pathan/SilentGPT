@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Activate Zap Pro</title>
+<title>Activate SilentGPT Pro</title>
 <style>
   :root{--accent:#4a6fa5;--accent-glow:#5b82bd;--accent-dim:#3a5a8a;--bg-deep:#0a0a12;--bg-card:rgba(18,18,35,0.85);--bg-input:rgba(10,10,22,0.9);--text:#f5f0e8;--text-muted:#b8b0a0;--text-dim:#6e6a60;--border:rgba(74,111,165,0.15);--green:#6ec87a;--red:#ef4444;--orange:#f59e0b;--gold:#f59e0b}
   *{margin:0;padding:0;box-sizing:border-box}
@@ -92,7 +92,7 @@
 <body>
 
 <div class="logo">&#9889;</div>
-<div class="title">Activate <span>Zap Pro</span></div>
+<div class="title">Activate <span>SilentGPT Pro</span></div>
 <div class="subtitle">Subscribe to unlock full access</div>
 
 <!-- Billing toggle -->
@@ -107,7 +107,7 @@
   <!-- LITE -->
   <div class="plan-card" data-tier="lite" id="card-lite">
     <div class="plan-badge badge-empty">&nbsp;</div>
-    <div class="plan-name">Zap Lite</div>
+    <div class="plan-name">SilentGPT Lite</div>
     <div class="plan-price" id="price-lite">$15<small>/mo</small></div>
     <div class="plan-desc">Great for getting started.</div>
     <div class="plan-features">
@@ -126,7 +126,7 @@
   <!-- PRO -->
   <div class="plan-card selected" data-tier="pro" id="card-pro">
     <div class="plan-badge badge-empty">&nbsp;</div>
-    <div class="plan-name">Zap Pro</div>
+    <div class="plan-name">SilentGPT Pro</div>
     <div class="plan-price" id="price-pro">$25<small>/mo</small></div>
     <div class="plan-desc">Full access. Cancel anytime.</div>
     <div class="plan-features">
@@ -145,9 +145,9 @@
   <!-- ULTIMATE -->
   <div class="plan-card" data-tier="ultimate" id="card-ultimate">
     <div class="plan-badge badge-popular">MOST POPULAR</div>
-    <div class="plan-name">Zap Ultimate</div>
+    <div class="plan-name">SilentGPT Ultimate</div>
     <div class="plan-price" id="price-ultimate">$75<small>/mo</small></div>
-    <div class="plan-desc">The full Zap experience.</div>
+    <div class="plan-desc">The full SilentGPT experience.</div>
     <div class="plan-features">
       <div class="feat"><span class="icon yes">&#10003;</span> Everything in Pro, plus:</div>
       <div class="feat"><span class="icon yes">&#10003;</span> Works in restricted &amp; proctored browsers</div>
@@ -194,7 +194,7 @@
   </div>
 </div>
 
-<div class="footer-text" id="footer-text">Subscribe here or directly at tryzap.net</div>
+<div class="footer-text" id="footer-text">Subscribe here or directly at trysilentgpt.net</div>
 
 <script>
 (function(){
@@ -256,12 +256,12 @@
   }
 
   // ── Pre-fill email ──
-  window.zap.getSettings().then(function(s) {
+  window.silentgpt.getSettings().then(function(s) {
     if (s.authEmail && !emailInput.value) emailInput.value = s.authEmail;
   }).catch(function(){});
 
   // ── Check existing license ──
-  window.zap.getLicenseStatus().then(function(s) {
+  window.silentgpt.getLicenseStatus().then(function(s) {
     if (s.licenseValid && s.hasKey && s.licensed) {
       subscribeBtn.textContent = 'Already Subscribed';
       subscribeBtn.disabled = true;
@@ -280,8 +280,8 @@
       acceptBtn.style.marginTop = '10px';
       acceptBtn.addEventListener('click', async function() {
         if (!legalCheckbox.checked) { showStatus('You must agree to the Terms, Privacy Policy, and Acceptable Use Policy.', 'error'); return; }
-        await window.zap.acceptTerms();
-        showStatus('Terms accepted! Zap is ready.', 'success');
+        await window.silentgpt.acceptTerms();
+        showStatus('Terms accepted! SilentGPT is ready.', 'success');
         acceptBtn.textContent = 'Done!';
         acceptBtn.disabled = true;
         $('footer-text').textContent = 'You can close this window.';
@@ -291,7 +291,7 @@
   });
 
   // ── Checkout cancelled ──
-  window.zap.onCheckoutCancelled(function() {
+  window.silentgpt.onCheckoutCancelled(function() {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     resetToRetry('Checkout was not completed. Ready to try again.');
   });
@@ -335,19 +335,19 @@
     showStatus('', '');
 
     try {
-      var session = await window.zap.createCheckoutSession(email, selectedBilling);
+      var session = await window.silentgpt.createCheckoutSession(email, selectedBilling);
       if (session.error) { showStatus(session.error, 'error'); $('restore-btn').disabled = false; $('restore-btn').textContent = 'Restore Subscription'; return; }
-      await window.zap.openCheckoutWindow(session.url, session.sessionId);
+      await window.silentgpt.openCheckoutWindow(session.url, session.sessionId);
       showStatus('Complete verification in the popup...', 'info');
 
       var attempts = 0;
       pollTimer = setInterval(async function() {
         attempts++;
         try {
-          var s = await window.zap.getLicenseStatus();
+          var s = await window.silentgpt.getLicenseStatus();
           if (s.licenseValid) {
             clearInterval(pollTimer); pollTimer = null;
-            await window.zap.acceptTerms();
+            await window.silentgpt.acceptTerms();
             showStatus('Subscription restored!', 'success');
             $('restore-btn').textContent = 'Restored!';
             $('footer-text').textContent = 'You can close this window.';
@@ -377,9 +377,9 @@
     showStatus('', '');
 
     try {
-      var result = await window.zap.validateLicense(key);
+      var result = await window.silentgpt.validateLicense(key);
       if (result.valid) {
-        await window.zap.acceptTerms();
+        await window.silentgpt.acceptTerms();
         showStatus('Activated!', 'success');
         $('admin-btn').textContent = 'Activated!';
         $('footer-text').textContent = 'You can close this window.';
@@ -397,9 +397,9 @@
   $('admin-key').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('admin-btn').click(); });
 
   // ── Legal links ──
-  $('link-terms').addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); window.zap.openExternal('https://tryzap.net/terms'); });
-  $('link-privacy').addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); window.zap.openExternal('https://tryzap.net/privacy'); });
-  $('link-aup').addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); window.zap.openExternal('https://tryzap.net/acceptable-use'); });
+  $('link-terms').addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); window.silentgpt.openExternal('https://trysilentgpt.net/terms'); });
+  $('link-privacy').addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); window.silentgpt.openExternal('https://trysilentgpt.net/privacy'); });
+  $('link-aup').addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); window.silentgpt.openExternal('https://trysilentgpt.net/acceptable-use'); });
 
   // ── Subscribe ──
   subscribeBtn.addEventListener('click', async function() {
@@ -412,10 +412,10 @@
     showStatus('', '');
 
     try {
-      var session = await window.zap.createCheckoutSession(email, selectedBilling);
+      var session = await window.silentgpt.createCheckoutSession(email, selectedBilling);
       if (session.error) { resetToRetry(session.error); return; }
 
-      await window.zap.openCheckoutWindow(session.url, session.sessionId);
+      await window.silentgpt.openCheckoutWindow(session.url, session.sessionId);
       subscribeBtn.innerHTML = '<span>Complete payment in the popup...</span>';
       showStatus('Waiting for payment...', 'info');
 
@@ -423,10 +423,10 @@
       pollTimer = setInterval(async function() {
         attempts++;
         try {
-          var s = await window.zap.getLicenseStatus();
+          var s = await window.silentgpt.getLicenseStatus();
           if (s.licenseValid) {
             clearInterval(pollTimer); pollTimer = null;
-            await window.zap.acceptTerms();
+            await window.silentgpt.acceptTerms();
             showStatus('Subscription activated!', 'success');
             subscribeBtn.innerHTML = 'Activated!';
             $('footer-text').textContent = 'You can close this window.';
