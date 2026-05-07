@@ -18,15 +18,40 @@ const Store = require('electron-store');
 
 /* ─────────────────── Environment Configuration ─────────────────── */
 
+function getLocalEnvironmentCandidateFiles() {
+  const candidateFiles = [
+    // Development checkout: /path/to/SilentGPT/.env
+    path.join(__dirname, '..', '.env'),
+    // Shell launch location: npm start, electron ., or manual CLI launch.
+    path.join(process.cwd(), '.env'),
+    // Packaged desktop app: keep .env next to SilentGPT.exe/SilentGPT.app launcher.
+    path.join(path.dirname(process.execPath), '.env'),
+    // Electron resources folder, useful for portable builds.
+    process.resourcesPath ? path.join(process.resourcesPath, '.env') : '',
+    // User-level fallback for installed apps.
+    path.join(os.homedir(), '.silentgpt.env'),
+    path.join(os.homedir(), '.config', 'SilentGPT', '.env')
+  ];
+
+  try {
+    candidateFiles.push(path.join(app.getPath('userData'), '.env'));
+  } catch (_) {
+    // app.getPath can be unavailable in unusual early-startup contexts.
+  }
+
+  return [...new Set(candidateFiles.filter(Boolean))];
+}
+
 function loadDotEnvFile(filePath) {
-  if (!fs.existsSync(filePath)) return;
+  if (!fs.existsSync(filePath)) return false;
   const lines = fs.readFileSync(filePath, 'utf8').split(/\r?\n/);
   lines.forEach((line) => {
-    const trimmed = line.trim();
+    const trimmed = line.trim().replace(/^\uFEFF/, '');
     if (!trimmed || trimmed.startsWith('#')) return;
     const equalsIndex = trimmed.indexOf('=');
     if (equalsIndex <= 0) return;
-    const key = trimmed.slice(0, equalsIndex).trim();
+    const rawKey = trimmed.slice(0, equalsIndex).trim();
+    const key = rawKey.replace(/^export\s+/, '').trim();
     let value = trimmed.slice(equalsIndex + 1).trim();
     if (!key || process.env[key] !== undefined) return;
     if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
@@ -34,17 +59,14 @@ function loadDotEnvFile(filePath) {
     }
     process.env[key] = value;
   });
+  return true;
 }
 
 function loadLocalEnvironment() {
-  const candidateFiles = [
-    path.join(__dirname, '..', '.env'),
-    path.join(process.cwd(), '.env')
-  ];
-  [...new Set(candidateFiles)].forEach(loadDotEnvFile);
+  return getLocalEnvironmentCandidateFiles().filter(loadDotEnvFile);
 }
 
-loadLocalEnvironment();
+const LOADED_ENV_FILES = loadLocalEnvironment();
 
 /* ─────────────────── Persistent Settings ─────────────────── */
 
@@ -205,9 +227,15 @@ function getStripe() {
   return stripeClient;
 }
 
+function describeLoadedEnvFiles() {
+  if (LOADED_ENV_FILES.length) return ` Loaded env file(s): ${LOADED_ENV_FILES.join(', ')}.`;
+  const checkedFiles = getLocalEnvironmentCandidateFiles().join(', ');
+  return ` No .env file was found. Checked: ${checkedFiles}.`;
+}
+
 function stripeConfigError(plan) {
   if (!STRIPE_SECRET_KEY || STRIPE_SECRET_KEY === STRIPE_KEY_PLACEHOLDER) {
-    return 'Stripe secret key is missing. Set SILENTGPT_STRIPE_SECRET_KEY before starting or packaging the app.';
+    return `Stripe secret key is missing. Add SILENTGPT_STRIPE_SECRET_KEY to a local .env file or export it before launching SilentGPT.${describeLoadedEnvFiles()}`;
   }
   if (plan === 'annual' && (!STRIPE_ANNUAL_PRICE_ID || STRIPE_ANNUAL_PRICE_ID === STRIPE_PRICE_PLACEHOLDER)) {
     return 'Stripe annual price ID is missing. Set SILENTGPT_STRIPE_ANNUAL_PRICE_ID.';
