@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Activate SilentGPT Pro</title>
+<title>Activate SilentGPT</title>
 <style>
-  :root{--accent:#facc15;--accent-glow:#fde047;--accent-dim:#a16207;--bg-deep:#050505;--bg-card:rgba(18,18,18,0.85);--bg-input:rgba(8,8,8,0.9);--text:#f5f0e8;--text-muted:#b8b0a0;--text-dim:#6e6a60;--border:rgba(250,204,21,0.15);--green:#6ec87a;--red:#ef4444;--orange:#f59e0b;--gold:#f59e0b}
+  :root{--accent:#2f4f4f;--accent-glow:#6f8f84;--accent-dim:#1f3434;--bg-deep:#020403;--bg-card:rgba(13,20,18,0.88);--bg-input:rgba(4,8,7,0.92);--text:#eef5f0;--text-muted:#a9bbb4;--text-dim:#65756f;--border:rgba(111,143,132,0.18);--green:#6ec87a;--red:#ef4444;--orange:#f59e0b;--gold:#6f8f84}
   *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg-deep);background-image:radial-gradient(ellipse at 20% 0%,rgba(250,204,21,.4) 0%,transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(161,98,7,.3) 0%,transparent 60%),linear-gradient(180deg,#050505 0%,#111111 40%,#050505 100%);color:var(--text);font-family:'SF Pro Display',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 20px;-webkit-app-region:drag;overflow-y:auto}
+  body{background:var(--bg-deep);background-image:radial-gradient(ellipse at 20% 0%,rgba(47,79,79,.46) 0%,transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(31,52,52,.42) 0%,transparent 60%),linear-gradient(180deg,#020403 0%,#0b1210 45%,#020403 100%);color:var(--text);font-family:'SF Pro Display',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 20px;-webkit-app-region:drag;overflow-y:auto}
   button,input,a,select,.plan-card,.billing-toggle,.legal-check{-webkit-app-region:no-drag}
 
-  .logo{width:58px;height:58px;background:linear-gradient(135deg,var(--accent),#a16207);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--text);box-shadow:0 4px 28px rgba(250,204,21,.35);margin-bottom:10px}
+  .logo{width:58px;height:58px;background:linear-gradient(135deg,var(--accent),var(--accent-dim));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--text);box-shadow:0 4px 28px rgba(111,143,132,.35);margin-bottom:10px}
   .title{font-size:22px;font-weight:700;letter-spacing:-.3px}
   .title span{color:var(--accent-glow)}
   .subtitle{font-size:13px;color:var(--text-dim);margin:6px 0 18px;text-align:center}
@@ -19,13 +19,13 @@
   .billing-opt{flex:1;padding:9px;text-align:center;cursor:pointer;font-size:12.5px;font-weight:600;transition:all .2s;position:relative;z-index:1;color:var(--text-dim)}
   .billing-opt.active{color:var(--text)}
   .billing-opt .save-tag{font-size:9px;color:var(--green);font-weight:700;margin-left:3px}
-  .billing-slider{position:absolute;top:3px;bottom:3px;border-radius:8px;background:rgba(250,204,21,.18);border:1px solid rgba(250,204,21,.25);transition:all .25s cubic-bezier(.4,0,.2,1);z-index:0}
+  .billing-slider{position:absolute;top:3px;bottom:3px;border-radius:8px;background:rgba(111,143,132,.18);border:1px solid rgba(111,143,132,.25);transition:all .25s cubic-bezier(.4,0,.2,1);z-index:0}
 
   /* Plan cards */
   .plans{display:flex;gap:10px;width:100%;max-width:560px;margin-bottom:16px}
   .plan-card{flex:1;background:var(--bg-card);border:1.5px solid var(--border);border-radius:14px;padding:18px 12px 16px;text-align:center;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
-  .plan-card:hover{border-color:rgba(250,204,21,.35);transform:translateY(-1px)}
-  .plan-card.selected{border-color:var(--accent-glow);box-shadow:0 0 20px rgba(250,204,21,.2)}
+  .plan-card:hover{border-color:rgba(111,143,132,.35);transform:translateY(-1px)}
+  .plan-card.selected{border-color:var(--accent-glow);box-shadow:0 0 20px rgba(111,143,132,.2)}
   .plan-card.selected.ultimate-selected{border-color:var(--gold);box-shadow:0 0 20px rgba(245,158,11,.2)}
   .plan-badge{display:inline-block;font-size:9px;font-weight:800;padding:3px 8px;border-radius:4px;letter-spacing:.8px;margin-bottom:8px;min-height:20px}
   .badge-popular{background:rgba(245,158,11,.15);color:var(--gold)}
@@ -44,15 +44,15 @@
   /* Email + subscribe */
   .checkout-section{width:100%;max-width:380px}
   .email-input{width:100%;padding:12px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;outline:none;transition:all .2s}
-  .email-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(250,204,21,.12)}
+  .email-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(111,143,132,.12)}
   .email-input::placeholder{color:var(--text-dim)}
 
-  .subscribe-btn{width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),#a16207);color:var(--text);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 2px 16px rgba(250,204,21,.3)}
-  .subscribe-btn:hover{box-shadow:0 4px 24px rgba(250,204,21,.45);transform:translateY(-1px)}
+  .subscribe-btn{width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-dim));color:var(--text);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 2px 16px rgba(111,143,132,.3)}
+  .subscribe-btn:hover{box-shadow:0 4px 24px rgba(111,143,132,.45);transform:translateY(-1px)}
   .subscribe-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
 
-  .legal-check{display:flex;align-items:flex-start;gap:8px;margin-top:10px;padding:10px 12px;background:rgba(250,204,21,0.04);border:1px solid var(--border);border-radius:9px;cursor:pointer;transition:border-color .15s}
-  .legal-check:hover{border-color:rgba(250,204,21,0.3)}
+  .legal-check{display:flex;align-items:flex-start;gap:8px;margin-top:10px;padding:10px 12px;background:rgba(111,143,132,0.04);border:1px solid var(--border);border-radius:9px;cursor:pointer;transition:border-color .15s}
+  .legal-check:hover{border-color:rgba(111,143,132,0.3)}
   .legal-check input[type="checkbox"]{width:16px;height:16px;margin-top:1px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
   .legal-check label{font-size:10.5px;color:var(--text-muted);line-height:1.5;cursor:pointer}
   .legal-check label a{color:var(--accent-glow);text-decoration:none}
@@ -79,7 +79,7 @@
   @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 
   .alt-input{width:100%;padding:12px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:12.5px;outline:none;transition:all .2s}
-  .alt-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(250,204,21,.12)}
+  .alt-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(111,143,132,.12)}
   .alt-input::placeholder{color:var(--text-dim)}
 
   .alt-btn{width:100%;padding:11px;border:1px solid var(--border);border-radius:10px;background:transparent;color:var(--text);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:8px}
@@ -92,8 +92,8 @@
 <body>
 
 <div class="logo">&#9889;</div>
-<div class="title">Activate <span>SilentGPT Pro</span></div>
-<div class="subtitle">Subscribe to unlock full access</div>
+<div class="title">Choose <span>SilentGPT</span></div>
+<div class="subtitle">Start free with Lite, or upgrade to Pro for every stealth feature.</div>
 
 <!-- Billing toggle -->
 <div class="billing-toggle" id="billing-toggle">
@@ -105,30 +105,30 @@
 <!-- Plan cards -->
 <div class="plans" id="plans">
   <!-- LITE -->
-  <div class="plan-card" data-tier="lite" id="card-lite">
+  <div class="plan-card selected" data-tier="lite" id="card-lite">
     <div class="plan-badge badge-empty">&nbsp;</div>
     <div class="plan-name">SilentGPT Lite</div>
-    <div class="plan-price" id="price-lite">$15<small>/mo</small></div>
-    <div class="plan-desc">Great for getting started.</div>
+    <div class="plan-price" id="price-lite">Free</div>
+    <div class="plan-desc">Core app access at no cost.</div>
     <div class="plan-features">
-      <div class="feat"><span class="icon yes">&#10003;</span> 25 selections per month</div>
-      <div class="feat"><span class="icon yes">&#10003;</span> Core AI modes</div>
-      <div class="feat"><span class="icon yes">&#10003;</span> Drip Type (basic)</div>
-      <div class="feat"><span class="icon yes">&#10003;</span> 10 translation languages</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Core AI overlay modes</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Ask, solve, write, code, and translate</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Basic customization</div>
       <div class="feat"><span class="icon yes">&#10003;</span> macOS &amp; Windows</div>
       <div class="feat"><span class="icon yes">&#10003;</span> Standard support</div>
       <div class="feat disabled"><span class="icon no">&#10005;</span> Stealth Mode</div>
       <div class="feat disabled"><span class="icon no">&#10005;</span> Phantom Mode</div>
-      <div class="feat disabled"><span class="icon no">&#10005;</span> Custom hotkeys</div>
+      <div class="feat disabled"><span class="icon no">&#10005;</span> Ghost Answer</div>
+      <div class="feat disabled"><span class="icon no">&#10005;</span> Invisible overlay controls</div>
     </div>
   </div>
 
   <!-- PRO -->
-  <div class="plan-card selected" data-tier="pro" id="card-pro">
+  <div class="plan-card" data-tier="pro" id="card-pro">
     <div class="plan-badge badge-empty">&nbsp;</div>
     <div class="plan-name">SilentGPT Pro</div>
     <div class="plan-price" id="price-pro">$25<small>/mo</small></div>
-    <div class="plan-desc">Full access. Cancel anytime.</div>
+    <div class="plan-desc">All stealth features. Cancel anytime.</div>
     <div class="plan-features">
       <div class="feat"><span class="icon yes">&#10003;</span> Unlimited selections</div>
       <div class="feat"><span class="icon yes">&#10003;</span> All 10 AI modes incl. Autopilot &amp; Flashcards</div>
@@ -137,27 +137,13 @@
       <div class="feat"><span class="icon yes">&#10003;</span> macOS &amp; Windows</div>
       <div class="feat"><span class="icon yes">&#10003;</span> Priority support</div>
       <div class="feat"><span class="icon yes">&#10003;</span> Stealth Mode</div>
-      <div class="feat"><span class="icon yes">&#10003;</span> Phantom Mode — 100% undetectable</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Phantom Mode</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Ghost Answer &amp; clear-screen controls</div>
+      <div class="feat"><span class="icon yes">&#10003;</span> Invisible overlay controls</div>
       <div class="feat"><span class="icon yes">&#10003;</span> Custom hotkeys &amp; appearance</div>
     </div>
   </div>
 
-  <!-- ULTIMATE -->
-  <div class="plan-card" data-tier="ultimate" id="card-ultimate">
-    <div class="plan-badge badge-popular">MOST POPULAR</div>
-    <div class="plan-name">SilentGPT Ultimate</div>
-    <div class="plan-price" id="price-ultimate">$75<small>/mo</small></div>
-    <div class="plan-desc">The full SilentGPT experience.</div>
-    <div class="plan-features">
-      <div class="feat"><span class="icon yes">&#10003;</span> Everything in Pro, plus:</div>
-      <div class="feat"><span class="icon yes">&#10003;</span> Works in restricted &amp; proctored browsers</div>
-      <div class="feat"><span class="icon yes">&#10003;</span> Multi-device license (up to 3)</div>
-      <div class="feat"><span class="icon yes">&#10003;</span> Early access to new features &amp; modes</div>
-      <div class="feat"><span class="icon yes">&#10003;</span> Custom AI model tuning</div>
-      <div class="feat"><span class="icon yes">&#10003;</span> Dedicated priority support</div>
-      <div class="feat"><span class="icon yes">&#10003;</span> Exclusive Discord role &amp; channel</div>
-    </div>
-  </div>
 </div>
 
 <!-- Email + checkout -->
@@ -167,11 +153,8 @@
     <input type="checkbox" id="legal-agree" onclick="event.stopPropagation()" />
     <label for="legal-agree" onclick="event.stopPropagation()">I agree to the <a href="#" id="link-terms">Terms of Use</a>, <a href="#" id="link-privacy">Privacy Policy</a>, and <a href="#" id="link-aup">Acceptable Use Policy</a>. I accept full liability for how I use this software.</label>
   </div>
-  <button class="subscribe-btn" id="subscribe-btn">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-    Subscribe with Stripe
-  </button>
-  <div class="stripe-badge">&#128274; Secure payment via Stripe</div>
+  <button class="subscribe-btn" id="subscribe-btn">Continue with Lite</button>
+  <div class="stripe-badge" id="stripe-badge">Select Pro for secure payment via Stripe</div>
   <div class="status" id="status"></div>
 </div>
 
@@ -194,7 +177,7 @@
   </div>
 </div>
 
-<div class="footer-text" id="footer-text">Subscribe here or directly at trysilentgpt.net</div>
+<div class="footer-text" id="footer-text">Lite is free. Pro unlocks every stealth feature.</div>
 
 <script>
 (function(){
@@ -206,12 +189,11 @@
   var pollTimer = null;
 
   var selectedBilling = 'monthly';
-  var selectedTier = 'pro';
+  var selectedTier = 'lite';
 
   var pricing = {
-    lite:     { monthly: 15, annual: 12 },
-    pro:      { monthly: 25, annual: 20 },
-    ultimate: { monthly: 75, annual: 60 }
+    lite:     { monthly: 0, annual: 0 },
+    pro:      { monthly: 25, annual: 20 }
   };
 
   // ── Billing toggle ──
@@ -241,18 +223,33 @@
     document.querySelectorAll('.plan-card').forEach(function(c) {
       var isSel = c.dataset.tier === tier;
       c.classList.toggle('selected', isSel);
-      c.classList.toggle('ultimate-selected', isSel && tier === 'ultimate');
+      c.classList.toggle('ultimate-selected', false);
     });
+    updateCheckoutMode();
+  }
+
+  function updateCheckoutMode() {
+    if (selectedTier === 'lite') {
+      emailInput.style.display = 'none';
+      subscribeBtn.textContent = 'Continue with Lite';
+      if ($('stripe-badge')) $('stripe-badge').textContent = 'Lite is free — no payment required';
+      $('footer-text').textContent = 'Lite is free. Upgrade anytime for SilentGPT Pro stealth features.';
+    } else {
+      emailInput.style.display = 'block';
+      subscribeBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Subscribe to Pro';
+      if ($('stripe-badge')) $('stripe-badge').textContent = '\uD83D\uDD12 Secure payment via Stripe';
+      $('footer-text').textContent = 'Pro unlocks every stealth feature in SilentGPT.';
+    }
   }
   document.querySelectorAll('.plan-card').forEach(function(c) {
     c.addEventListener('click', function(){ selectTier(c.dataset.tier); });
   });
 
   function updatePrices() {
-    ['lite','pro','ultimate'].forEach(function(tier) {
-      var p = pricing[tier][selectedBilling];
-      $('price-' + tier).innerHTML = '$' + p + '<small>/mo</small>';
-    });
+    $('price-lite').innerHTML = 'Free';
+    var p = pricing.pro[selectedBilling];
+    $('price-pro').innerHTML = '$' + p + '<small>/mo</small>';
+    updateCheckoutMode();
   }
 
   // ── Pre-fill email ──
@@ -392,6 +389,17 @@
   // ── Subscribe ──
   subscribeBtn.addEventListener('click', async function() {
     if (!legalCheckbox.checked) { showStatus('You must agree to the Terms, Privacy Policy, and Acceptable Use Policy.', 'error'); return; }
+    if (selectedTier === 'lite') {
+      subscribeBtn.disabled = true;
+      subscribeBtn.textContent = 'Starting Lite...';
+      await window.silentgpt.startFreeLite();
+      await window.silentgpt.acceptTerms();
+      showStatus('SilentGPT Lite is ready!', 'success');
+      subscribeBtn.textContent = 'Lite Activated';
+      $('footer-text').textContent = 'You can close this window.';
+      return;
+    }
+
     var email = emailInput.value.trim();
     if (!email || !email.includes('@')) { showStatus('Please enter a valid email address.', 'error'); emailInput.focus(); return; }
 
@@ -428,6 +436,7 @@
       resetToRetry(err.message || 'Failed to create checkout session.');
     }
   });
+  updateCheckoutMode();
   emailInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') subscribeBtn.click(); });
 })();
 </script>
