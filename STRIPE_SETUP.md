@@ -42,8 +42,8 @@ Copy the monthly and annual `price_...` IDs from Stripe after the prices are cre
 Copy `.env.example` to `.env` for local development, or add the same values as CI/build secrets. Fill in the real test-mode values from Stripe:
 
 ```bash
-SILENTGPT_STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
-SILENTGPT_STRIPE_SECRET_KEY=sk_test_your_key_here
+SILENTGPT_STRIPE_PUBLISHABLE_KEY=pk_test_51TUKxH6ZIYtirJwf55k8Mc6DK2XVumhNFlLR25O8PXcUDb7ckLEXKEjwUvtVFRVpzXhJof7jYocoPqLXPZS42SYj00AlB34qPN
+SILENTGPT_STRIPE_SECRET_KEY=sk_test_51TUKxH6ZIYtirJwfwGkVxVbSpIGG9i06Z4qlnmtHlFWHUYHQrG0Ndb358QK5DqZ21z5zyJA02gF86ncliAlJTwxF00L7hEKg3X
 SILENTGPT_STRIPE_MONTHLY_PRICE_ID=price_your_monthly_price_id
 SILENTGPT_STRIPE_ANNUAL_PRICE_ID=price_your_annual_price_id
 SILENTGPT_STRIPE_SUCCESS_URL='https://trysilentgpt.net/checkout/success?session_id={CHECKOUT_SESSION_ID}'
