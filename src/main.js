@@ -16,6 +16,61 @@ const os = require('os');
 const { exec } = require('child_process');
 const Store = require('electron-store');
 
+/* ─────────────────── Startup / Storage Configuration ─────────────────── */
+
+function ensureDirectory(dirPath) {
+  try {
+    fs.mkdirSync(dirPath, { recursive: true });
+    return true;
+  } catch (err) {
+    console.warn('[startup] Unable to create directory:', dirPath, err.message);
+    return false;
+  }
+}
+
+function getWritableAppDataRoot() {
+  if (process.platform === 'win32') {
+    return process.env.LOCALAPPDATA || process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Local');
+  }
+  try {
+    return app.getPath('appData');
+  } catch (_) {
+    return path.join(os.homedir(), '.config');
+  }
+}
+
+function configureChromiumStorage() {
+  const appDataRoot = getWritableAppDataRoot();
+  const storageRoot = path.join(appDataRoot, 'SilentGPT');
+  const sessionDataPath = path.join(storageRoot, 'Session Data');
+  const diskCachePath = path.join(storageRoot, 'Cache');
+
+  ensureDirectory(sessionDataPath);
+  ensureDirectory(diskCachePath);
+
+  try { app.setPath('sessionData', sessionDataPath); } catch (err) { console.warn('[startup] Unable to set sessionData path:', err.message); }
+  try { app.commandLine.appendSwitch('disk-cache-dir', diskCachePath); } catch (_) {}
+}
+
+configureChromiumStorage();
+
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+}
+
+app.on('second-instance', () => {
+  const visibleWindow = BrowserWindow.getAllWindows().find((win) => win && !win.isDestroyed() && win.isVisible());
+  if (visibleWindow) {
+    try { if (visibleWindow.isMinimized()) visibleWindow.restore(); } catch (_) {}
+    try { visibleWindow.focus(); } catch (_) {}
+  } else if (typeof showActivate === 'function' && store && !isAppUnlocked()) {
+    showActivate();
+  } else if (typeof makeSettings === 'function') {
+    makeSettings();
+  }
+});
+
 /* ─────────────────── Environment Configuration ─────────────────── */
 
 function getLocalEnvironmentCandidateFiles() {
