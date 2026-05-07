@@ -51,6 +51,18 @@ SILENTGPT_STRIPE_CANCEL_URL='https://trysilentgpt.net/checkout/cancel'
 SILENTGPT_STRIPE_BILLING_PORTAL_RETURN_URL='https://trysilentgpt.net/account'
 ```
 
+Copy `.env.example` to `.env` for local development, or add the same values as CI/build secrets. Fill in the real test-mode values from Stripe:
+
+```bash
+SILENTGPT_STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
+SILENTGPT_STRIPE_SECRET_KEY=sk_test_your_key_here
+SILENTGPT_STRIPE_MONTHLY_PRICE_ID=price_your_monthly_price_id
+SILENTGPT_STRIPE_ANNUAL_PRICE_ID=price_your_annual_price_id
+SILENTGPT_STRIPE_SUCCESS_URL='https://trysilentgpt.net/checkout/success?session_id={CHECKOUT_SESSION_ID}'
+SILENTGPT_STRIPE_CANCEL_URL='https://trysilentgpt.net/checkout/cancel'
+SILENTGPT_STRIPE_BILLING_PORTAL_RETURN_URL='https://trysilentgpt.net/account'
+```
+
 The app also reads these values from exported environment variables, so this works too:
 
 ```bash
