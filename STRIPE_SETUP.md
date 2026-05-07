@@ -18,7 +18,38 @@ That option matches the current SilentGPT integration because the app creates a 
    - Annual price, for example `$143.90 / year`.
 5. Copy each `price_...` ID.
 
-## 2. Configure environment variables
+## 2. What to enter on Stripe's Add a product screen
+
+On the **Add a product** screen shown in the Stripe Dashboard, use values like these for a subscription product:
+
+- **Name:** `SilentGPT Pro`
+- **Description:** `Premium access to SilentGPT`
+- **Image:** optional; upload the app logo only if you want it shown in Stripe Checkout
+- **Pricing:** select **Recurring**, not **One-off**
+- **Amount:** enter your monthly price, for example `14.99`
+- **Currency:** choose the currency you want to charge customers in, such as `USD` for US customers or `CAD` if you want Canadian-dollar billing
+- **Billing period:** select **Monthly** for the first price
+
+After saving, add a second recurring price on the same product for the annual plan:
+
+- **Amount:** enter your annual price, for example `143.90`
+- **Billing period:** select **Yearly**
+
+Copy the monthly and annual `price_...` IDs from Stripe after the prices are created. SilentGPT needs those price IDs in `.env`; the product ID alone is not enough.
+
+## 3. Configure environment variables
+
+Copy `.env.example` to `.env` for local development, or add the same values as CI/build secrets. Fill in the real test-mode values from Stripe:
+
+```bash
+SILENTGPT_STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
+SILENTGPT_STRIPE_SECRET_KEY=sk_test_your_key_here
+SILENTGPT_STRIPE_MONTHLY_PRICE_ID=price_your_monthly_price_id
+SILENTGPT_STRIPE_ANNUAL_PRICE_ID=price_your_annual_price_id
+SILENTGPT_STRIPE_SUCCESS_URL='https://trysilentgpt.net/checkout/success?session_id={CHECKOUT_SESSION_ID}'
+SILENTGPT_STRIPE_CANCEL_URL='https://trysilentgpt.net/checkout/cancel'
+SILENTGPT_STRIPE_BILLING_PORTAL_RETURN_URL='https://trysilentgpt.net/account'
+```
 
 Copy `.env.example` to `.env` for local development, or add the same values as CI/build secrets. Fill in the real test-mode values from Stripe:
 
@@ -45,7 +76,7 @@ export SILENTGPT_STRIPE_BILLING_PORTAL_RETURN_URL='https://trysilentgpt.net/acco
 
 Then start or package the app from that same shell/CI job. The `.env` file is ignored by Git so local test keys do not get committed.
 
-## 3. Configure redirect pages
+## 4. Configure redirect pages
 
 Stripe Checkout requires absolute success and cancel URLs. Host lightweight pages at:
 
@@ -54,7 +85,7 @@ Stripe Checkout requires absolute success and cancel URLs. Host lightweight page
 
 The Electron checkout popup watches these URLs and activates the app when the success URL includes `session_id={CHECKOUT_SESSION_ID}`.
 
-## 4. Enable Billing Portal
+## 5. Enable Billing Portal
 
 In Stripe Dashboard, enable **Billing Portal** and configure:
 
@@ -63,7 +94,7 @@ In Stripe Dashboard, enable **Billing Portal** and configure:
 - Invoice history.
 - Return URL matching `SILENTGPT_STRIPE_BILLING_PORTAL_RETURN_URL`.
 
-## 5. Test before going live
+## 6. Test before going live
 
 1. Use test-mode API keys and test-mode `price_...` IDs.
 2. Start the app with the environment variables set.
@@ -73,7 +104,7 @@ In Stripe Dashboard, enable **Billing Portal** and configure:
 6. Test cancellation and reactivation.
 7. Test **Restore Subscription** using the same customer email.
 
-## 6. Go live safely
+## 7. Go live safely
 
 1. Switch Stripe Dashboard to **live mode**.
 2. Create live-mode monthly and annual recurring prices.
