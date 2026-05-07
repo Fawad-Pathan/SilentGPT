@@ -1,0 +1,20 @@
+{
+  "name": "zap",
+  "version": "3.29.3",
+  "description": "Zap — AI Screen Overlay",
+  "main": "src/main.js",
+  "author": {
+    "name": "Zap",
+    "email": "support@tryzap.net"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "electron-store": "^8.1.0",
+    "stripe": "^20.3.1",
+    "tweetnacl": "^1.0.3"
+  },
+  "optionalDependencies": {
+    "ffi-napi": "^4.0.3",
+    "ref-napi": "^3.0.3"
+  }
+}
