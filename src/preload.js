@@ -43,6 +43,7 @@ contextBridge.exposeInMainWorld('silentgpt', {
   createCheckoutSession: (email, plan) => ipcRenderer.invoke('create-checkout-session', email, plan),
   openCheckoutWindow:    (url, sessionId) => ipcRenderer.invoke('open-checkout-window', url, sessionId),
   validateStripeSubscription: (sid) => ipcRenderer.invoke('validate-stripe-subscription', sid),
+  restoreStripeSubscription: (email) => ipcRenderer.invoke('restore-stripe-subscription', email),
   getSubscriptionInfo:   () => ipcRenderer.invoke('get-subscription-info'),
   cancelSubscription:    () => ipcRenderer.invoke('cancel-subscription'),
   reactivateSubscription:() => ipcRenderer.invoke('reactivate-subscription'),

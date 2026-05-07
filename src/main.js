@@ -26,11 +26,16 @@ const OPENAI_KEY_PLACEHOLDER = 'YOUR_OPENAI' + '_API_KEY';
 const OPENAI_API_KEY = process.env.SILENTGPT_OPENAI_API_KEY || OPENAI_KEY_PLACEHOLDER;
 
 // Stripe configuration — use environment variables during packaging/deployment.
+// Keep the secret key on a trusted machine/backend; never commit a live key.
 const STRIPE_KEY_PLACEHOLDER = 'YOUR_STRIPE' + '_SECRET_KEY';
+const STRIPE_PRICE_PLACEHOLDER = 'YOUR_STRIPE' + '_PRICE_ID';
 const STRIPE_SECRET_KEY = process.env.SILENTGPT_STRIPE_SECRET_KEY || STRIPE_KEY_PLACEHOLDER;
-const STRIPE_PRICE_ID = process.env.SILENTGPT_STRIPE_MONTHLY_PRICE_ID || 'price_1T7p8qDu0Wu9yqrt7NG7SsY5';
-const STRIPE_ANNUAL_PRICE_ID = process.env.SILENTGPT_STRIPE_ANNUAL_PRICE_ID || 'price_1TGuTfDu0Wu9yqrtwyCCLgDU';
-const PREMIUM_PRICE_IDS = new Set([STRIPE_PRICE_ID, STRIPE_ANNUAL_PRICE_ID].filter(Boolean));
+const STRIPE_PRICE_ID = process.env.SILENTGPT_STRIPE_MONTHLY_PRICE_ID || STRIPE_PRICE_PLACEHOLDER;
+const STRIPE_ANNUAL_PRICE_ID = process.env.SILENTGPT_STRIPE_ANNUAL_PRICE_ID || STRIPE_PRICE_PLACEHOLDER;
+const STRIPE_SUCCESS_URL = process.env.SILENTGPT_STRIPE_SUCCESS_URL || 'https://trysilentgpt.net/checkout/success?session_id={CHECKOUT_SESSION_ID}';
+const STRIPE_CANCEL_URL = process.env.SILENTGPT_STRIPE_CANCEL_URL || 'https://trysilentgpt.net/checkout/cancel';
+const STRIPE_BILLING_PORTAL_RETURN_URL = process.env.SILENTGPT_STRIPE_BILLING_PORTAL_RETURN_URL || 'https://trysilentgpt.net/account';
+const PREMIUM_PRICE_IDS = new Set([STRIPE_PRICE_ID, STRIPE_ANNUAL_PRICE_ID].filter(Boolean).filter(id => id !== STRIPE_PRICE_PLACEHOLDER));
 
 // GitHub token for support tickets (Issues API) — use environment variables.
 const GITHUB_SUPPORT_PLACEHOLDER = 'YOUR_GH' + '_SUPPORT_TOKEN';
@@ -162,10 +167,25 @@ function initStore() {
 let stripeClient = null;
 function getStripe() {
   if (stripeClient) return stripeClient;
-  if (STRIPE_SECRET_KEY === STRIPE_KEY_PLACEHOLDER) return null;
+  if (!STRIPE_SECRET_KEY || STRIPE_SECRET_KEY === STRIPE_KEY_PLACEHOLDER) return null;
   const Stripe = require('stripe');
-  stripeClient = new Stripe(STRIPE_SECRET_KEY);
+  stripeClient = new Stripe(STRIPE_SECRET_KEY, {
+    appInfo: { name: 'SilentGPT', version: app.getVersion() }
+  });
   return stripeClient;
+}
+
+function stripeConfigError(plan) {
+  if (!STRIPE_SECRET_KEY || STRIPE_SECRET_KEY === STRIPE_KEY_PLACEHOLDER) {
+    return 'Stripe secret key is missing. Set SILENTGPT_STRIPE_SECRET_KEY before starting or packaging the app.';
+  }
+  if (plan === 'annual' && (!STRIPE_ANNUAL_PRICE_ID || STRIPE_ANNUAL_PRICE_ID === STRIPE_PRICE_PLACEHOLDER)) {
+    return 'Stripe annual price ID is missing. Set SILENTGPT_STRIPE_ANNUAL_PRICE_ID.';
+  }
+  if (plan !== 'annual' && (!STRIPE_PRICE_ID || STRIPE_PRICE_ID === STRIPE_PRICE_PLACEHOLDER)) {
+    return 'Stripe monthly price ID is missing. Set SILENTGPT_STRIPE_MONTHLY_PRICE_ID.';
+  }
+  return null;
 }
 
 // Admin master keys — always valid
@@ -1870,6 +1890,14 @@ function normalizeEmail(email) {
   return (email || '').toLowerCase().trim();
 }
 
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(email));
+}
+
+function planPriceId(plan) {
+  return plan === 'annual' ? STRIPE_ANNUAL_PRICE_ID : STRIPE_PRICE_ID;
+}
+
 function subscriptionHasPremiumPrice(sub) {
   const items = sub?.items?.data || [];
   return items.some(item => PREMIUM_PRICE_IDS.has(item?.price?.id));
@@ -1984,19 +2012,34 @@ ipcMain.handle('validate-license', async (_ev, key) => {
 // Create Stripe Checkout Session — supports monthly and annual plans
 ipcMain.handle('create-checkout-session', async (_ev, email, plan) => {
   try {
+    const selectedPlan = plan === 'annual' ? 'annual' : 'monthly';
+    const normalizedEmail = normalizeEmail(email);
+    if (!isValidEmail(normalizedEmail)) return { error: 'Please enter a valid email address.' };
+
+    const configError = stripeConfigError(selectedPlan);
+    if (configError) return { error: configError };
+
     const stripe = getStripe();
     if (!stripe) return { error: 'Payment system not configured. Please reinstall SilentGPT or contact support.' };
 
-    const priceId = plan === 'annual' ? STRIPE_ANNUAL_PRICE_ID : STRIPE_PRICE_ID;
+    const metadata = {
+      app: 'silentgpt',
+      hostname: require('os').hostname(),
+      accountEmail: normalizeEmail(store.get('authEmail')) || normalizedEmail,
+      plan: selectedPlan
+    };
+
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
-      line_items: [{ price: priceId, quantity: 1 }],
-      customer_email: email || undefined,
+      line_items: [{ price: planPriceId(selectedPlan), quantity: 1 }],
+      customer_email: normalizedEmail,
+      client_reference_id: metadata.accountEmail,
       allow_promotion_codes: true,
-      success_url: 'https://trysilentgpt.net/checkout/success?session_id={CHECKOUT_SESSION_ID}',
-      cancel_url: 'https://trysilentgpt.net/checkout/cancel',
-      metadata: { app: 'silentgpt', hostname: require('os').hostname(), plan: plan || 'monthly' }
+      success_url: STRIPE_SUCCESS_URL,
+      cancel_url: STRIPE_CANCEL_URL,
+      metadata,
+      subscription_data: { metadata }
     });
 
     return { sessionId: session.id, url: session.url };
@@ -2128,9 +2171,56 @@ async function activateFromSession(sessionId) {
   }
 }
 
+async function activateFromSubscription(sub, customerEmail) {
+  const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer.id;
+  store.set('licenseKey', sub.id);
+  store.set('stripeCustomerId', customerId);
+  store.set('stripeSubscriptionId', sub.id);
+  store.set('stripeEmail', customerEmail);
+  store.set('subscriptionStatus', sub.status);
+  store.set('membershipTier', 'premium');
+  store.set('licenseValid', true);
+  store.set('licenseEmail', customerEmail);
+  store.set('lastSubscriptionCheck', Date.now());
+  proceedAfterLicense();
+  return { valid: true, email: customerEmail, tier: 'premium', subscriptionId: sub.id };
+}
+
+async function findPaidPremiumSubscriptionByEmail(email) {
+  const stripe = getStripe();
+  if (!stripe) return { valid: false, error: 'Payment system not configured.' };
+
+  const normalizedEmail = normalizeEmail(email);
+  if (!isValidEmail(normalizedEmail)) return { valid: false, error: 'Please enter a valid email address.' };
+
+  const customers = await stripe.customers.list({ email: normalizedEmail, limit: 10 });
+  for (const customer of customers.data) {
+    const subscriptions = await stripe.subscriptions.list({
+      customer: customer.id,
+      status: 'all',
+      limit: 20,
+      expand: ['data.customer', 'data.items.data.price']
+    });
+
+    const match = subscriptions.data.find(sub => isPaidPremiumSubscription(sub, customer.email || normalizedEmail));
+    if (match) return activateFromSubscription(match, customer.email || normalizedEmail);
+  }
+
+  return { valid: false, error: 'No active SilentGPT subscription was found for that email.' };
+}
+
 // Validate subscription from stored session ID (called from renderer)
 ipcMain.handle('validate-stripe-subscription', async (_ev, sessionId) => {
   return activateFromSession(sessionId);
+});
+
+ipcMain.handle('restore-stripe-subscription', async (_ev, email) => {
+  try {
+    return await findPaidPremiumSubscriptionByEmail(email);
+  } catch (err) {
+    console.error('restore-stripe-subscription failed:', err.message);
+    return { valid: false, error: err.message };
+  }
 });
 
 // Check subscription status — force=true skips cooldown (used by periodic timer)
@@ -2287,7 +2377,7 @@ ipcMain.handle('create-billing-portal', async () => {
 
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: 'https://trysilentgpt.net'
+      return_url: STRIPE_BILLING_PORTAL_RETURN_URL
     });
 
     return { url: session.url };
