@@ -51,18 +51,6 @@ SILENTGPT_STRIPE_CANCEL_URL='https://trysilentgpt.net/checkout/cancel'
 SILENTGPT_STRIPE_BILLING_PORTAL_RETURN_URL='https://trysilentgpt.net/account'
 ```
 
-Copy `.env.example` to `.env` for local development, or add the same values as CI/build secrets. Fill in the real test-mode values from Stripe:
-
-```bash
-SILENTGPT_STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
-SILENTGPT_STRIPE_SECRET_KEY=sk_test_your_key_here
-SILENTGPT_STRIPE_MONTHLY_PRICE_ID=price_your_monthly_price_id
-SILENTGPT_STRIPE_ANNUAL_PRICE_ID=price_your_annual_price_id
-SILENTGPT_STRIPE_SUCCESS_URL='https://trysilentgpt.net/checkout/success?session_id={CHECKOUT_SESSION_ID}'
-SILENTGPT_STRIPE_CANCEL_URL='https://trysilentgpt.net/checkout/cancel'
-SILENTGPT_STRIPE_BILLING_PORTAL_RETURN_URL='https://trysilentgpt.net/account'
-```
-
 The app also reads these values from exported environment variables, so this works too:
 
 ```bash
@@ -74,7 +62,9 @@ export SILENTGPT_STRIPE_CANCEL_URL='https://trysilentgpt.net/checkout/cancel'
 export SILENTGPT_STRIPE_BILLING_PORTAL_RETURN_URL='https://trysilentgpt.net/account'
 ```
 
-Then start or package the app from that same shell/CI job. The `.env` file is ignored by Git so local test keys do not get committed.
+Then start the app from that same shell/CI job. The `.env` file is ignored by Git so local test keys do not get committed. Keep Stripe secret keys only in `.env` or your deployment secret store; do not add real `sk_...` values to tracked files such as `STRIPE_SETUP.md`, `.env.example`, or `src/main.js`.
+
+For packaged/portable builds, runtime environment variables are often not inherited when a user double-clicks the app. If you intentionally keep using local Stripe keys instead of a backend, place a `.env` file next to the packaged app executable, in Electron's resources folder, at `~/.silentgpt.env`, or at `~/.config/SilentGPT/.env`. SilentGPT checks those locations at startup before reporting missing Stripe configuration.
 
 ## 4. Configure redirect pages
 
