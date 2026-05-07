@@ -385,19 +385,42 @@ function stopLockdownKeepAlive() {
 
 let kernelShield = null;
 
+function resolveOptionalModule(basePath) {
+  const candidates = [basePath, `${basePath}.js`, `${basePath}.json`, `${basePath}.node`];
+  return candidates.find((candidate) => fs.existsSync(candidate)) || null;
+}
+
+function getKernelShieldModulePath() {
+  return resolveOptionalModule(path.join(__dirname, '..', 'kernel', 'windows', 'usermode', 'silentgpt_shield_node'));
+}
+
+function getKernelDriverLoaderPath() {
+  return resolveOptionalModule(path.join(__dirname, '..', 'kernel', 'windows', 'driver_loader'));
+}
+
 function initKernelShield() {
-  if (process.platform !== 'win32') return;
+  if (process.platform !== 'win32') return false;
+
+  const shieldModulePath = getKernelShieldModulePath();
+  if (!shieldModulePath) {
+    kernelShield = null;
+    return false;
+  }
+
   try {
-    kernelShield = require(path.join(__dirname, '..', 'kernel', 'windows', 'usermode', 'silentgpt_shield_node'));
+    kernelShield = require(shieldModulePath);
     if (kernelShield.available()) {
       console.log('[KERNEL] Shield driver detected — kernel-level stealth available');
-    } else {
-      console.log('[KERNEL] Shield driver not loaded — using user-mode stealth only');
-      kernelShield = null;
+      return true;
     }
-  } catch (err) {
-    console.log('[KERNEL] Shield module not available:', err.message);
+
+    console.log('[KERNEL] Shield driver not loaded — using user-mode stealth only');
     kernelShield = null;
+    return false;
+  } catch (err) {
+    console.warn('[KERNEL] Shield module failed to load; using user-mode stealth only.');
+    kernelShield = null;
+    return false;
   }
 }
 
@@ -2779,8 +2802,14 @@ ipcMain.handle('kernel-shield-status', async () => {
 
 ipcMain.handle('kernel-shield-install', async () => {
   if (process.platform !== 'win32') return { success: false, error: 'Windows only' };
+
+  const driverLoaderPath = getKernelDriverLoaderPath();
+  if (!driverLoaderPath) {
+    return { success: false, error: 'Kernel shield installer is not included in this build.' };
+  }
+
   try {
-    const loader = require(path.join(__dirname, '..', 'kernel', 'windows', 'driver_loader'));
+    const loader = require(driverLoaderPath);
     const result = await loader.installDriver();
     if (result.success) {
       // Re-init the shield now that driver is loaded
