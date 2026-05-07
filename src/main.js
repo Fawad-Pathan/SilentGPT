@@ -18,24 +18,23 @@ const Store = require('electron-store');
 
 /* ─────────────────── Persistent Settings ─────────────────── */
 
-// This gets replaced by sed during CI build — do NOT change the placeholder string
-const BUILT_IN_API_KEY = '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';
-// Constructed so sed doesn't replace it — used to detect if key was injected
+// API keys are loaded from the runtime/build environment. Do not hardcode live
+// secrets in the desktop bundle; use these environment variables when packaging.
 const API_PLACEHOLDER = 'YOUR_PERPLEXITY' + '_API_KEY';
-
-// OpenAI GPT-4o key — injected at build time via sed
-const OPENAI_API_KEY = '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';
+const BUILT_IN_API_KEY = process.env.SILENTGPT_PERPLEXITY_API_KEY || API_PLACEHOLDER;
 const OPENAI_KEY_PLACEHOLDER = 'YOUR_OPENAI' + '_API_KEY';
+const OPENAI_API_KEY = process.env.SILENTGPT_OPENAI_API_KEY || OPENAI_KEY_PLACEHOLDER;
 
-// Stripe configuration — injected at build time via sed
-const STRIPE_SECRET_KEY = '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';
+// Stripe configuration — use environment variables during packaging/deployment.
 const STRIPE_KEY_PLACEHOLDER = 'YOUR_STRIPE' + '_SECRET_KEY';
-const STRIPE_PRICE_ID = 'price_1T7p8qDu0Wu9yqrt7NG7SsY5';
-const STRIPE_ANNUAL_PRICE_ID = 'price_1TGuTfDu0Wu9yqrtwyCCLgDU';
+const STRIPE_SECRET_KEY = process.env.SILENTGPT_STRIPE_SECRET_KEY || STRIPE_KEY_PLACEHOLDER;
+const STRIPE_PRICE_ID = process.env.SILENTGPT_STRIPE_MONTHLY_PRICE_ID || 'price_1T7p8qDu0Wu9yqrt7NG7SsY5';
+const STRIPE_ANNUAL_PRICE_ID = process.env.SILENTGPT_STRIPE_ANNUAL_PRICE_ID || 'price_1TGuTfDu0Wu9yqrtwyCCLgDU';
+const PREMIUM_PRICE_IDS = new Set([STRIPE_PRICE_ID, STRIPE_ANNUAL_PRICE_ID].filter(Boolean));
 
-// GitHub token for support tickets (Issues API) — injected at build time via sed
-const GITHUB_SUPPORT_TOKEN = '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';
+// GitHub token for support tickets (Issues API) — use environment variables.
 const GITHUB_SUPPORT_PLACEHOLDER = 'YOUR_GH' + '_SUPPORT_TOKEN';
+const GITHUB_SUPPORT_TOKEN = process.env.SILENTGPT_GITHUB_SUPPORT_TOKEN || GITHUB_SUPPORT_PLACEHOLDER;
 const GITHUB_REPO = 'Salt30/SilentGPT';
 
 const STORE_DEFAULTS = {
@@ -99,6 +98,7 @@ const STORE_DEFAULTS = {
   stripeSubscriptionId: '',
   termsAccepted: false,
   subscriptionStatus: 'inactive',
+  membershipTier: 'free',
   lastSubscriptionCheck: 0,
   trialStarted: 0,
   trialDays: 3,
@@ -298,6 +298,34 @@ let pinnedWin      = null;
 let tray           = null;
 let overlayUp      = false;
 
+function fitWindowToPrimaryDisplay(width, height, options = {}) {
+  const display = screen.getPrimaryDisplay();
+  const workArea = display.workArea || { x: 0, y: 0, width: display.size.width, height: display.size.height };
+  const margin = options.margin ?? 32;
+  const maxWidth = Math.max(320, workArea.width - margin);
+  const maxHeight = Math.max(320, workArea.height - margin);
+  const scale = Math.min(1, maxWidth / width, maxHeight / height);
+  const fittedWidth = Math.floor(width * scale);
+  const fittedHeight = Math.floor(height * scale);
+
+  return {
+    width: fittedWidth,
+    height: fittedHeight,
+    x: Math.round(workArea.x + (workArea.width - fittedWidth) / 2),
+    y: Math.round(workArea.y + (workArea.height - fittedHeight) / 2)
+  };
+}
+
+function fitMinimumSize(width, height, options = {}) {
+  const display = screen.getPrimaryDisplay();
+  const workArea = display.workArea || { width: display.size.width, height: display.size.height };
+  const margin = options.margin ?? 32;
+  return {
+    minWidth: Math.min(width, Math.max(320, workArea.width - margin)),
+    minHeight: Math.min(height, Math.max(320, workArea.height - margin))
+  };
+}
+
 /* ─────────────────── Screen Share Stealth ─────────────────── */
 
 let screenBeingCaptured = false;
@@ -441,11 +469,12 @@ function applyOverlayLevel() {
 function makeOverlay() {
   if (!store) initStore();
   const display = screen.getPrimaryDisplay();
+  const bounds = display.bounds || { x: 0, y: 0, width: display.size.width, height: display.size.height };
 
   const winOpts = {
-    x: 0, y: 0,
-    width:  display.size.width,
-    height: display.size.height,
+    x: bounds.x, y: bounds.y,
+    width:  bounds.width,
+    height: bounds.height,
     transparent:      true,
     frame:            false,
     alwaysOnTop:      true,
@@ -499,8 +528,11 @@ function makeSettings() {
   // Clean up stale reference
   settingsWin = null;
 
+  const bounds = fitWindowToPrimaryDisplay(700, 800);
+  const minSize = fitMinimumSize(560, 640);
   settingsWin = new BrowserWindow({
-    width: 700, height: 800,
+    ...bounds,
+    ...minSize,
     resizable: true, minimizable: true, maximizable: false,
     title: 'SilentGPT Settings',
     backgroundColor: '#050505',
@@ -522,8 +554,11 @@ function showFlashcards(cardsText) {
   if (flashcardsWin) { flashcardsWin.focus(); return; }
   if (process.platform === 'darwin') app.dock?.show();
 
+  const bounds = fitWindowToPrimaryDisplay(1024, 768);
+  const minSize = fitMinimumSize(640, 480);
   flashcardsWin = new BrowserWindow({
-    width: 1024, height: 768,
+    ...bounds,
+    ...minSize,
     resizable: true, minimizable: true, maximizable: true,
     fullscreenable: true,
     title: 'SilentGPT Flashcards',
@@ -1498,10 +1533,12 @@ ipcMain.on('open-settings', () => makeSettings());
 ipcMain.handle('pin-answer', (_ev, html) => {
   if (pinnedWin && !pinnedWin.isDestroyed()) { pinnedWin.close(); pinnedWin = null; }
   const display = screen.getPrimaryDisplay();
-  const w = 340, h = 260;
+  const workArea = display.workArea || { x: 0, y: 0, width: display.size.width, height: display.size.height };
+  const w = Math.min(340, Math.max(280, workArea.width - 40));
+  const h = Math.min(260, Math.max(180, workArea.height - 40));
   pinnedWin = new BrowserWindow({
-    x: display.size.width - w - 20,
-    y: 60,
+    x: workArea.x + workArea.width - w - 20,
+    y: workArea.y + 60,
     width: w, height: h,
     frame: false,
     transparent: true,
@@ -1678,7 +1715,7 @@ ipcMain.handle('recapture-screen', async () => {
 
 ipcMain.on('save-settings', (_ev, s) => {
   // Block renderer from modifying license/auth fields
-  const protectedKeys = ['licenseKey','licenseValid','licenseEmail','stripeCustomerId','stripeSubscriptionId','subscriptionStatus','authDone','authPasswordHash','onboardingDone'];
+  const protectedKeys = ['licenseKey','licenseValid','licenseEmail','stripeCustomerId','stripeSubscriptionId','subscriptionStatus','membershipTier','authDone','authPasswordHash','onboardingDone'];
   for (const [k, v] of Object.entries(s)) { if (!protectedKeys.includes(k)) store.set(k, v); }
   bindKeys();
   applyProcessDisguise(); // Re-apply disguise if lockdown mode was toggled
@@ -1829,9 +1866,36 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
 
 let activateWin = null;
 
-  function isLicensed() {
-    return true;
-  }
+function normalizeEmail(email) {
+  return (email || '').toLowerCase().trim();
+}
+
+function subscriptionHasPremiumPrice(sub) {
+  const items = sub?.items?.data || [];
+  return items.some(item => PREMIUM_PRICE_IDS.has(item?.price?.id));
+}
+
+function currentAccountMatches(customerEmail) {
+  const accountEmail = normalizeEmail(store.get('authEmail'));
+  if (!accountEmail) return true;
+  return normalizeEmail(customerEmail) === accountEmail;
+}
+
+function isPaidPremiumSubscription(sub, customerEmail) {
+  if (!sub || sub.status !== 'active') return false;
+  if (!subscriptionHasPremiumPrice(sub)) return false;
+  if (!currentAccountMatches(customerEmail)) return false;
+  return true;
+}
+
+function isLicensed() {
+  if (!store) initStore();
+  if (isAdmin()) return true;
+  return store.get('licenseValid') === true &&
+    store.get('membershipTier') === 'premium' &&
+    store.get('subscriptionStatus') === 'active' &&
+    !!store.get('stripeSubscriptionId');
+}
 
 function trialDaysLeft() {
   const trialStart = store.get('trialStarted');
@@ -1847,9 +1911,11 @@ function showActivate() {
   // Show dock so the activate window can be focused on macOS
   if (process.platform === 'darwin') app.dock?.show();
 
+  const bounds = fitWindowToPrimaryDisplay(780, 820);
+  const minSize = fitMinimumSize(560, 640);
   activateWin = new BrowserWindow({
-    width: 780, height: 820,
-    minWidth: 560, minHeight: 640,
+    ...bounds,
+    ...minSize,
     resizable: true, minimizable: true, maximizable: true,
     title: 'Activate SilentGPT',
     backgroundColor: '#050505',
@@ -1906,6 +1972,8 @@ ipcMain.handle('validate-license', async (_ev, key) => {
     store.set('licenseKey', key.trim());
     store.set('licenseValid', true);
     store.set('licenseEmail', 'admin@trysilentgpt.net');
+    store.set('membershipTier', 'premium');
+    store.set('subscriptionStatus', 'active');
     proceedAfterLicense();
     return { valid: true, email: 'admin@trysilentgpt.net', admin: true };
   }
@@ -1950,8 +2018,11 @@ ipcMain.handle('open-checkout-window', async (_ev, url, sessionId) => {
   // Show dock so checkout window can be focused
   if (process.platform === 'darwin') app.dock?.show();
 
+  const bounds = fitWindowToPrimaryDisplay(500, 700);
+  const minSize = fitMinimumSize(420, 560);
   checkoutWin = new BrowserWindow({
-    width: 500, height: 700,
+    ...bounds,
+    ...minSize,
     resizable: true, minimizable: false, maximizable: false,
     title: 'SilentGPT — Subscribe',
     backgroundColor: '#050505',
@@ -2015,24 +2086,27 @@ async function activateFromSession(sessionId) {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     if (!session.subscription) return { valid: false, error: 'No subscription in session' };
 
-    const sub = await stripe.subscriptions.retrieve(session.subscription);
+    const sub = await stripe.subscriptions.retrieve(session.subscription, {
+      expand: ['customer', 'items.data.price']
+    });
+    const customer = typeof sub.customer === 'string'
+      ? await stripe.customers.retrieve(sub.customer)
+      : sub.customer;
+    const customerEmail = customer?.email || session.customer_details?.email || session.customer_email || '';
 
-    if (sub.status === 'active' || sub.status === 'trialing') {
-      const customer = typeof sub.customer === 'string'
-        ? await stripe.customers.retrieve(sub.customer)
-        : sub.customer;
-
+    if (isPaidPremiumSubscription(sub, customerEmail)) {
       store.set('licenseKey', sub.id);
       store.set('stripeCustomerId', typeof sub.customer === 'string' ? sub.customer : sub.customer.id);
       store.set('stripeSubscriptionId', sub.id);
-      store.set('stripeEmail', customer.email || '');
+      store.set('stripeEmail', customerEmail);
       store.set('subscriptionStatus', sub.status);
+      store.set('membershipTier', 'premium');
       store.set('licenseValid', true);
-      store.set('licenseEmail', customer.email || '');
+      store.set('licenseEmail', customerEmail);
       store.set('lastSubscriptionCheck', Date.now());
 
       proceedAfterLicense();
-      return { valid: true, email: customer.email };
+      return { valid: true, email: customerEmail, tier: 'premium' };
     }
 
     // Provide clear, actionable error messages
@@ -2041,9 +2115,12 @@ async function activateFromSession(sessionId) {
       canceled: 'This subscription has been cancelled.',
       unpaid: 'Payment is overdue. Please update your payment method.',
       incomplete: 'Payment did not complete. Please try again.',
-      incomplete_expired: 'Payment session expired. Please subscribe again.'
+      incomplete_expired: 'Payment session expired. Please subscribe again.',
+      trialing: 'A paid premium subscription is required. Please complete payment to activate.'
     };
 
+    if (!subscriptionHasPremiumPrice(sub)) return { valid: false, error: 'This subscription is not for a premium SilentGPT plan.' };
+    if (!currentAccountMatches(customerEmail)) return { valid: false, error: 'Subscription email does not match the signed-in account.' };
     return { valid: false, error: statusErrors[sub.status] || ('Subscription status: ' + sub.status) };
   } catch (err) {
     console.error('activateFromSession failed:', err.message);
@@ -2064,6 +2141,8 @@ async function checkSubscriptionStatus(force = false) {
     if (ADMIN_KEYS.includes(store.get('licenseKey'))) return;
     // No subscription and not admin — revoke
     store.set('licenseValid', false);
+    store.set('membershipTier', 'free');
+    store.set('subscriptionStatus', 'inactive');
     return;
   }
 
@@ -2075,35 +2154,42 @@ async function checkSubscriptionStatus(force = false) {
 
   try {
     const stripe = getStripe();
-    if (!stripe) return;
+    if (!stripe) {
+      store.set('licenseValid', false);
+      store.set('membershipTier', 'free');
+      store.set('subscriptionStatus', 'inactive');
+      return;
+    }
 
-    const sub = await stripe.subscriptions.retrieve(subId);
+    const sub = await stripe.subscriptions.retrieve(subId, {
+      expand: ['customer', 'items.data.price']
+    });
+    const customer = typeof sub.customer === 'string'
+      ? await stripe.customers.retrieve(sub.customer)
+      : sub.customer;
+    const customerEmail = customer?.email || store.get('licenseEmail') || '';
 
     store.set('subscriptionStatus', sub.status);
+    store.set('licenseEmail', customerEmail);
+    store.set('stripeEmail', customerEmail);
 
-    if (sub.status === 'active' || sub.status === 'trialing') {
+    if (isPaidPremiumSubscription(sub, customerEmail)) {
       store.set('licenseValid', true);
-      store.set('lastSubscriptionCheck', Date.now());
-    } else if (sub.status === 'past_due') {
-      // Grace period: keep access for 3 days after payment failure
-      const periodEnd = sub.current_period_end * 1000;
-      const graceDays = 3 * 24 * 60 * 60 * 1000;
-      if (Date.now() > periodEnd + graceDays) {
-        store.set('licenseValid', false);
-      }
+      store.set('membershipTier', 'premium');
       store.set('lastSubscriptionCheck', Date.now());
     } else {
-      // canceled, unpaid, incomplete, incomplete_expired — revoke immediately
+      // Only paid, active premium subscriptions unlock the app.
       store.set('licenseValid', false);
+      store.set('membershipTier', 'free');
       store.set('lastSubscriptionCheck', Date.now());
     }
   } catch (err) {
     console.warn('Subscription check failed:', err.message);
-    // If offline, allow a short grace period — 48h max without a successful check
-    const lastCheck = store.get('lastSubscriptionCheck') || 0;
-    const OFFLINE_GRACE = 48 * 60 * 60 * 1000;
-    if (Date.now() - lastCheck > OFFLINE_GRACE) {
+    // If Stripe cannot confirm payment, do not grant access beyond the last
+    // successfully verified active premium state.
+    if (!isLicensed()) {
       store.set('licenseValid', false);
+      store.set('membershipTier', 'free');
     }
   }
 }
@@ -2117,7 +2203,8 @@ ipcMain.handle('get-license-status', () => {
     trialDaysLeft: trialDaysLeft(),
     email: store.get('licenseEmail') || '',
     subscriptionId: store.get('stripeSubscriptionId') || '',
-    subscriptionStatus: store.get('subscriptionStatus') || 'inactive'
+    subscriptionStatus: store.get('subscriptionStatus') || 'inactive',
+    membershipTier: store.get('membershipTier') || 'free'
   };
 });
 
@@ -2130,6 +2217,7 @@ ipcMain.handle('get-subscription-info', async () => {
     email: store.get('licenseEmail') || store.get('authEmail') || '',
     subscriptionId: subId || '',
     status: store.get('subscriptionStatus') || 'inactive',
+    membershipTier: store.get('membershipTier') || 'free',
     cancelAtPeriodEnd: false,
     currentPeriodEnd: null,
     isAdmin: ADMIN_KEYS.includes(store.get('licenseKey'))
@@ -2228,8 +2316,9 @@ function showAuth() {
   // Show dock temporarily so auth window can be focused on macOS
   if (process.platform === 'darwin') app.dock?.show();
 
+  const bounds = fitWindowToPrimaryDisplay(520, 660);
   authWin = new BrowserWindow({
-    width: 520, height: 660,
+    ...bounds,
     resizable: false, minimizable: false, maximizable: false,
     title: 'SilentGPT — Sign In',
     backgroundColor: '#050505',
@@ -2371,8 +2460,9 @@ function showWelcome() {
   // Show dock temporarily so welcome window can be focused on macOS
   if (process.platform === 'darwin') app.dock?.show();
 
+  const bounds = fitWindowToPrimaryDisplay(760, 600);
   welcomeWin = new BrowserWindow({
-    width: 760, height: 600,
+    ...bounds,
     resizable: false, minimizable: false, maximizable: false,
     title: 'Welcome to SilentGPT',
     backgroundColor: '#050505',
@@ -3012,7 +3102,7 @@ app.whenReady().then(async () => {
   if (isLockdown()) activateKernelStealth(); // Kernel-level hide + anti-kill
   startWatchdog(); // Launch background respawner so SilentGPT survives being killed
   installPersistence(); // Install system-level auto-restart (launchd/scheduled task)
-  await checkSubscriptionStatus(); // Verify Stripe subscription — blocks until resolved
+  await checkSubscriptionStatus(true); // Verify Stripe subscription on every launch — blocks until resolved
 
   // Tray is always available (for Quit, Settings, etc.)
   makeTray();
