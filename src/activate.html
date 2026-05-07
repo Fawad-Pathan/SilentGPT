@@ -335,30 +335,18 @@
     showStatus('', '');
 
     try {
-      var session = await window.silentgpt.createCheckoutSession(email, selectedBilling);
-      if (session.error) { showStatus(session.error, 'error'); $('restore-btn').disabled = false; $('restore-btn').textContent = 'Restore Subscription'; return; }
-      await window.silentgpt.openCheckoutWindow(session.url, session.sessionId);
-      showStatus('Complete verification in the popup...', 'info');
+      var result = await window.silentgpt.restoreStripeSubscription(email);
+      if (result && result.valid) {
+        await window.silentgpt.acceptTerms();
+        showStatus('Subscription restored!', 'success');
+        $('restore-btn').textContent = 'Restored!';
+        $('footer-text').textContent = 'You can close this window.';
+        return;
+      }
 
-      var attempts = 0;
-      pollTimer = setInterval(async function() {
-        attempts++;
-        try {
-          var s = await window.silentgpt.getLicenseStatus();
-          if (s.licenseValid) {
-            clearInterval(pollTimer); pollTimer = null;
-            await window.silentgpt.acceptTerms();
-            showStatus('Subscription restored!', 'success');
-            $('restore-btn').textContent = 'Restored!';
-            $('footer-text').textContent = 'You can close this window.';
-          } else if (attempts > 30) {
-            clearInterval(pollTimer); pollTimer = null;
-            showStatus('Could not verify. Please try again.', 'warn');
-            $('restore-btn').disabled = false;
-            $('restore-btn').textContent = 'Restore Subscription';
-          }
-        } catch(_){}
-      }, 2000);
+      showStatus((result && result.error) || 'No active subscription found for that email.', 'error');
+      $('restore-btn').disabled = false;
+      $('restore-btn').textContent = 'Restore Subscription';
     } catch(err) {
       showStatus(err.message || 'Failed. Please try again.', 'error');
       $('restore-btn').disabled = false;
