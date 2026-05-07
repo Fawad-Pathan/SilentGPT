@@ -1,19 +1,38 @@
 # Stripe setup for SilentGPT
 
-SilentGPT now creates Stripe Checkout subscription sessions for monthly and annual plans, verifies the paid subscription after Checkout redirects back with the session ID, restores existing subscriptions by email, and opens Stripe Billing Portal for cancellation/payment-method management.
+SilentGPT creates Stripe Checkout subscription sessions for monthly and annual plans, verifies the paid subscription after Checkout redirects back with the session ID, restores existing subscriptions by email, and opens Stripe Billing Portal for cancellation/payment-method management.
+
+## Which Stripe payment setup option should I choose?
+
+Choose **Prebuilt checkout form**.
+
+That option matches the current SilentGPT integration because the app creates a Stripe Checkout Session and redirects customers to Stripe-hosted Checkout. Do **not** choose **Shareable payment links** for this app flow, because reusable Payment Links do not give the app the same per-customer Checkout Session activation flow. Do **not** choose **Custom payment flow** unless you plan to rebuild the payment UI with Stripe Elements. Leave **Invoices** unchecked unless you separately want manual invoice billing.
 
 ## 1. Create Stripe products and prices
 
 1. Open the Stripe Dashboard in **test mode**.
-2. Create a product such as `SilentGPT Pro`.
-3. Add two recurring prices:
+2. When Stripe asks how you want to accept payments, select **Prebuilt checkout form**.
+3. Create a product such as `SilentGPT Pro`.
+4. Add two recurring prices:
    - Monthly price, for example `$14.99 / month`.
    - Annual price, for example `$143.90 / year`.
-4. Copy each `price_...` ID.
+5. Copy each `price_...` ID.
 
 ## 2. Configure environment variables
 
-Copy `.env.example` to your own local environment file or CI/build secrets and fill in real values:
+Copy `.env.example` to `.env` for local development, or add the same values as CI/build secrets. Fill in the real test-mode values from Stripe:
+
+```bash
+SILENTGPT_STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
+SILENTGPT_STRIPE_SECRET_KEY=sk_test_your_key_here
+SILENTGPT_STRIPE_MONTHLY_PRICE_ID=price_your_monthly_price_id
+SILENTGPT_STRIPE_ANNUAL_PRICE_ID=price_your_annual_price_id
+SILENTGPT_STRIPE_SUCCESS_URL='https://trysilentgpt.net/checkout/success?session_id={CHECKOUT_SESSION_ID}'
+SILENTGPT_STRIPE_CANCEL_URL='https://trysilentgpt.net/checkout/cancel'
+SILENTGPT_STRIPE_BILLING_PORTAL_RETURN_URL='https://trysilentgpt.net/account'
+```
+
+The app also reads these values from exported environment variables, so this works too:
 
 ```bash
 export SILENTGPT_STRIPE_SECRET_KEY=sk_test_your_key_here
@@ -24,7 +43,7 @@ export SILENTGPT_STRIPE_CANCEL_URL='https://trysilentgpt.net/checkout/cancel'
 export SILENTGPT_STRIPE_BILLING_PORTAL_RETURN_URL='https://trysilentgpt.net/account'
 ```
 
-Then start or package the app from that same shell/CI job.
+Then start or package the app from that same shell/CI job. The `.env` file is ignored by Git so local test keys do not get committed.
 
 ## 3. Configure redirect pages
 
