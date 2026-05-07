@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Zap Flashcards</title>
+<title>SilentGPT Flashcards</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:system-ui,-apple-system,sans-serif;background:#0a0a12;color:#e2e2e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;user-select:none;overflow:hidden}
@@ -35,7 +35,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0a0a12;color:#e2
 </head>
 <body>
 <div class="header">
-  <h1>ZAP FLASHCARDS</h1>
+  <h1>SILENTGPT FLASHCARDS</h1>
   <div class="controls">
     <button id="shuffle-btn">Shuffle</button>
     <button id="fullscreen-btn">Fullscreen</button>
@@ -169,8 +169,8 @@ document.addEventListener('keydown',function(e){
 });
 
 // Receive cards from main process
-if(window.zap && window.zap.onLoadCards){
-  window.zap.onLoadCards(function(raw){
+if(window.silentgpt && window.silentgpt.onLoadCards){
+  window.silentgpt.onLoadCards(function(raw){
     cards=parseCards(raw);
     if(cards.length===0){
       progress.textContent='No flashcards parsed';

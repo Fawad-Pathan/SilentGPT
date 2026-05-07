@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zap Overlay</title>
+<title>SilentGPT Overlay</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
   :root {
@@ -107,7 +107,7 @@
 <div id="capture-layer"></div>
 <div id="selection"><div id="selection-label"></div></div>
 <div id="mode-indicator">Answer</div>
-<button id="open-app-btn" title="Open Zap App" style="position:fixed;top:12px;right:52px;z-index:100;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:var(--glass);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid var(--glass-border);border-radius:10px;color:var(--text-dim);font-size:14px;cursor:pointer;transition:all .15s;box-shadow:0 2px 12px rgba(0,0,0,0.2),inset 0 1px 0 var(--glass-glow)">&#9889;</button>
+<button id="open-app-btn" title="Open SilentGPT App" style="position:fixed;top:12px;right:52px;z-index:100;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:var(--glass);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid var(--glass-border);border-radius:10px;color:var(--text-dim);font-size:14px;cursor:pointer;transition:all .15s;box-shadow:0 2px 12px rgba(0,0,0,0.2),inset 0 1px 0 var(--glass-glow)">&#9889;</button>
 <button id="settings-btn" title="Settings">&#9881;</button>
 <div id="instructions">Drag to select &middot; <kbd>Tab</kbd> type question &middot; <kbd>Esc</kbd> close</div>
 <button id="add-capture-btn" title="Capture another screen to include" style="position:fixed;bottom:28px;right:20px;z-index:100;display:none;width:36px;height:36px;align-items:center;justify-content:center;background:var(--glass);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid var(--glass-border);border-radius:10px;color:var(--accent);font-size:18px;font-weight:700;cursor:pointer;transition:all .15s;box-shadow:0 2px 12px rgba(0,0,0,0.2),inset 0 1px 0 var(--glass-glow)">+</button>
@@ -133,7 +133,7 @@
     <button class="dt-close" id="dt-close-btn">Close</button>
   </div>
   <div class="dt-body">
-    <div class="dt-desc">Paste the text you want typed below. Zap will hide, switch to your previous app, and type it out character by character — like a real human, complete with natural speed variation and occasional typos that get corrected.</div>
+    <div class="dt-desc">Paste the text you want typed below. SilentGPT will hide, switch to your previous app, and type it out character by character — like a real human, complete with natural speed variation and occasional typos that get corrected.</div>
     <textarea id="dt-textarea" placeholder="Paste or type your text here..."></textarea>
   </div>
   <div class="dt-footer">
@@ -156,9 +156,9 @@
   var inputBar=$('text-input-bar'), inputEl=$('text-input');
   var dtPanel=$('drip-type-panel'), dtArea=$('dt-textarea'), dtStart=$('dt-start-btn'), dtClose=$('dt-close-btn'), dtPencil=$('dt-pencil-btn');
 
-  window.zap.onScreenCaptured(function(u){capture=u;if(captures.length===0&&u)captures=[u];updateCaptureUI()});
+  window.silentgpt.onScreenCaptured(function(u){capture=u;if(captures.length===0&&u)captures=[u];updateCaptureUI()});
 
-  window.zap.onLoadSettings(function(s){
+  window.silentgpt.onLoadSettings(function(s){
     settings=s;
     var r=document.documentElement;
     if(s.accentColor) r.style.setProperty('--accent',s.accentColor);
@@ -191,10 +191,10 @@
     }
   });
 
-  window.zap.onSetMode(function(m){setMode(m)});
+  window.silentgpt.onSetMode(function(m){setMode(m)});
 
   // Instant Answer — full screen capture → AI, no drag/selection needed
-  window.zap.onInstantAnswer(function(){
+  window.silentgpt.onInstantAnswer(function(){
     if(!capture) return;
     instr.style.display='none';
     sel.style.display='none';
@@ -203,23 +203,23 @@
   });
 
   // Self-destruct armed/disarmed visual feedback
-  window.zap.onSelfDestructArmed(function(){
+  window.silentgpt.onSelfDestructArmed(function(){
     var msg=document.createElement('div');
     msg.id='sd-armed-msg';
     msg.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(220,38,38,0.95);color:#fff;padding:16px 32px;border-radius:12px;font-size:18px;font-weight:700;z-index:999999;text-align:center;backdrop-filter:blur(8px);pointer-events:none';
     msg.innerHTML='💀 SELF-DESTRUCT ARMED<br><span style="font-size:13px;font-weight:400;opacity:0.85">Press again within 3s to confirm</span>';
     document.body.appendChild(msg);
   });
-  window.zap.onSelfDestructDisarmed(function(){
+  window.silentgpt.onSelfDestructDisarmed(function(){
     var el=document.getElementById('sd-armed-msg');
     if(el)el.remove();
   });
 
   // Listen for autopilot results pushed from main process (e.g. accessibility error)
-  window.zap.onAutopilotResult(function(result){ showAutopilotResults(result); });
+  window.silentgpt.onAutopilotResult(function(result){ showAutopilotResults(result); });
 
   // Screen share stealth: show small indicator when overlay is hidden from recordings
-  window.zap.onScreenShareStatus(function(hidden){
+  window.silentgpt.onScreenShareStatus(function(hidden){
     var badge=document.getElementById('stealth-badge');
     if(!badge){
       badge=document.createElement('div');
@@ -280,7 +280,7 @@
     await new Promise(function(r){setTimeout(r,500)});
     hideDT();
     try{
-      var res=await window.zap.dripType(txt);
+      var res=await window.silentgpt.dripType(txt);
       if(res&&res.error){console.error('Drip type error:',res.error)}
     }catch(err){console.error('Drip type failed:',err)}
     dripTypeActive=false;
@@ -334,7 +334,7 @@
         }
       }
       var compImg=capture?await compressImg(capture):null;
-      var res=await window.zap.aiRequest({mode:'answer',text:ocr||'Look at the screen and write a detailed, natural response to whatever question or prompt is visible. Write as if you are a student answering. If there is math, read all notation from the image carefully — exponents, fractions, integrals, subscripts. Show your work.',imageDataUrl:compImg,region:null,language:settings.language});
+      var res=await window.silentgpt.aiRequest({mode:'answer',text:ocr||'Look at the screen and write a detailed, natural response to whatever question or prompt is visible. Write as if you are a student answering. If there is math, read all notation from the image carefully — exponents, fractions, integrals, subscripts. Show your work.',imageDataUrl:compImg,region:null,language:settings.language});
       if(res.error){
         dtPencil.innerHTML='<span class="pencil-icon">&#9998;</span> Auto Draft';
         dtPencil.disabled=false;
@@ -351,7 +351,7 @@
   });
 
   // Open App button
-  $('open-app-btn').addEventListener('click',function(e){e.stopPropagation();window.zap.openApp()});
+  $('open-app-btn').addEventListener('click',function(e){e.stopPropagation();window.silentgpt.openApp()});
 
   layer.addEventListener('mousedown',function(e){
     if(e.button!==0||textMode)return;
@@ -402,11 +402,11 @@
       if(dtPanel.style.display==='block'){hideDT();setMode('answer');instr.style.display=''}
       else if(resPanel.style.display==='flex'){disableClickThrough();resPanel.style.display='none';resPanel.style.transform='';resetSel()}
       else if(textMode){textMode=false;inputBar.style.display='none';inputEl.value='';instr.style.display=''}
-      else{disableClickThrough();window.zap.hideOverlay()}
+      else{disableClickThrough();window.silentgpt.hideOverlay()}
     }
     if(e.key==='Enter'&&textMode&&inputEl.value.trim()) processRequest(inputEl.value.trim());
     if((e.ctrlKey||e.metaKey)&&e.key==='c'&&resPanel.style.display==='flex'){
-      window.zap.copyToClipboard(resBody.innerText);
+      window.silentgpt.copyToClipboard(resBody.innerText);
       copyBtn.textContent='Copied!';
       setTimeout(function(){copyBtn.textContent='Copy'},1200);
     }
@@ -461,7 +461,7 @@
     // Hide add-capture button during request
     addCaptureBtn.style.display='none';captureCount.style.display='none';
     try{
-      var r=await window.zap.aiRequest({mode:currentMode,text:ocr||manual||null,imageDataUrl:img,images:allImages.length>1?allImages:undefined,region:selRect,language:settings.language});
+      var r=await window.silentgpt.aiRequest({mode:currentMode,text:ocr||manual||null,imageDataUrl:img,images:allImages.length>1?allImages:undefined,region:selRect,language:settings.language});
       if(r.error){resBody.className='';resBody.innerHTML='<div class="error-msg">'+esc(r.error)+'</div>';return}
       if(currentMode==='autopilot'){handleAutopilotResponse(r.result);return}
       resBody.className='';resBody.innerHTML=fmtMd(r.result);
@@ -472,7 +472,7 @@
         fbtn.style.cssText='margin-top:14px;padding:10px 20px;background:#facc15;color:#000;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;display:block;width:100%';
         fbtn.onmouseover=function(){this.style.background='#fbd948'};
         fbtn.onmouseout=function(){this.style.background='#facc15'};
-        fbtn.onclick=function(){window.zap.openFlashcards(resBody.innerText)};
+        fbtn.onclick=function(){window.silentgpt.openFlashcards(resBody.innerText)};
         resBody.appendChild(fbtn);
       }
       pasteBtn.textContent=(currentMode==='email')?'Paste Reply':'Paste';
@@ -483,16 +483,16 @@
 
   // ── Click-Through: let user click on exam/app below the transparent overlay ──
   function enableClickThrough(){
-    window.zap.setIgnoreMouseEvents(true,{forward:true});
+    window.silentgpt.setIgnoreMouseEvents(true,{forward:true});
     // The response panel and input bar need to receive mouse events
     [resPanel,inputBar,dtPanel].forEach(function(el){
       if(!el) return;
-      el.addEventListener('mouseenter',function(){window.zap.setIgnoreMouseEvents(false)});
-      el.addEventListener('mouseleave',function(){window.zap.setIgnoreMouseEvents(true,{forward:true})});
+      el.addEventListener('mouseenter',function(){window.silentgpt.setIgnoreMouseEvents(false)});
+      el.addEventListener('mouseleave',function(){window.silentgpt.setIgnoreMouseEvents(true,{forward:true})});
     });
   }
   function disableClickThrough(){
-    window.zap.setIgnoreMouseEvents(false);
+    window.silentgpt.setIgnoreMouseEvents(false);
   }
 
   // ── Autopilot Mode — fully automatic, no user interaction needed ──
@@ -519,7 +519,7 @@
     resBody.innerHTML='<div style="text-align:center;padding:14px 0"><div style="font-size:14px;font-weight:600;color:#facc15">Filling...</div></div>';
 
     try{
-      var result=await window.zap.autopilotExecute({fields:parsed.fields});
+      var result=await window.silentgpt.autopilotExecute({fields:parsed.fields});
       // Only show popup if there's an error — otherwise silently hide
       if(result && (result.error || (result.filled||0)<(result.total||0))){
         showAutopilotResults(result);
@@ -535,7 +535,7 @@
   function showAutopilotResults(result){
     if(!result)return;
     if(result.error==='accessibility_not_granted'){
-      resBody.className='';resBody.innerHTML='<div class="error-msg" style="text-align:center;padding:14px 0"><div style="font-size:28px;margin-bottom:8px">&#128274;</div><div style="font-size:13px;font-weight:600;color:#facc15;margin-bottom:6px">Accessibility Permission Required</div><div style="font-size:11px;color:rgba(255,255,255,0.55);line-height:1.5">Go to <b>System Settings → Privacy &amp; Security → Accessibility</b> and enable <b>Zap</b>. Then press Alt+4 to try again.</div></div>';
+      resBody.className='';resBody.innerHTML='<div class="error-msg" style="text-align:center;padding:14px 0"><div style="font-size:28px;margin-bottom:8px">&#128274;</div><div style="font-size:13px;font-weight:600;color:#facc15;margin-bottom:6px">Accessibility Permission Required</div><div style="font-size:11px;color:rgba(255,255,255,0.55);line-height:1.5">Go to <b>System Settings → Privacy &amp; Security → Accessibility</b> and enable <b>SilentGPT</b>. Then press Alt+4 to try again.</div></div>';
       return;
     }
     var filled=result.filled||0, total=result.total||0;
@@ -559,13 +559,13 @@
   // Autopilot runs completely invisibly — hide overlay, do AI + fill, auto-return
   async function runAutopilotSilent(){
     // Hide overlay immediately so user sees nothing
-    window.zap.hideOverlay();
+    window.silentgpt.hideOverlay();
 
     // Get screen capture and send to AI
     var img=null;
     if(capture) img=await compressImg(capture);
     try{
-      var r=await window.zap.aiRequest({mode:'autopilot',text:null,imageDataUrl:img,region:null,language:settings.language});
+      var r=await window.silentgpt.aiRequest({mode:'autopilot',text:null,imageDataUrl:img,region:null,language:settings.language});
       if(r.error){
         // Show error — bring overlay back
         resPanel.style.display='flex';resPanel.style.flexDirection='column';
@@ -584,7 +584,7 @@
       }catch(e){return}
 
       // Execute fills silently
-      var result=await window.zap.autopilotExecute({fields:parsed.fields});
+      var result=await window.silentgpt.autopilotExecute({fields:parsed.fields});
       // Only show UI if there was an error
       if(result && (result.error || (result.filled||0)<(result.total||0))){
         showAutopilotResults(result);
@@ -721,7 +721,7 @@
   function esc(t){var d=document.createElement('div');d.appendChild(document.createTextNode(t));return d.innerHTML}
 
   copyBtn.addEventListener('click',function(){
-    window.zap.copyToClipboard(resBody.innerText);
+    window.silentgpt.copyToClipboard(resBody.innerText);
     copyBtn.textContent='Copied!';
     setTimeout(function(){copyBtn.textContent='Copy'},1200);
   });
@@ -729,11 +729,11 @@
   pasteBtn.addEventListener('click',function(){
     var txt=resBody.innerText;
     if(!txt) return;
-    window.zap.copyToClipboard(txt);
+    window.silentgpt.copyToClipboard(txt);
     pasteBtn.textContent='Pasting...';
     // Hide overlay and paste into the previous app
     disableClickThrough();resPanel.style.display='none';resPanel.style.transform='';resetSel();
-    window.zap.pasteToScreen();
+    window.silentgpt.pasteToScreen();
     setTimeout(function(){pasteBtn.textContent='Paste'},1500);
   });
 
@@ -744,7 +744,7 @@
     var html=resBody.innerHTML;
     if(!html)return;
     stayBtn.textContent='Pinning...';
-    window.zap.pinAnswer(html);
+    window.silentgpt.pinAnswer(html);
     setTimeout(function(){stayBtn.textContent='Stay';disableClickThrough();resPanel.style.display='none';resPanel.style.transform='';resetSel()},300);
   });
 
@@ -752,7 +752,7 @@
   addCaptureBtn.addEventListener('click',async function(){
     addCaptureBtn.style.opacity='0.4';addCaptureBtn.style.pointerEvents='none';
     try{
-      var img=await window.zap.recapture();
+      var img=await window.silentgpt.recapture();
       if(img){captures.push(img);capture=img;updateCaptureUI()}
     }catch(_){}
     addCaptureBtn.style.opacity='1';addCaptureBtn.style.pointerEvents='auto';
@@ -769,7 +769,7 @@
     }
   }
 
-  $('settings-btn').addEventListener('click',function(e){e.stopPropagation();window.zap.openSettings()});
+  $('settings-btn').addEventListener('click',function(e){e.stopPropagation();window.silentgpt.openSettings()});
 
   var dragging=false,dragOff=null;
   $('response-header').addEventListener('mousedown',function(e){

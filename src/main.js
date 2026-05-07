@@ -1,4 +1,4 @@
-bconst {
+const {
   app,
   BrowserWindow,
   globalShortcut,
@@ -36,7 +36,7 @@ const STRIPE_ANNUAL_PRICE_ID = 'price_1TGuTfDu0Wu9yqrtwyCCLgDU';
 // GitHub token for support tickets (Issues API) — injected at build time via sed
 const GITHUB_SUPPORT_TOKEN = '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';
 const GITHUB_SUPPORT_PLACEHOLDER = 'YOUR_GH' + '_SUPPORT_TOKEN';
-const GITHUB_REPO = 'Salt30/Zap';
+const GITHUB_REPO = 'Salt30/SilentGPT';
 
 const STORE_DEFAULTS = {
   apiKey:        BUILT_IN_API_KEY,
@@ -123,17 +123,17 @@ let store = null;
 function initStore() {
   if (store) return store;
   try {
-    store = new Store({ name: 'zap-config', defaults: STORE_DEFAULTS });
+    store = new Store({ name: 'silentgpt-config', defaults: STORE_DEFAULTS });
     // Test that the store is readable
     store.get('apiKey');
   } catch (_) {
     // Config file is corrupted — delete it and start fresh
     const fs = require('fs');
     try {
-      const configPath = path.join(app.getPath('userData'), 'zap-config.json');
+      const configPath = path.join(app.getPath('userData'), 'silentgpt-config.json');
       fs.unlinkSync(configPath);
     } catch (_) {}
-    store = new Store({ name: 'zap-config', defaults: STORE_DEFAULTS });
+    store = new Store({ name: 'silentgpt-config', defaults: STORE_DEFAULTS });
   }
 
   // If stored API key is the placeholder, update it with the built-in key
@@ -167,7 +167,7 @@ function getStripe() {
 }
 
 // Admin master keys — always valid
-const ADMIN_KEYS = ['ZAP-ADMIN-MASTER-2026', 'ZapAdmin2026'];
+const ADMIN_KEYS = ['SILENTGPT-ADMIN-MASTER-2026', 'SilentGPTAdmin2026'];
 
 /* ─────────────────── Usage Analytics ─────────────────── */
 
@@ -239,7 +239,7 @@ let kernelShield = null;
 function initKernelShield() {
   if (process.platform !== 'win32') return;
   try {
-    kernelShield = require(path.join(__dirname, '..', 'kernel', 'windows', 'usermode', 'zap_shield_node'));
+    kernelShield = require(path.join(__dirname, '..', 'kernel', 'windows', 'usermode', 'silentgpt_shield_node'));
     if (kernelShield.available()) {
       console.log('[KERNEL] Shield driver detected — kernel-level stealth available');
     } else {
@@ -500,7 +500,7 @@ function makeSettings() {
   settingsWin = new BrowserWindow({
     width: 700, height: 800,
     resizable: true, minimizable: true, maximizable: false,
-    title: 'Zap Settings',
+    title: 'SilentGPT Settings',
     backgroundColor: '#0a0a12',
     webPreferences: {
       preload:          path.join(__dirname, 'preload.js'),
@@ -524,7 +524,7 @@ function showFlashcards(cardsText) {
     width: 1024, height: 768,
     resizable: true, minimizable: true, maximizable: true,
     fullscreenable: true,
-    title: 'Zap Flashcards',
+    title: 'SilentGPT Flashcards',
     backgroundColor: '#0a0a12',
     show: false,
     webPreferences: {
@@ -557,7 +557,7 @@ function showFlashcards(cardsText) {
 async function grabScreenNative() {
   if (process.platform === 'darwin') {
     try {
-      const tmpFile = path.join(os.tmpdir(), 'zap_nat_' + Date.now() + '.png');
+      const tmpFile = path.join(os.tmpdir(), 'silentgpt_nat_' + Date.now() + '.png');
       await new Promise((resolve, reject) => {
         exec(`screencapture -x "${tmpFile}"`, { timeout: 8000 }, (err) => err ? reject(err) : resolve());
       });
@@ -571,7 +571,7 @@ async function grabScreenNative() {
 
   if (process.platform === 'win32') {
     try {
-      const tmpFile = path.join(os.tmpdir(), 'zap_nat_' + Date.now() + '.png');
+      const tmpFile = path.join(os.tmpdir(), 'silentgpt_nat_' + Date.now() + '.png');
       const ps = `Add-Type -AssemblyName System.Drawing; Add-Type -AssemblyName System.Windows.Forms; $bounds = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds; $bmp = New-Object System.Drawing.Bitmap($bounds.Width, $bounds.Height); $g = [System.Drawing.Graphics]::FromImage($bmp); $g.CopyFromScreen($bounds.Location, [System.Drawing.Point]::Empty, $bounds.Size); $bmp.Save('${tmpFile.replace(/\\/g, '\\\\')}'); $g.Dispose(); $bmp.Dispose()`;
       await new Promise((resolve, reject) => {
         exec(`powershell -WindowStyle Hidden -Command "${ps}"`, { timeout: 8000, windowsHide: true }, (err) => err ? reject(err) : resolve());
@@ -619,7 +619,7 @@ async function grabScreen() {
   // Step 3: Last-resort fallbacks with lower validation threshold
   if (process.platform === 'win32') {
     try {
-      const tmpFile = path.join(os.tmpdir(), 'zap_cap_' + Date.now() + '.png');
+      const tmpFile = path.join(os.tmpdir(), 'silentgpt_cap_' + Date.now() + '.png');
       const ps = `Add-Type -AssemblyName System.Drawing; Add-Type -AssemblyName System.Windows.Forms; $bounds = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds; $bmp = New-Object System.Drawing.Bitmap($bounds.Width, $bounds.Height); $g = [System.Drawing.Graphics]::FromImage($bmp); $g.CopyFromScreen($bounds.Location, [System.Drawing.Point]::Empty, $bounds.Size); $bmp.Save('${tmpFile.replace(/\\/g, '\\\\')}'); $g.Dispose(); $bmp.Dispose()`;
       await new Promise((resolve, reject) => {
         exec(`powershell -WindowStyle Hidden -Command "${ps}"`, { timeout: 8000, windowsHide: true }, (err) => err ? reject(err) : resolve());
@@ -634,7 +634,7 @@ async function grabScreen() {
 
   if (process.platform === 'darwin') {
     try {
-      const tmpFile = path.join(os.tmpdir(), 'zap_cap_' + Date.now() + '.png');
+      const tmpFile = path.join(os.tmpdir(), 'silentgpt_cap_' + Date.now() + '.png');
       await new Promise((resolve, reject) => {
         exec(`screencapture -x "${tmpFile}"`, { timeout: 8000 }, (err) => err ? reject(err) : resolve());
       });
@@ -768,10 +768,10 @@ function makeTray() {
     { type: 'separator' },
     { label: 'Phantom Mode (Always On)', type: 'checkbox', checked: true, enabled: false },
     { type: 'separator' },
-    { label: 'Quit Zap', click: () => app.quit() }
+    { label: 'Quit SilentGPT', click: () => app.quit() }
   ]);
 
-  tray.setToolTip('Zap — AI Screen Overlay');
+  tray.setToolTip('SilentGPT — AI Screen Overlay');
   tray.setContextMenu(menu);
   tray.on('click', toggle);
 }
@@ -980,7 +980,7 @@ ipcMain.handle('drip-type', async (_ev, text) => {
       if (dripTypeCancelled) { dripTypeRunning = false; return { cancelled: true }; }
       const script = `tell application "System Events"\n${cmds.slice(c, c + CHUNK).join('\n')}\nend tell`;
       // Write to temp file to avoid shell escaping issues (single quotes, backslashes, etc.)
-      const tmpPath = path.join(os.tmpdir(), 'zap_drip_' + c + '.scpt');
+      const tmpPath = path.join(os.tmpdir(), 'silentgpt_drip_' + c + '.scpt');
       fs.writeFileSync(tmpPath, script);
       await new Promise(resolve => {
         exec(`osascript "${tmpPath}"`, { timeout: 120000 }, () => {
@@ -1094,7 +1094,7 @@ async function browserExecJS(browserName, js) {
   const os = require('os');
 
   // Write JS to a temp file, then have AppleScript read it — avoids all escaping issues
-  const jsPath = path.join(os.tmpdir(), 'zap_inject.js');
+  const jsPath = path.join(os.tmpdir(), 'silentgpt_inject.js');
   fs.writeFileSync(jsPath, js);
 
   if (browserName === 'Safari') {
@@ -1103,7 +1103,7 @@ set jsCode to read jsFile as «class utf8»
 tell application "Safari"
   do JavaScript jsCode in document 1
 end tell`;
-    const p = path.join(os.tmpdir(), 'zap_js.applescript');
+    const p = path.join(os.tmpdir(), 'silentgpt_js.applescript');
     fs.writeFileSync(p, script);
     return await execPromise(`osascript "${p}" 2>&1`, 10000);
   } else {
@@ -1113,7 +1113,7 @@ set jsCode to read jsFile as «class utf8»
 tell application "${browserName}"
   execute active tab of front window javascript jsCode
 end tell`;
-    const p = path.join(os.tmpdir(), 'zap_js.applescript');
+    const p = path.join(os.tmpdir(), 'silentgpt_js.applescript');
     fs.writeFileSync(p, script);
     return await execPromise(`osascript "${p}" 2>&1`, 10000);
   }
@@ -1319,7 +1319,7 @@ try:
 except Exception as e:
     print('error: ' + str(e))
 `;
-  const sp = path.join(os.tmpdir(), 'zap_click.py');
+  const sp = path.join(os.tmpdir(), 'silentgpt_click.py');
   fs.writeFileSync(sp, pyScript);
   try {
     const r = await execPromise(`/usr/bin/python3 "${sp}" 2>&1`, 8000);
@@ -1328,7 +1328,7 @@ except Exception as e:
   } catch(e) { console.log('[Autopilot] CGEvent failed:', e.message); }
 
   // Swift binary fallback
-  const clickerPath = path.join(process.resourcesPath, 'helpers', 'zap-clicker');
+  const clickerPath = path.join(process.resourcesPath, 'helpers', 'silentgpt-clicker');
   if (require('fs').existsSync(clickerPath)) {
     try {
       await execPromise(`chmod +x "${clickerPath}" && "${clickerPath}" ${x} ${y}`, 5000);
@@ -1359,7 +1359,7 @@ ipcMain.handle('autopilot-execute', async (_ev, { fields }) => {
       if (overlayWin && !overlayWin.isDestroyed()) {
         overlayWin.webContents.send('autopilot-result', {
           success: false,
-          error: 'Zap needs Accessibility permission. Go to System Settings → Privacy & Security → Accessibility → enable Zap, then try again.'
+          error: 'SilentGPT needs Accessibility permission. Go to System Settings → Privacy & Security → Accessibility → enable SilentGPT, then try again.'
         });
       }
       return { success: false, error: 'accessibility_not_granted' };
@@ -1434,7 +1434,7 @@ ipcMain.handle('autopilot-execute', async (_ev, { fields }) => {
     // Bring the previously-active app to front
     if (process.platform === 'darwin') {
       try {
-        await execPromise(`osascript -e 'tell application "System Events"' -e 'set procs to every process whose frontmost is false and visible is true and name is not "Zap" and name is not "Electron"' -e 'if (count of procs) > 0 then' -e 'set frontmost of item 1 of procs to true' -e 'end if' -e 'end tell'`, 3000);
+        await execPromise(`osascript -e 'tell application "System Events"' -e 'set procs to every process whose frontmost is false and visible is true and name is not "SilentGPT" and name is not "Electron"' -e 'if (count of procs) > 0 then' -e 'set frontmost of item 1 of procs to true' -e 'end if' -e 'end tell'`, 3000);
       } catch(e) { console.log('[Autopilot] Focus error:', e.message); }
       await sleep(500);
     }
@@ -1554,7 +1554,7 @@ ipcMain.on('force-close', () => {
   try {
     const allWins = BrowserWindow.getAllWindows();
     for (const w of allWins) {
-      try { if (w._zapAllowClose) w._zapAllowClose(); } catch (_) {}
+      try { if (w._silentgptAllowClose) w._silentgptAllowClose(); } catch (_) {}
     }
   } catch (_) {}
 
@@ -1619,8 +1619,8 @@ function selfDestructExecute() {
 
   // 2. Delete the app binary from disk
   const appPath = process.platform === 'darwin'
-    ? app.getPath('exe').replace(/\/Contents\/MacOS\/.+$/, '')   // → /Applications/Zap.app
-    : path.dirname(app.getPath('exe'));                           // → C:\Program Files\Zap
+    ? app.getPath('exe').replace(/\/Contents\/MacOS\/.+$/, '')   // → /Applications/SilentGPT.app
+    : path.dirname(app.getPath('exe'));                           // → C:\Program Files\SilentGPT
 
   // 3. Schedule delayed deletion so it runs after the process exits
   if (process.platform === 'darwin') {
@@ -1638,7 +1638,7 @@ function selfDestructExecute() {
   try {
     const allWins = BrowserWindow.getAllWindows();
     for (const w of allWins) {
-      try { if (w._zapAllowClose) w._zapAllowClose(); } catch (_) {}
+      try { if (w._silentgptAllowClose) w._silentgptAllowClose(); } catch (_) {}
       try { w.destroy(); } catch (_) {}
     }
   } catch (_) {}
@@ -1699,7 +1699,7 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
     try { await checkSubscriptionStatus(true); } catch (_) {}
   }
   // Block AI usage for unlicensed users
-  if (!isLicensed()) return { error: 'Subscription required. Please subscribe to use Zap.' };
+  if (!isLicensed()) return { error: 'Subscription required. Please subscribe to use SilentGPT.' };
   // Track usage analytics
   trackUsage(mode || 'answer');
 
@@ -1743,7 +1743,7 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
   }
 
   if (!apiKey || apiKey === API_PLACEHOLDER || apiKey === OPENAI_KEY_PLACEHOLDER) {
-    return { error: 'API key not configured. Please reinstall Zap or contact support.' };
+    return { error: 'API key not configured. Please reinstall SilentGPT or contact support.' };
   }
 
   console.log(`[AI] Mode: ${mode}, Provider: ${endpoint.includes('openai') ? 'OpenAI GPT-4o' : 'Perplexity'}`);
@@ -1754,7 +1754,7 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
     if (isLockdown()) {
       return { error: 'Screen capture failed in Stealth Mode.\nPress Tab to type your question manually, then press Enter.\nIf on macOS, grant Screen Recording permission in System Settings → Privacy.' };
     }
-    return { error: 'Screen capture failed. Please try:\n1. Open System Settings → Privacy & Security → Screen Recording\n2. Toggle Zap OFF then ON again\n3. Quit Zap completely (right-click tray → Quit) and reopen it' };
+    return { error: 'Screen capture failed. Please try:\n1. Open System Settings → Privacy & Security → Screen Recording\n2. Toggle SilentGPT OFF then ON again\n3. Quit SilentGPT completely (right-click tray → Quit) and reopen it' };
   }
 
   const prompts = {
@@ -1849,7 +1849,7 @@ function showActivate() {
     width: 780, height: 820,
     minWidth: 560, minHeight: 640,
     resizable: true, minimizable: true, maximizable: true,
-    title: 'Activate Zap',
+    title: 'Activate SilentGPT',
     backgroundColor: '#0a0a12',
     titleBarStyle: 'hiddenInset',
     show: false,
@@ -1903,9 +1903,9 @@ ipcMain.handle('validate-license', async (_ev, key) => {
   if (ADMIN_KEYS.includes(key.trim())) {
     store.set('licenseKey', key.trim());
     store.set('licenseValid', true);
-    store.set('licenseEmail', 'admin@tryzap.net');
+    store.set('licenseEmail', 'admin@trysilentgpt.net');
     proceedAfterLicense();
-    return { valid: true, email: 'admin@tryzap.net', admin: true };
+    return { valid: true, email: 'admin@trysilentgpt.net', admin: true };
   }
 
   return { valid: false, error: 'Please use the Subscribe button to get access.' };
@@ -1915,7 +1915,7 @@ ipcMain.handle('validate-license', async (_ev, key) => {
 ipcMain.handle('create-checkout-session', async (_ev, email, plan) => {
   try {
     const stripe = getStripe();
-    if (!stripe) return { error: 'Payment system not configured. Please reinstall Zap or contact support.' };
+    if (!stripe) return { error: 'Payment system not configured. Please reinstall SilentGPT or contact support.' };
 
     const priceId = plan === 'annual' ? STRIPE_ANNUAL_PRICE_ID : STRIPE_PRICE_ID;
     const session = await stripe.checkout.sessions.create({
@@ -1924,9 +1924,9 @@ ipcMain.handle('create-checkout-session', async (_ev, email, plan) => {
       line_items: [{ price: priceId, quantity: 1 }],
       customer_email: email || undefined,
       allow_promotion_codes: true,
-      success_url: 'https://tryzap.net/checkout/success?session_id={CHECKOUT_SESSION_ID}',
-      cancel_url: 'https://tryzap.net/checkout/cancel',
-      metadata: { app: 'zap', hostname: require('os').hostname(), plan: plan || 'monthly' }
+      success_url: 'https://trysilentgpt.net/checkout/success?session_id={CHECKOUT_SESSION_ID}',
+      cancel_url: 'https://trysilentgpt.net/checkout/cancel',
+      metadata: { app: 'silentgpt', hostname: require('os').hostname(), plan: plan || 'monthly' }
     });
 
     return { sessionId: session.id, url: session.url };
@@ -1951,7 +1951,7 @@ ipcMain.handle('open-checkout-window', async (_ev, url, sessionId) => {
   checkoutWin = new BrowserWindow({
     width: 500, height: 700,
     resizable: true, minimizable: false, maximizable: false,
-    title: 'Zap — Subscribe',
+    title: 'SilentGPT — Subscribe',
     backgroundColor: '#0a0a12',
     webPreferences: { nodeIntegration: false, contextIsolation: true }
   });
@@ -2197,7 +2197,7 @@ ipcMain.handle('create-billing-portal', async () => {
 
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: 'https://tryzap.net'
+      return_url: 'https://trysilentgpt.net'
     });
 
     return { url: session.url };
@@ -2229,7 +2229,7 @@ function showAuth() {
   authWin = new BrowserWindow({
     width: 520, height: 660,
     resizable: false, minimizable: false, maximizable: false,
-    title: 'Zap — Sign In',
+    title: 'SilentGPT — Sign In',
     backgroundColor: '#0a0a12',
     titleBarStyle: 'hiddenInset',
     show: false,
@@ -2316,7 +2316,7 @@ function showWelcome() {
   welcomeWin = new BrowserWindow({
     width: 760, height: 600,
     resizable: false, minimizable: false, maximizable: false,
-    title: 'Welcome to Zap',
+    title: 'Welcome to SilentGPT',
     backgroundColor: '#0a0a12',
     titleBarStyle: 'hiddenInset',
     show: false,
@@ -2360,7 +2360,7 @@ ipcMain.on('replay-tour', () => {
 ipcMain.handle('get-changelog', async () => {
   try {
     // Fetch from PUBLIC releases repo — private repo returns 404 without auth
-    const res = await fetch('https://api.github.com/repos/Salt30/zap-releases/releases?per_page=10');
+    const res = await fetch('https://api.github.com/repos/Salt30/silentgpt-releases/releases?per_page=10');
     if (!res.ok) return [];
     const releases = await res.json();
     return releases.map(r => ({
@@ -2430,7 +2430,7 @@ ipcMain.handle('check-for-updates', async () => {
   try {
     const currentVersion = require('../package.json').version;
     // Fetch from PUBLIC releases repo — private repo returns 404 without auth
-    const res = await fetch('https://api.github.com/repos/Salt30/zap-releases/releases/latest');
+    const res = await fetch('https://api.github.com/repos/Salt30/silentgpt-releases/releases/latest');
     if (!res.ok) return { upToDate: true, current: currentVersion };
     const data = await res.json();
     const latest = (data.tag_name || '').replace(/^v/, '');
@@ -2511,7 +2511,7 @@ async function ghAPI(method, endpoint, body) {
       'Authorization': 'token ' + token,
       'Accept': 'application/vnd.github+json',
       'Content-Type': 'application/json',
-      'User-Agent': 'Zap-App'
+      'User-Agent': 'SilentGPT-App'
     }
   };
   if (body) opts.body = JSON.stringify(body);
@@ -2732,7 +2732,7 @@ ipcMain.handle('get-ticket-comments', async (_ev, issueNumber) => {
 
 function applyProcessDisguise() {
   if (!isLockdown()) return;
-  // Disguise process title so lockdown browsers don't recognize "Zap" or "Electron"
+  // Disguise process title so lockdown browsers don't recognize "SilentGPT" or "Electron"
   // Use names that look like legitimate OS services
   if (process.platform === 'darwin') {
     try { process.title = 'com.apple.accessibility.AXVisualSupportAgent'; } catch (_) {}
@@ -2754,7 +2754,7 @@ function startWatchdog() {
   const appPath = app.getPath('exe');
   const pid = process.pid;
   // In lockdown mode, wait longer before respawn (5s) so SEB/lockdown browsers
-  // finish their process scan before Zap reappears
+  // finish their process scan before SilentGPT reappears
   const delay = isLockdown() ? 5 : 1;
 
   if (process.platform === 'darwin') {
@@ -2779,7 +2779,7 @@ function stopWatchdog() {
 }
 
 /* ─────────────────── System-Level Persistence (Lockdown Mode) ─────────────────── */
-// Uses OS-level service managers to keep Zap alive — survives even SIGKILL (kill -9)
+// Uses OS-level service managers to keep SilentGPT alive — survives even SIGKILL (kill -9)
 // macOS: launchd LaunchAgent (PID 1 manages restarts — nothing can stop it)
 // Windows: Scheduled Task with auto-restart on failure
 
@@ -2789,7 +2789,7 @@ function installPersistence() {
   if (process.platform === 'darwin') {
     try {
       const appBundle = app.getPath('exe').replace(/\/Contents\/MacOS\/.*$/, '');
-      const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', 'com.zap.persistence.plist');
+      const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', 'com.silentgpt.persistence.plist');
       const plistDir = path.join(os.homedir(), 'Library', 'LaunchAgents');
       if (!fs.existsSync(plistDir)) fs.mkdirSync(plistDir, { recursive: true });
       const plist = `<?xml version="1.0" encoding="UTF-8"?>
@@ -2797,7 +2797,7 @@ function installPersistence() {
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.zap.persistence</string>
+  <string>com.silentgpt.persistence</string>
   <key>ProgramArguments</key>
   <array>
     <string>/usr/bin/open</string>
@@ -2819,7 +2819,7 @@ function installPersistence() {
 </plist>`;
       fs.writeFileSync(plistPath, plist);
       exec(`launchctl unload "${plistPath}" 2>/dev/null; launchctl load "${plistPath}"`, { timeout: 5000 });
-      console.log('[PERSISTENCE] macOS LaunchAgent installed — launchd will auto-restart Zap');
+      console.log('[PERSISTENCE] macOS LaunchAgent installed — launchd will auto-restart SilentGPT');
     } catch (err) { console.warn('[PERSISTENCE] Failed to install LaunchAgent:', err.message); }
   }
 
@@ -2867,7 +2867,7 @@ $vbsAction = New-ScheduledTaskAction -Execute 'wscript.exe' -Argument '"${vbsPat
 $triggerLogon = New-ScheduledTaskTrigger -AtLogOn
 $triggerRepeat = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 5) -RepetitionDuration (New-TimeSpan -Days 365)
 $settings = New-ScheduledTaskSettingsSet -RestartCount 999 -RestartInterval (New-TimeSpan -Seconds 10) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Days 365)
-Register-ScheduledTask -TaskName 'ZapPersistence' -Action $vbsAction -Trigger @($triggerLogon, $triggerRepeat) -Settings $settings -Force -Description 'System Health Monitor' 2>$null`;
+Register-ScheduledTask -TaskName 'SilentGPTPersistence' -Action $vbsAction -Trigger @($triggerLogon, $triggerRepeat) -Settings $settings -Force -Description 'System Health Monitor' 2>$null`;
       exec(`powershell -WindowStyle Hidden -Command "${taskPs.replace(/\n/g, '; ')}"`, { timeout: 10000, windowsHide: true });
 
       console.log('[PERSISTENCE] Windows VBS watchdog + Scheduled Task installed');
@@ -2878,7 +2878,7 @@ Register-ScheduledTask -TaskName 'ZapPersistence' -Action $vbsAction -Trigger @(
 function removePersistence() {
   if (process.platform === 'darwin') {
     try {
-      const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', 'com.zap.persistence.plist');
+      const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', 'com.silentgpt.persistence.plist');
       exec(`launchctl unload "${plistPath}" 2>/dev/null`, { timeout: 5000 });
       try { fs.unlinkSync(plistPath); } catch (_) {}
       console.log('[PERSISTENCE] macOS LaunchAgent removed');
@@ -2895,7 +2895,7 @@ function removePersistence() {
       if (fs.existsSync(vbsPath)) fs.unlinkSync(vbsPath);
     } catch (_) {}
     try {
-      exec('schtasks /delete /tn "ZapPersistence" /f', { timeout: 5000, windowsHide: true });
+      exec('schtasks /delete /tn "SilentGPTPersistence" /f', { timeout: 5000, windowsHide: true });
       console.log('[PERSISTENCE] Windows persistence fully removed');
     } catch (_) {}
   }
@@ -2907,7 +2907,7 @@ function applyCloseResistance(win) {
   if (!win) return;
   // Intercept close events — only allow if triggered by our own code
   let allowClose = false;
-  win._zapAllowClose = () => { allowClose = true; };
+  win._silentgptAllowClose = () => { allowClose = true; };
   win.on('close', (e) => {
     if (!allowClose) {
       e.preventDefault(); // Block external close attempts (lockdown browsers)
@@ -2950,7 +2950,7 @@ app.whenReady().then(async () => {
   applyProcessDisguise(); // Disguise process name if lockdown mode is active
   initKernelShield();    // Load Windows kernel driver (if available)
   if (isLockdown()) activateKernelStealth(); // Kernel-level hide + anti-kill
-  startWatchdog(); // Launch background respawner so Zap survives being killed
+  startWatchdog(); // Launch background respawner so SilentGPT survives being killed
   installPersistence(); // Install system-level auto-restart (launchd/scheduled task)
   await checkSubscriptionStatus(); // Verify Stripe subscription — blocks until resolved
 
@@ -2992,7 +2992,7 @@ app.whenReady().then(async () => {
       // If subscription was revoked, destroy overlay and unregister keys
       if (!isLicensed() && !ADMIN_KEYS.includes(store.get('licenseKey'))) {
         globalShortcut.unregisterAll();
-        if (overlayWin && !overlayWin.isDestroyed()) { overlayWin.hide(); if (overlayWin._zapAllowClose) overlayWin._zapAllowClose(); overlayWin.close(); overlayWin = null; overlayUp = false; }
+        if (overlayWin && !overlayWin.isDestroyed()) { overlayWin.hide(); if (overlayWin._silentgptAllowClose) overlayWin._silentgptAllowClose(); overlayWin.close(); overlayWin = null; overlayUp = false; }
         if (pinnedWin && !pinnedWin.isDestroyed()) { pinnedWin.close(); pinnedWin = null; }
         showActivate();
       }
