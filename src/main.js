@@ -115,7 +115,9 @@ const STORE_DEFAULTS = {
   statsTotalRequests: 0,
   statsLastUsed: 0,
   // Support Tickets (local log)
-  supportTickets: []
+  supportTickets: [],
+  accountSignups: [],
+  pendingSignupNotifications: []
 };
 
 let store = null;
@@ -501,7 +503,7 @@ function makeSettings() {
     width: 700, height: 800,
     resizable: true, minimizable: true, maximizable: false,
     title: 'SilentGPT Settings',
-    backgroundColor: '#0a0a12',
+    backgroundColor: '#050505',
     webPreferences: {
       preload:          path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -525,7 +527,7 @@ function showFlashcards(cardsText) {
     resizable: true, minimizable: true, maximizable: true,
     fullscreenable: true,
     title: 'SilentGPT Flashcards',
-    backgroundColor: '#0a0a12',
+    backgroundColor: '#050505',
     show: false,
     webPreferences: {
       preload:          path.join(__dirname, 'preload.js'),
@@ -1516,14 +1518,14 @@ ipcMain.handle('pin-answer', (_ev, html) => {
   const page = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
     *{margin:0;padding:0;box-sizing:border-box}
     html,body{background:transparent;overflow:hidden;font-family:'SF Pro Display',system-ui,-apple-system,'Segoe UI',sans-serif}
-    .wrap{background:rgba(12,12,24,0.92);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid rgba(74,111,165,0.2);border-radius:14px;color:#f5f0e8;font-size:13px;line-height:1.5;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+    .wrap{background:rgba(12,12,12,0.92);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid rgba(250,204,21,0.2);border-radius:14px;color:#f5f0e8;font-size:13px;line-height:1.5;display:flex;flex-direction:column;height:100vh;overflow:hidden}
     .bar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;-webkit-app-region:drag;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0}
     .bar span{font-size:11px;color:#b8b0a0;font-weight:600}
     .bar button{-webkit-app-region:no-drag;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.2);color:#ef4444;font-size:10px;padding:3px 10px;border-radius:6px;cursor:pointer;font-family:inherit;font-weight:600}
     .bar button:hover{background:rgba(239,68,68,0.25)}
     .body{padding:12px;overflow-y:auto;flex:1;font-size:13px;line-height:1.6;color:#e8e0d8}
-    .body strong{color:#fff} .body code{background:rgba(74,111,165,0.15);padding:1px 5px;border-radius:4px;font-size:12px}
-    .body pre{background:rgba(10,10,22,0.8);padding:10px;border-radius:8px;overflow-x:auto;font-size:12px;margin:8px 0}
+    .body strong{color:#fff} .body code{background:rgba(250,204,21,0.15);padding:1px 5px;border-radius:4px;font-size:12px}
+    .body pre{background:rgba(8,8,8,0.8);padding:10px;border-radius:8px;overflow-x:auto;font-size:12px;margin:8px 0}
   </style></head><body><div class="wrap">
     <div class="bar"><span>Pinned Answer</span><button onclick="window.close()">Close</button></div>
     <div class="body">${html.replace(/`/g, '\\`').replace(/\$/g, '\\$')}</div>
@@ -1850,7 +1852,7 @@ function showActivate() {
     minWidth: 560, minHeight: 640,
     resizable: true, minimizable: true, maximizable: true,
     title: 'Activate SilentGPT',
-    backgroundColor: '#0a0a12',
+    backgroundColor: '#050505',
     titleBarStyle: 'hiddenInset',
     show: false,
     webPreferences: {
@@ -1952,7 +1954,7 @@ ipcMain.handle('open-checkout-window', async (_ev, url, sessionId) => {
     width: 500, height: 700,
     resizable: true, minimizable: false, maximizable: false,
     title: 'SilentGPT — Subscribe',
-    backgroundColor: '#0a0a12',
+    backgroundColor: '#050505',
     webPreferences: { nodeIntegration: false, contextIsolation: true }
   });
 
@@ -2230,7 +2232,7 @@ function showAuth() {
     width: 520, height: 660,
     resizable: false, minimizable: false, maximizable: false,
     title: 'SilentGPT — Sign In',
-    backgroundColor: '#0a0a12',
+    backgroundColor: '#050505',
     titleBarStyle: 'hiddenInset',
     show: false,
     webPreferences: {
@@ -2250,6 +2252,61 @@ function showAuth() {
   });
 }
 
+
+function getSignupMetadata() {
+  return {
+    platform: process.platform,
+    hostname: os.hostname(),
+    version: require('../package.json').version,
+    submittedAt: new Date().toISOString()
+  };
+}
+
+async function notifyOwnerOfSignup(account) {
+  const metadata = getSignupMetadata();
+  const signup = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+    name: account.name,
+    email: account.email,
+    ...metadata
+  };
+
+  const signups = store.get('accountSignups') || [];
+  signups.unshift(signup);
+  store.set('accountSignups', signups.slice(0, 250));
+
+  const body = [
+    'A new SilentGPT account was created from the desktop app.',
+    '',
+    '---',
+    `**Name:** ${account.name}`,
+    `**Email:** ${account.email}`,
+    `**Platform:** ${metadata.platform}`,
+    `**Hostname:** ${metadata.hostname}`,
+    `**Version:** v${metadata.version}`,
+    `**Created:** ${metadata.submittedAt}`
+  ].join('\n');
+
+  try {
+    const issue = await ghAPI('POST', `/repos/${GITHUB_REPO}/issues`, {
+      title: `[Account Created] ${account.name} <${account.email}>`,
+      body
+    });
+    signup.ownerNotification = { delivered: true, issueNumber: issue.number, url: issue.html_url, deliveredAt: new Date().toISOString() };
+    signups[0] = signup;
+    store.set('accountSignups', signups.slice(0, 250));
+    return { notified: true, ticketId: '#' + issue.number, url: issue.html_url };
+  } catch (err) {
+    signup.ownerNotification = { delivered: false, error: err.message, queuedAt: new Date().toISOString() };
+    const pending = store.get('pendingSignupNotifications') || [];
+    pending.unshift(signup);
+    store.set('pendingSignupNotifications', pending.slice(0, 250));
+    signups[0] = signup;
+    store.set('accountSignups', signups.slice(0, 250));
+    return { notified: false, queued: true, error: err.message };
+  }
+}
+
 ipcMain.handle('auth-signup', async (_ev, { name, email, password }) => {
   if (!name || !email || !password) return { success: false, error: 'All fields are required.' };
   if (password.length < 6) return { success: false, error: 'Password must be at least 6 characters.' };
@@ -2266,7 +2323,8 @@ ipcMain.handle('auth-signup', async (_ev, { name, email, password }) => {
   store.set('authPasswordHash', simpleHash(password));
   store.set('authDone', true);
 
-  return { success: true };
+  const ownerNotice = await notifyOwnerOfSignup({ name, email });
+  return { success: true, ...ownerNotice };
 });
 
 ipcMain.handle('auth-signin', async (_ev, { email, password }) => {
@@ -2317,7 +2375,7 @@ function showWelcome() {
     width: 760, height: 600,
     resizable: false, minimizable: false, maximizable: false,
     title: 'Welcome to SilentGPT',
-    backgroundColor: '#0a0a12',
+    backgroundColor: '#050505',
     titleBarStyle: 'hiddenInset',
     show: false,
     webPreferences: {
@@ -2491,6 +2549,8 @@ ipcMain.handle('get-admin-stats', () => {
       version: require('../package.json').version,
       electronVersion: process.versions.electron
     },
+    signups: store.get('accountSignups') || [],
+    pendingSignupNotifications: store.get('pendingSignupNotifications') || [],
     tickets: store.get('supportTickets') || []
   };
 });

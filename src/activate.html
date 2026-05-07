@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <title>Activate SilentGPT Pro</title>
 <style>
-  :root{--accent:#4a6fa5;--accent-glow:#5b82bd;--accent-dim:#3a5a8a;--bg-deep:#0a0a12;--bg-card:rgba(18,18,35,0.85);--bg-input:rgba(10,10,22,0.9);--text:#f5f0e8;--text-muted:#b8b0a0;--text-dim:#6e6a60;--border:rgba(74,111,165,0.15);--green:#6ec87a;--red:#ef4444;--orange:#f59e0b;--gold:#f59e0b}
+  :root{--accent:#facc15;--accent-glow:#fde047;--accent-dim:#a16207;--bg-deep:#050505;--bg-card:rgba(18,18,18,0.85);--bg-input:rgba(8,8,8,0.9);--text:#f5f0e8;--text-muted:#b8b0a0;--text-dim:#6e6a60;--border:rgba(250,204,21,0.15);--green:#6ec87a;--red:#ef4444;--orange:#f59e0b;--gold:#f59e0b}
   *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg-deep);background-image:radial-gradient(ellipse at 20% 0%,rgba(30,45,80,.4) 0%,transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(20,30,60,.3) 0%,transparent 60%),linear-gradient(180deg,#0a0a14 0%,#0d0d1c 40%,#0a0b16 100%);color:var(--text);font-family:'SF Pro Display',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 20px;-webkit-app-region:drag;overflow-y:auto}
+  body{background:var(--bg-deep);background-image:radial-gradient(ellipse at 20% 0%,rgba(250,204,21,.4) 0%,transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(161,98,7,.3) 0%,transparent 60%),linear-gradient(180deg,#050505 0%,#111111 40%,#050505 100%);color:var(--text);font-family:'SF Pro Display',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 20px;-webkit-app-region:drag;overflow-y:auto}
   button,input,a,select,.plan-card,.billing-toggle,.legal-check{-webkit-app-region:no-drag}
 
-  .logo{width:58px;height:58px;background:linear-gradient(135deg,var(--accent),#3a5a8a);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--text);box-shadow:0 4px 28px rgba(74,111,165,.35);margin-bottom:10px}
+  .logo{width:58px;height:58px;background:linear-gradient(135deg,var(--accent),#a16207);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--text);box-shadow:0 4px 28px rgba(250,204,21,.35);margin-bottom:10px}
   .title{font-size:22px;font-weight:700;letter-spacing:-.3px}
   .title span{color:var(--accent-glow)}
   .subtitle{font-size:13px;color:var(--text-dim);margin:6px 0 18px;text-align:center}
@@ -19,13 +19,13 @@
   .billing-opt{flex:1;padding:9px;text-align:center;cursor:pointer;font-size:12.5px;font-weight:600;transition:all .2s;position:relative;z-index:1;color:var(--text-dim)}
   .billing-opt.active{color:var(--text)}
   .billing-opt .save-tag{font-size:9px;color:var(--green);font-weight:700;margin-left:3px}
-  .billing-slider{position:absolute;top:3px;bottom:3px;border-radius:8px;background:rgba(74,111,165,.18);border:1px solid rgba(74,111,165,.25);transition:all .25s cubic-bezier(.4,0,.2,1);z-index:0}
+  .billing-slider{position:absolute;top:3px;bottom:3px;border-radius:8px;background:rgba(250,204,21,.18);border:1px solid rgba(250,204,21,.25);transition:all .25s cubic-bezier(.4,0,.2,1);z-index:0}
 
   /* Plan cards */
   .plans{display:flex;gap:10px;width:100%;max-width:560px;margin-bottom:16px}
   .plan-card{flex:1;background:var(--bg-card);border:1.5px solid var(--border);border-radius:14px;padding:18px 12px 16px;text-align:center;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
-  .plan-card:hover{border-color:rgba(74,111,165,.35);transform:translateY(-1px)}
-  .plan-card.selected{border-color:var(--accent-glow);box-shadow:0 0 20px rgba(74,111,165,.2)}
+  .plan-card:hover{border-color:rgba(250,204,21,.35);transform:translateY(-1px)}
+  .plan-card.selected{border-color:var(--accent-glow);box-shadow:0 0 20px rgba(250,204,21,.2)}
   .plan-card.selected.ultimate-selected{border-color:var(--gold);box-shadow:0 0 20px rgba(245,158,11,.2)}
   .plan-badge{display:inline-block;font-size:9px;font-weight:800;padding:3px 8px;border-radius:4px;letter-spacing:.8px;margin-bottom:8px;min-height:20px}
   .badge-popular{background:rgba(245,158,11,.15);color:var(--gold)}
@@ -44,15 +44,15 @@
   /* Email + subscribe */
   .checkout-section{width:100%;max-width:380px}
   .email-input{width:100%;padding:12px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;outline:none;transition:all .2s}
-  .email-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(74,111,165,.12)}
+  .email-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(250,204,21,.12)}
   .email-input::placeholder{color:var(--text-dim)}
 
-  .subscribe-btn{width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),#3a5a8a);color:var(--text);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 2px 16px rgba(74,111,165,.3)}
-  .subscribe-btn:hover{box-shadow:0 4px 24px rgba(74,111,165,.45);transform:translateY(-1px)}
+  .subscribe-btn{width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),#a16207);color:var(--text);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 2px 16px rgba(250,204,21,.3)}
+  .subscribe-btn:hover{box-shadow:0 4px 24px rgba(250,204,21,.45);transform:translateY(-1px)}
   .subscribe-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
 
-  .legal-check{display:flex;align-items:flex-start;gap:8px;margin-top:10px;padding:10px 12px;background:rgba(74,111,165,0.04);border:1px solid var(--border);border-radius:9px;cursor:pointer;transition:border-color .15s}
-  .legal-check:hover{border-color:rgba(74,111,165,0.3)}
+  .legal-check{display:flex;align-items:flex-start;gap:8px;margin-top:10px;padding:10px 12px;background:rgba(250,204,21,0.04);border:1px solid var(--border);border-radius:9px;cursor:pointer;transition:border-color .15s}
+  .legal-check:hover{border-color:rgba(250,204,21,0.3)}
   .legal-check input[type="checkbox"]{width:16px;height:16px;margin-top:1px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
   .legal-check label{font-size:10.5px;color:var(--text-muted);line-height:1.5;cursor:pointer}
   .legal-check label a{color:var(--accent-glow);text-decoration:none}
@@ -79,7 +79,7 @@
   @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 
   .alt-input{width:100%;padding:12px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:12.5px;outline:none;transition:all .2s}
-  .alt-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(74,111,165,.12)}
+  .alt-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(250,204,21,.12)}
   .alt-input::placeholder{color:var(--text-dim)}
 
   .alt-btn{width:100%;padding:11px;border:1px solid var(--border);border-radius:10px;background:transparent;color:var(--text);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:8px}
