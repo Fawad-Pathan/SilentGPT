@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld('silentgpt', {
   setIgnoreMouseEvents: (ignore, opts) => ipcRenderer.send('set-ignore-mouse', ignore, opts),
   onSettingsSaved:  (cb) => ipcRenderer.on('settings-saved',   ()     => cb()),
   onCheckoutCancelled: (cb) => ipcRenderer.on('checkout-cancelled', () => cb()),
+  onOpenUpgradeScreen: (cb) => ipcRenderer.on('open-upgrade-screen', (_, d) => cb(d)),
 
   authSignup:      (data) => ipcRenderer.invoke('auth-signup', data),
   authSignin:      (data) => ipcRenderer.invoke('auth-signin', data),
@@ -39,6 +40,7 @@ contextBridge.exposeInMainWorld('silentgpt', {
   startTrial:      () => ipcRenderer.send('start-trial'),
   acceptTerms:     () => ipcRenderer.invoke('accept-terms'),
   startFreeLite:   () => ipcRenderer.invoke('start-free-lite'),
+  openUpgradeScreen: () => ipcRenderer.invoke('open-upgrade-screen'),
   validateLicense: (key) => ipcRenderer.invoke('validate-license', key),
   getLicenseStatus: () => ipcRenderer.invoke('get-license-status'),
   createCheckoutSession: (email, plan) => ipcRenderer.invoke('create-checkout-session', email, plan),

@@ -217,6 +217,15 @@
   $('opt-monthly').addEventListener('click', function(){ setBilling('monthly'); });
   $('opt-annual').addEventListener('click', function(){ setBilling('annual'); });
 
+  function showUpgradeScreen() {
+    selectTier('pro');
+    if (emailInput && emailInput.value) {
+      emailInput.select();
+    } else if (emailInput) {
+      emailInput.focus();
+    }
+  }
+
   // ── Plan cards ──
   function selectTier(tier) {
     selectedTier = tier;
@@ -290,8 +299,18 @@
   // ── Checkout cancelled ──
   window.silentgpt.onCheckoutCancelled(function() {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    showUpgradeScreen();
     resetToRetry('Checkout was not completed. Ready to try again.');
   });
+
+  if (window.silentgpt.onOpenUpgradeScreen) {
+    window.silentgpt.onOpenUpgradeScreen(function() { showUpgradeScreen(); });
+  }
+
+  try {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('upgrade') === 'pro') setTimeout(showUpgradeScreen, 0);
+  } catch (_) {}
 
   function showStatus(msg, type) {
     statusEl.textContent = msg;
