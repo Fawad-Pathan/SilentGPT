@@ -1226,17 +1226,26 @@
     updateCardBtn.disabled=false;updateCardBtn.textContent='Update Payment Method';
   });
 
-  // Subscribe now (inactive/cancelled) — opens the Pro upgrade screen
+  // Subscribe now (inactive/cancelled) — opens Stripe Checkout directly when possible.
   var subscribeBtn=document.getElementById('sub-subscribe-btn');
   if(subscribeBtn)subscribeBtn.addEventListener('click',async function(){
-    subscribeBtn.disabled=true;subscribeBtn.textContent='Opening upgrade...';
+    subscribeBtn.disabled=true;subscribeBtn.textContent='Opening checkout...';
+    var statusEl=document.getElementById('sub-action-status');
+    if(statusEl)statusEl.textContent='';
     try{
-      if(window.silentgpt.openUpgradeScreen){
-        await window.silentgpt.openUpgradeScreen();
-      }else{
-        window.silentgpt.openSettings&&window.silentgpt.openSettings();
+      var r=null;
+      if(window.silentgpt.upgradeToProFromSettings){
+        r=await window.silentgpt.upgradeToProFromSettings();
+      }else if(window.silentgpt.openUpgradeScreen){
+        r=await window.silentgpt.openUpgradeScreen();
       }
-    }catch(e){}
+      if(statusEl){
+        if(r&&r.warning)statusEl.textContent=r.warning+' Opened the upgrade screen so you can continue there.';
+        else statusEl.textContent='Checkout opened. Complete payment in the popup to activate Pro.';
+      }
+    }catch(e){
+      if(statusEl)statusEl.textContent=(e&&e.message)||'Could not open checkout.';
+    }
     subscribeBtn.disabled=false;subscribeBtn.textContent='Upgrade to Pro';
   });
 
