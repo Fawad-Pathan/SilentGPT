@@ -41,6 +41,7 @@ contextBridge.exposeInMainWorld('silentgpt', {
   acceptTerms:     () => ipcRenderer.invoke('accept-terms'),
   startFreeLite:   () => ipcRenderer.invoke('start-free-lite'),
   openUpgradeScreen: () => ipcRenderer.invoke('open-upgrade-screen'),
+  upgradeToProFromSettings: () => ipcRenderer.invoke('upgrade-to-pro-from-settings'),
   validateLicense: (key) => ipcRenderer.invoke('validate-license', key),
   getLicenseStatus: () => ipcRenderer.invoke('get-license-status'),
   createCheckoutSession: (email, plan) => ipcRenderer.invoke('create-checkout-session', email, plan),

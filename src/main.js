@@ -71,6 +71,23 @@ app.on('second-instance', () => {
   }
 });
 
+
+// Remove Electron's default application menu (File/Edit/View/Window/Help) from all app windows.
+// Individual tray menus still use Menu.buildFromTemplate and are unaffected.
+try { Menu.setApplicationMenu(null); } catch (_) {}
+
+function framelessWindowOptions() {
+  return {
+    autoHideMenuBar: true,
+    titleBarStyle: 'hidden',
+    titleBarOverlay: {
+      color: '#00000000',
+      symbolColor: '#eef5f0',
+      height: 32
+    }
+  };
+}
+
 /* ─────────────────── Environment Configuration ─────────────────── */
 
 function getLocalEnvironmentCandidateFiles() {
@@ -703,6 +720,7 @@ function makeSettings() {
   settingsWin = new BrowserWindow({
     ...bounds,
     ...minSize,
+    ...framelessWindowOptions(),
     resizable: true, minimizable: true, maximizable: false,
     title: 'SilentGPT Settings',
     backgroundColor: '#020403',
@@ -729,6 +747,7 @@ function showFlashcards(cardsText) {
   flashcardsWin = new BrowserWindow({
     ...bounds,
     ...minSize,
+    ...framelessWindowOptions(),
     resizable: true, minimizable: true, maximizable: true,
     fullscreenable: true,
     title: 'SilentGPT Flashcards',
@@ -2119,10 +2138,10 @@ function showActivate(options = {}) {
   activateWin = new BrowserWindow({
     ...bounds,
     ...minSize,
+    ...framelessWindowOptions(),
     resizable: true, minimizable: true, maximizable: true,
     title: 'Activate SilentGPT',
     backgroundColor: '#020403',
-    titleBarStyle: 'hiddenInset',
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -2169,6 +2188,55 @@ ipcMain.handle('start-free-lite', () => {
 ipcMain.handle('open-upgrade-screen', () => {
   showActivate({ openUpgrade: true });
   return { ok: true };
+});
+
+ipcMain.handle('upgrade-to-pro-from-settings', async () => {
+  const email = normalizeEmail(store.get('licenseEmail') || store.get('authEmail') || store.get('stripeEmail'));
+  if (!isValidEmail(email)) {
+    showActivate({ openUpgrade: true });
+    return { opened: true, needsEmail: true };
+  }
+
+  try {
+    const selectedPlan = 'monthly';
+    const configError = stripeConfigError(selectedPlan);
+    if (configError) {
+      showActivate({ openUpgrade: true });
+      return { opened: true, needsEmail: true, warning: configError };
+    }
+
+    const stripe = getStripe();
+    if (!stripe) {
+      showActivate({ openUpgrade: true });
+      return { opened: true, needsEmail: true, warning: 'Payment system not configured.' };
+    }
+
+    const metadata = {
+      app: 'silentgpt',
+      hostname: require('os').hostname(),
+      accountEmail: normalizeEmail(store.get('authEmail')) || email,
+      plan: selectedPlan
+    };
+
+    const checkoutSession = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [{ price: planPriceId(selectedPlan), quantity: 1 }],
+      customer_email: email,
+      client_reference_id: metadata.accountEmail,
+      allow_promotion_codes: true,
+      success_url: STRIPE_SUCCESS_URL,
+      cancel_url: STRIPE_CANCEL_URL,
+      metadata,
+      subscription_data: { metadata }
+    });
+
+    await openCheckoutWindow(checkoutSession.url, checkoutSession.id);
+    return { opened: true };
+  } catch (err) {
+    showActivate({ openUpgrade: true });
+    return { opened: true, needsEmail: true, warning: err.message };
+  }
 });
 
 // Admin master keys defined at top of file
@@ -2247,7 +2315,7 @@ ipcMain.handle('create-checkout-session', async (_ev, email, plan) => {
 let checkoutWin = null;
 let checkoutSucceeded = false;
 
-ipcMain.handle('open-checkout-window', async (_ev, url, sessionId) => {
+async function openCheckoutWindow(url, sessionId) {
   if (checkoutWin) { checkoutWin.focus(); return { opened: true }; }
 
   checkoutSucceeded = false;
@@ -2260,6 +2328,7 @@ ipcMain.handle('open-checkout-window', async (_ev, url, sessionId) => {
   checkoutWin = new BrowserWindow({
     ...bounds,
     ...minSize,
+    ...framelessWindowOptions(),
     resizable: true, minimizable: false, maximizable: false,
     title: 'SilentGPT — Subscribe',
     backgroundColor: '#020403',
@@ -2312,7 +2381,9 @@ ipcMain.handle('open-checkout-window', async (_ev, url, sessionId) => {
   });
 
   return { opened: true };
-});
+}
+
+ipcMain.handle('open-checkout-window', async (_ev, url, sessionId) => openCheckoutWindow(url, sessionId));
 
 // Validate subscription from a Checkout Session and activate
 async function activateFromSession(sessionId) {
@@ -2604,10 +2675,10 @@ function showAuth() {
   const bounds = fitWindowToPrimaryDisplay(520, 660);
   authWin = new BrowserWindow({
     ...bounds,
+    ...framelessWindowOptions(),
     resizable: false, minimizable: false, maximizable: false,
     title: 'SilentGPT — Sign In',
     backgroundColor: '#020403',
-    titleBarStyle: 'hiddenInset',
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -2748,10 +2819,10 @@ function showWelcome() {
   const bounds = fitWindowToPrimaryDisplay(760, 600);
   welcomeWin = new BrowserWindow({
     ...bounds,
+    ...framelessWindowOptions(),
     resizable: false, minimizable: false, maximizable: false,
     title: 'Welcome to SilentGPT',
     backgroundColor: '#020403',
-    titleBarStyle: 'hiddenInset',
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
