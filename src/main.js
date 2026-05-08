@@ -2091,8 +2091,25 @@ function trialDaysLeft() {
   return Math.max(0, Math.ceil(trialDays - elapsed));
 }
 
-function showActivate() {
-  if (activateWin) { activateWin.focus(); return; }
+function sendActivateUpgradeIntent() {
+  if (!activateWin || activateWin.isDestroyed()) return;
+  activateWin.webContents.send('open-upgrade-screen', { tier: 'pro' });
+}
+
+function showActivate(options = {}) {
+  const openUpgrade = options.openUpgrade === true;
+
+  if (activateWin && !activateWin.isDestroyed()) {
+    activateWin.focus();
+    if (openUpgrade) {
+      if (activateWin.webContents.isLoading()) {
+        activateWin.webContents.once('did-finish-load', sendActivateUpgradeIntent);
+      } else {
+        sendActivateUpgradeIntent();
+      }
+    }
+    return;
+  }
 
   // Show dock so the activate window can be focused on macOS
   if (process.platform === 'darwin') app.dock?.show();
@@ -2114,9 +2131,10 @@ function showActivate() {
     }
   });
 
-  activateWin.loadFile(path.join(__dirname, 'activate.html'));
+  activateWin.loadFile(path.join(__dirname, 'activate.html'), openUpgrade ? { query: { upgrade: 'pro' } } : undefined);
   try { activateWin.setContentProtection(true); } catch (_) {}
   activateWin.once('ready-to-show', () => { activateWin.show(); activateWin.focus(); });
+  if (openUpgrade) activateWin.webContents.once('did-finish-load', sendActivateUpgradeIntent);
   activateWin.on('closed', () => {
     activateWin = null;
     if (isAppUnlocked()) {
@@ -2146,6 +2164,11 @@ ipcMain.handle('start-free-lite', () => {
   PRO_ONLY_SETTING_KEYS.forEach((key) => store.set(key, false));
   setImmediate(proceedAfterActivation);
   return { ok: true, tier: 'free' };
+});
+
+ipcMain.handle('open-upgrade-screen', () => {
+  showActivate({ openUpgrade: true });
+  return { ok: true };
 });
 
 // Admin master keys defined at top of file

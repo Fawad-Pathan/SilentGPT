@@ -1226,10 +1226,18 @@
     updateCardBtn.disabled=false;updateCardBtn.textContent='Update Payment Method';
   });
 
-  // Subscribe now (inactive/cancelled) — opens activate window
+  // Subscribe now (inactive/cancelled) — opens the Pro upgrade screen
   var subscribeBtn=document.getElementById('sub-subscribe-btn');
-  if(subscribeBtn)subscribeBtn.addEventListener('click',function(){
-    window.silentgpt.openSettings&&window.close&&window.close();
+  if(subscribeBtn)subscribeBtn.addEventListener('click',async function(){
+    subscribeBtn.disabled=true;subscribeBtn.textContent='Opening upgrade...';
+    try{
+      if(window.silentgpt.openUpgradeScreen){
+        await window.silentgpt.openUpgradeScreen();
+      }else{
+        window.silentgpt.openSettings&&window.silentgpt.openSettings();
+      }
+    }catch(e){}
+    subscribeBtn.disabled=false;subscribeBtn.textContent='Upgrade to Pro';
   });
 
   // Load subscription when tab clicked
