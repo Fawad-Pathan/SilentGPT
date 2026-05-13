@@ -267,10 +267,17 @@ function initStore() {
     store = new Store({ name: 'silentgpt-config', defaults: STORE_DEFAULTS });
   }
 
-  // If stored API key is the placeholder, update it with the built-in key
+  // If stored provider keys are placeholders, update them from the runtime environment.
+  // This lets users drop a local .env file into the app folder without manually
+  // editing the persisted Electron store created by an earlier launch.
   const savedKey = store.get('apiKey');
   if ((!savedKey || savedKey === API_PLACEHOLDER) && BUILT_IN_API_KEY !== API_PLACEHOLDER) {
     store.set('apiKey', BUILT_IN_API_KEY);
+  }
+
+  const savedOpenAIKey = store.get('openaiKey');
+  if ((!savedOpenAIKey || savedOpenAIKey === OPENAI_KEY_PLACEHOLDER) && OPENAI_API_KEY !== OPENAI_KEY_PLACEHOLDER) {
+    store.set('openaiKey', OPENAI_API_KEY);
   }
 
   // v3.15.1 migration: Rewrite mode removed — remap its hotkey to Autopilot
