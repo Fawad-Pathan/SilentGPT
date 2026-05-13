@@ -5,84 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SilentGPT Settings</title>
 <style>
-  :root{--accent:#2f4f4f;--accent-glow:#6f8f84;--accent-dim:#1f3434;--bg-deep:#020403;--bg:#0b1210;--bg-card:rgba(13,20,18,0.88);--bg-card-hover:rgba(18,28,25,0.92);--bg-input:rgba(4,8,7,0.92);--text:#eef5f0;--text-muted:#a9bbb4;--text-dim:#65756f;--border:rgba(111,143,132,0.15);--border-card:rgba(111,143,132,0.12);--glow:rgba(111,143,132,0.08)}
+  :root{
+    --bg-deep:#020202;--bg-void:#050505;--bg-charcoal:#0d0d0f;--bg-panel:rgba(8,8,9,.94);--bg-panel-hover:rgba(14,14,16,.98);--bg-input:rgba(0,0,0,.64);
+    --text:#f4f4f1;--text-muted:#b6b6b0;--text-dim:#74746e;--text-faint:#4f4f4a;
+    --accent:#f2f2ee;--accent-glow:#ffffff;--accent-dim:#a9a9a2;
+    --border:rgba(255,255,255,.13);--border-card:rgba(255,255,255,.10);--border-strong:rgba(255,255,255,.24);--glow:rgba(255,255,255,.10)
+  }
   *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg-deep);background-image:radial-gradient(ellipse at 20% 0%,rgba(47,79,79,.46) 0%,transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(31,52,52,.42) 0%,transparent 60%),linear-gradient(180deg,#020403 0%,#0b1210 45%,#020403 100%);color:var(--text);font-family:'SF Pro Display',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;padding:0;overflow-y:auto;min-height:100vh;-webkit-app-region:drag}
-  .header{padding:28px 32px 0;display:flex;align-items:center;gap:14px}
-  .header .logo{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--accent-dim));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--text);box-shadow:0 2px 12px rgba(111,143,132,.25);letter-spacing:-.5px}
-  .header h1{font-size:20px;font-weight:600;color:var(--text);letter-spacing:-.3px}
-  .header .version{font-size:11px;color:var(--text-dim);background:rgba(111,143,132,.1);padding:3px 10px;border-radius:6px;border:1px solid rgba(111,143,132,.1);font-weight:500}
-  .header .update-badge{display:none;font-size:11px;color:#fff;background:linear-gradient(135deg,#34d399,#059669);padding:4px 12px;border-radius:6px;font-weight:600;cursor:pointer;border:none;font-family:inherit;-webkit-app-region:no-drag;animation:update-pulse 2s ease-in-out infinite;transition:all .2s}
-  .header .update-badge:hover{box-shadow:0 2px 12px rgba(52,211,153,.4);transform:translateY(-1px)}
-  @keyframes update-pulse{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,.3)}50%{box-shadow:0 0 8px 3px rgba(52,211,153,.15)}}
-  .tabs{display:flex;gap:2px;padding:20px 32px 0;-webkit-app-region:no-drag}
-  .tab{padding:10px 18px;border:none;background:transparent;color:var(--text-dim);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;border-radius:8px;transition:all .2s}
-  .tab:hover{color:var(--text-muted);background:rgba(111,143,132,.06)}
-  .tab.active{color:var(--text);background:rgba(111,143,132,.12)}
-  .content{padding:20px 32px 28px;-webkit-app-region:no-drag}
-  .tab-panel{display:none}.tab-panel.active{display:block}
-  .card{background:var(--bg-card);border:1px solid var(--border-card);border-radius:14px;padding:20px 22px;margin-bottom:16px;backdrop-filter:blur(20px);transition:border-color .2s}
-  .card:hover{border-color:rgba(111,143,132,.22)}
-  .card-title{font-size:11px;font-weight:600;color:var(--accent-glow);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-  .card-title::before{content:'';width:3px;height:12px;background:var(--accent);border-radius:2px}
-  .field{margin-bottom:18px}.field:last-child{margin-bottom:0}
-  .field label{display:block;font-size:13px;color:var(--text);margin-bottom:8px;font-weight:500}
-  .field .hint{font-size:11px;color:var(--text-dim);margin-top:6px;line-height:1.4}
-  input[type="text"],input[type="password"],input[type="number"],input[type="url"],select{width:100%;padding:11px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s}
-  input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(111,143,132,.12)}
-  input::placeholder{color:var(--text-dim)}
-  select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%236e6a60' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;cursor:pointer}
-  select option{background:#0b1210;color:var(--text)}
-  input[type="color"]{width:44px;height:44px;border:2px solid var(--border);border-radius:10px;background:none;cursor:pointer;padding:3px}
-  input[type="range"]{width:100%;height:6px;-webkit-appearance:none;appearance:none;background:rgba(111,143,132,.15);border-radius:3px;outline:none}
-  input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--accent);border-radius:50%;cursor:pointer;box-shadow:0 2px 8px rgba(111,143,132,.35);transition:transform .15s}
-  input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.15)}
-  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(111,143,132,.06)}
-  .toggle-row:last-child{border-bottom:none}
-  .toggle-info{flex:1}
-  .toggle-info .toggle-label{font-size:14px;font-weight:500;color:var(--text)}
-  .toggle-info .toggle-desc{font-size:12px;color:var(--text-dim);margin-top:3px;line-height:1.4}
-  .toggle{width:46px;height:26px;background:rgba(111,143,132,.15);border-radius:13px;position:relative;cursor:pointer;transition:background .25s;flex-shrink:0;margin-left:16px}
-  .toggle.active{background:var(--accent);box-shadow:0 0 12px rgba(111,143,132,.3)}
-  .toggle .thumb{width:20px;height:20px;background:var(--text);border-radius:50%;position:absolute;top:3px;left:3px;transition:transform .25s cubic-bezier(.4,0,.2,1);box-shadow:0 1px 4px rgba(0,0,0,.3)}
-  .toggle.active .thumb{transform:translateX(20px)}
-  .toggle.pro-locked{opacity:.45;cursor:not-allowed;filter:grayscale(.4)}
-  .toggle-row.pro-locked .toggle-label::after{content:"PRO";display:inline-block;margin-left:8px;padding:2px 6px;border-radius:5px;background:rgba(111,143,132,.14);color:var(--accent-glow);font-size:9px;font-weight:800;letter-spacing:.7px}
-  .toggle-row.pro-locked .toggle-desc::after{content:" Upgrade to SilentGPT Pro to enable this.";color:var(--accent-glow)}
-  .color-row{display:flex;align-items:center;gap:14px}
-  .color-row span{font-size:12px;color:var(--text-muted);font-family:'SF Mono','Fira Code',monospace}
-  .slider-row{display:flex;align-items:center;gap:14px}
-  .slider-row input[type="range"]{flex:1}
-  .slider-value{font-size:12px;color:var(--text-muted);min-width:40px;text-align:right;font-family:'SF Mono','Fira Code',monospace;font-variant-numeric:tabular-nums;background:rgba(111,143,132,.08);padding:4px 8px;border-radius:6px}
-  .hotkey-field{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(111,143,132,.06)}
-  .hotkey-field:last-child{border-bottom:none}
-  .hotkey-label{font-size:14px;font-weight:500;color:var(--text);display:flex;align-items:center;gap:8px}
-  .hotkey-label .mode-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-  .hotkey-input-wrap{display:flex;align-items:center;gap:8px}
-  .hotkey-input-wrap input{width:140px;padding:8px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'SF Mono','Fira Code',monospace;font-size:12px;text-align:center;outline:none;transition:border-color .2s;cursor:pointer}
-  .hotkey-input-wrap input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(111,143,132,.12)}
-  .hotkey-input-wrap input.recording{border-color:#e07040;box-shadow:0 0 0 3px rgba(224,112,64,.15);animation:pulse-border 1.5s infinite}
-  @keyframes pulse-border{0%,100%{box-shadow:0 0 0 3px rgba(224,112,64,.1)}50%{box-shadow:0 0 0 3px rgba(224,112,64,.25)}}
-  .info-callout{background:rgba(111,143,132,.06);border:1px solid rgba(111,143,132,.1);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:16px}
-  .save-bar{padding:18px 32px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;align-items:center;gap:12px;background:linear-gradient(180deg,rgba(10,10,18,.95),rgba(10,10,18,1));position:sticky;bottom:0;-webkit-app-region:no-drag;backdrop-filter:blur(20px)}
-  .btn{padding:10px 24px;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;border:none;letter-spacing:.2px}
-  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent-dim));color:var(--text);box-shadow:0 2px 12px rgba(111,143,132,.25)}
-  .btn-primary:hover{box-shadow:0 4px 20px rgba(111,143,132,.35);transform:translateY(-1px)}
-  .btn-secondary{background:rgba(111,143,132,.08);color:var(--text-muted);border:1px solid var(--border)}
-  .btn-secondary:hover{background:rgba(111,143,132,.14);color:var(--text)}
-  .save-status{font-size:13px;color:#6ec87a;align-self:center;opacity:0;transition:opacity .3s;font-weight:500;padding:6px 14px;background:rgba(110,200,122,0.1);border-radius:8px;border:1px solid rgba(110,200,122,0.2)}
-  .save-status.visible{opacity:1}
-  .update-card{text-align:center;padding:30px 22px}
-  .update-card .update-version{font-size:28px;font-weight:700;color:var(--text);margin-bottom:6px}
-  .update-card .update-label{font-size:13px;color:var(--text-dim);margin-bottom:20px}
-  .update-card .btn-update{padding:12px 32px;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;border:none;background:linear-gradient(135deg,#34d399,#059669);color:#fff;box-shadow:0 2px 12px rgba(52,211,153,.25)}
-  .update-card .btn-update:hover{box-shadow:0 4px 20px rgba(52,211,153,.4);transform:translateY(-1px)}
-  .update-card .btn-update:disabled{opacity:.5;cursor:not-allowed;transform:none}
-  .update-card .update-status{font-size:12px;color:var(--text-dim);margin-top:14px}
-  ::-webkit-scrollbar{width:5px}
-  ::-webkit-scrollbar-track{background:transparent}
-  ::-webkit-scrollbar-thumb{background:rgba(111,143,132,.2);border-radius:3px}
-  ::-webkit-scrollbar-thumb:hover{background:rgba(111,143,132,.35)}
+  html{background:#020202}
+  body{position:relative;min-height:100vh;overflow-y:auto;padding:0;color:var(--text);font-family:'SF Mono','Cascadia Mono','JetBrains Mono','IBM Plex Mono','SF Pro Text',ui-monospace,Menlo,Consolas,monospace;font-size:13px;letter-spacing:.01em;-webkit-app-region:drag;background:#020202;background-image:radial-gradient(circle at 8% 10%,rgba(255,255,255,.12) 0,rgba(255,255,255,.035) 18%,transparent 42%),radial-gradient(circle at 92% 2%,rgba(255,255,255,.10) 0,rgba(255,255,255,.025) 20%,transparent 44%),radial-gradient(circle at 78% 88%,rgba(255,255,255,.09) 0,rgba(255,255,255,.025) 22%,transparent 48%),linear-gradient(145deg,#020202 0%,#101012 42%,#050505 74%,#000 100%)}
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:linear-gradient(rgba(255,255,255,.018) 50%,rgba(0,0,0,.10) 50%),radial-gradient(ellipse at center,transparent 42%,rgba(0,0,0,.58) 100%);background-size:100% 3px,100% 100%;mix-blend-mode:screen;opacity:.56}
+  body::after{content:'';position:fixed;inset:-20%;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 20% 30%,rgba(255,255,255,.055),transparent 34%),radial-gradient(ellipse at 76% 70%,rgba(255,255,255,.045),transparent 38%);filter:blur(28px);opacity:.9;animation:ambient-drift 18s ease-in-out infinite alternate}
+  @keyframes ambient-drift{from{transform:translate3d(-1.5%,0,0) scale(1)}to{transform:translate3d(1.5%,-1%,0) scale(1.04)}}
+  @keyframes update-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.10)}50%{box-shadow:0 0 20px 2px rgba(255,255,255,.11)}}
+  .header,.tabs,.content{position:relative;z-index:1}
+  .header{padding:30px 36px 0;display:flex;align-items:center;gap:16px}
+  .header .logo{width:42px;height:42px;border:1px solid var(--border-strong);border-radius:3px;background:linear-gradient(145deg,#f4f4f1,#9f9f99);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#030303;box-shadow:0 0 36px rgba(255,255,255,.16),inset 0 0 0 1px rgba(0,0,0,.18);letter-spacing:-.08em;text-shadow:none}
+  .header h1{font-size:19px;font-weight:800;color:var(--text);letter-spacing:.08em;text-transform:uppercase;text-shadow:0 0 18px rgba(255,255,255,.18)}
+  .header .version{font-size:10px;color:var(--text-muted);background:rgba(255,255,255,.055);padding:5px 10px;border-radius:2px;border:1px solid var(--border);font-weight:700;letter-spacing:.12em;text-transform:uppercase;box-shadow:0 0 16px rgba(255,255,255,.04)}
+  .header .update-badge{display:none;font-size:10px;color:#050505;background:#f0f0ed;padding:6px 12px;border-radius:1px;border:1px solid rgba(255,255,255,.35);font-weight:800;cursor:pointer;font-family:inherit;-webkit-app-region:no-drag;animation:update-pulse 2s ease-in-out infinite;transition:opacity .18s,transform .18s;text-transform:uppercase;letter-spacing:.08em}.header .update-badge:hover{opacity:.85;transform:translateY(-1px)}
+  .tabs{display:flex;gap:8px;padding:24px 36px 0;-webkit-app-region:no-drag;flex-wrap:wrap}.tab{padding:10px 15px;border:1px solid var(--border);background:rgba(0,0,0,.42);color:var(--text-dim);font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;border-radius:2px;transition:color .18s,border-color .18s,background .18s,box-shadow .18s;text-transform:uppercase;letter-spacing:.08em}.tab:hover{color:var(--text-muted);border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.045)}.tab.active{color:var(--text);background:linear-gradient(180deg,rgba(255,255,255,.105),rgba(255,255,255,.035));border-color:rgba(255,255,255,.34);box-shadow:0 0 22px rgba(255,255,255,.07),inset 0 1px 0 rgba(255,255,255,.16)}
+  .content{padding:26px 36px 36px;-webkit-app-region:no-drag;max-width:1180px;margin:0 auto;width:100%}.tab-panel{display:none}.tab-panel.active{display:block}.tab-panel.active::before{content:'';display:block;height:1px;margin:0 0 22px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.24),transparent)}
+  .card{position:relative;background:linear-gradient(180deg,rgba(15,15,17,.92),rgba(5,5,6,.95))!important;border:1px solid var(--border-card)!important;border-radius:2px!important;padding:22px 24px;margin-bottom:18px;box-shadow:0 22px 60px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.045);transition:border-color .18s,box-shadow .18s,transform .18s;overflow:hidden}.card::before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,.035),transparent 18%,transparent 82%,rgba(255,255,255,.025));opacity:.55}.card:hover{border-color:rgba(255,255,255,.25)!important;box-shadow:0 28px 74px rgba(0,0,0,.55),0 0 28px rgba(255,255,255,.045),inset 0 1px 0 rgba(255,255,255,.07);transform:translateY(-1px)}
+  .card-title{font-size:10px;font-weight:900;color:var(--text)!important;text-transform:uppercase;letter-spacing:.16em;margin-bottom:18px;display:flex;align-items:center;gap:10px}.card-title::before{content:'';width:22px;height:1px;background:var(--accent);border-radius:0;box-shadow:0 0 12px rgba(255,255,255,.28)}
+  .field{margin-bottom:18px}.field:last-child{margin-bottom:0}.field label{display:block;font-size:12px;color:var(--text);margin-bottom:8px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}.field .hint,.toggle-info .toggle-desc,.info-callout,.update-label,.update-status{font-size:11px;color:var(--text-dim)!important;line-height:1.55}
+  input[type="text"],input[type="password"],input[type="number"],input[type="url"],select,textarea{width:100%;padding:11px 13px;background:var(--bg-input)!important;border:1px solid var(--border)!important;border-radius:1px!important;color:var(--text)!important;font-family:inherit;font-size:13px;outline:none;transition:border-color .18s,box-shadow .18s}input:focus,select:focus,textarea:focus{border-color:rgba(255,255,255,.34)!important;box-shadow:0 0 0 3px rgba(255,255,255,.06)}input::placeholder,textarea::placeholder{color:var(--text-faint)}select{appearance:none;cursor:pointer}select option{background:#080808;color:var(--text)}
+  input[type="color"]{width:44px;height:44px;border:1px solid var(--border)!important;border-radius:1px!important;background:none;cursor:pointer;padding:3px;filter:grayscale(1)}input[type="range"]{width:100%;height:5px;-webkit-appearance:none;appearance:none;background:linear-gradient(90deg,#e8e8e4 0,#e8e8e4 22%,rgba(255,255,255,.12) 22%)!important;border-radius:0;outline:none}input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:18px;background:#f2f2ee;border-radius:0;cursor:pointer;box-shadow:0 0 18px rgba(255,255,255,.18);transition:transform .15s}input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.08)}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.075)!important}.toggle-row:last-child{border-bottom:none}.toggle-info{flex:1}.toggle-info .toggle-label{font-size:13px;font-weight:800;color:var(--text)!important;text-transform:uppercase;letter-spacing:.045em}.toggle{width:46px;height:24px;background:rgba(255,255,255,.075)!important;border:1px solid var(--border);border-radius:1px;position:relative;cursor:pointer;transition:background .2s,border-color .2s;flex-shrink:0;margin-left:16px}.toggle.active{background:rgba(255,255,255,.18)!important;border-color:rgba(255,255,255,.34);box-shadow:0 0 16px rgba(255,255,255,.09)}.toggle .thumb{width:18px;height:18px;background:var(--text);border-radius:1px;position:absolute;top:2px;left:3px;transition:transform .22s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 8px rgba(0,0,0,.55)}.toggle.active .thumb{transform:translateX(20px)}.toggle.pro-locked{opacity:.45;cursor:not-allowed;filter:grayscale(1)}
+  .btn,.btn-primary,.btn-secondary,.btn-update,.nav-btn,button:not(.tab):not(.update-badge){font-family:inherit!important;border-radius:1px!important;border:1px solid rgba(255,255,255,.32)!important;background:#f0f0ed!important;color:#050505!important;font-weight:900!important;letter-spacing:.045em;text-transform:uppercase;box-shadow:none!important;transition:opacity .18s,transform .18s,background .18s!important}.btn:hover,.btn-primary:hover,.btn-secondary:hover,.btn-update:hover,button:not(.tab):not(.update-badge):hover{opacity:.82;transform:translateY(-1px)}.btn-secondary{background:rgba(255,255,255,.08)!important;color:var(--text)!important}.btn-update{padding:11px 16px;margin-top:12px;cursor:pointer}
+  .slider-row{display:flex;align-items:center;gap:12px}.slider-value{min-width:58px;color:var(--text-muted)!important;font-size:11px}.info-callout{background:rgba(255,255,255,.045)!important;border:1px solid var(--border)!important;border-radius:1px!important;padding:14px 16px;margin-bottom:16px}.hotkey-field{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.075)}.hotkey-field:last-child{border-bottom:none}.hotkey-label{color:var(--text)!important;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}.hotkey-input-wrap{min-width:190px}.mode-dot{background:#d8d8d2!important;box-shadow:0 0 10px rgba(255,255,255,.18)}.update-card{text-align:center}.update-version{font-size:28px;font-weight:900;color:var(--text)!important;margin-bottom:6px;letter-spacing:.08em}
+  .hero-panel{padding:50px 24px 42px!important;text-align:center}.hero-mark{position:relative;width:96px;height:96px;margin:0 auto 24px;border:1px solid rgba(255,255,255,.30);display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,rgba(255,255,255,.16),rgba(255,255,255,.035) 62%,rgba(0,0,0,.42));box-shadow:0 0 70px rgba(255,255,255,.14),inset 0 0 28px rgba(255,255,255,.04)}.hero-mark::before{content:'';position:absolute;inset:-36px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 62%);filter:blur(14px);z-index:-1}.hero-mark span{font-size:38px;color:#f7f7f3;text-shadow:0 0 30px rgba(255,255,255,.28)}.hero-kicker{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.28em;margin-bottom:12px}.hero-title{font-size:34px;font-weight:900;letter-spacing:-.035em;margin-bottom:10px}.hero-subtitle{font-size:14px;color:var(--text-muted);max-width:560px;margin:0 auto;line-height:1.6}.module-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:22px 0}.module-card{position:relative;min-height:208px;padding:18px;background:linear-gradient(180deg,rgba(18,18,20,.96),rgba(4,4,5,.98));border:1px solid rgba(255,255,255,.12);box-shadow:0 20px 45px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.05);overflow:hidden;transition:border-color .18s,box-shadow .18s,transform .18s}.module-card:hover{border-color:rgba(255,255,255,.30);box-shadow:0 28px 68px rgba(0,0,0,.55),0 0 30px rgba(255,255,255,.055);transform:translateY(-2px)}.module-card::after{content:'';position:absolute;left:0;right:0;bottom:0;height:58px;background:linear-gradient(0deg,rgba(255,255,255,.045),transparent);opacity:.65}.module-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:30px}.module-tags{display:flex;gap:6px;flex-wrap:wrap}.module-tag{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.055);color:var(--text-muted);font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;padding:5px 7px}.module-id{font-size:10px;color:var(--text-faint);letter-spacing:.12em}.module-title{font-size:18px;font-weight:900;color:var(--text);margin-bottom:10px;letter-spacing:-.02em}.module-desc{font-size:11px;color:var(--text-dim);line-height:1.55;min-height:35px}.phase-row{display:flex;align-items:center;justify-content:space-between;margin-top:24px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.12em}.phase-bars{display:flex;gap:3px;margin-top:10px}.phase-bars span{display:block;width:8px;height:24px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.035)}.phase-bars span.active{background:#f2f2ee;box-shadow:0 0 12px rgba(255,255,255,.18)}.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.quick-step{display:flex;gap:14px;align-items:flex-start;padding:14px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.035)}.quick-num{width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:#f0f0ed;color:#050505;font-weight:900;flex-shrink:0}.quick-copy{font-size:12px;color:var(--text-muted);line-height:1.5}.quick-copy strong{display:block;color:var(--text);font-size:13px;margin-bottom:3px;text-transform:uppercase;letter-spacing:.045em}kbd{background:rgba(255,255,255,.10)!important;color:var(--text)!important;border:1px solid rgba(255,255,255,.20)!important;border-radius:1px!important;padding:2px 7px;font-family:inherit}.status-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.055);color:var(--text-muted);padding:7px 14px;border-radius:1px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.12em}.status-pill::before{content:'';width:6px;height:6px;background:#f2f2ee;box-shadow:0 0 12px rgba(255,255,255,.40)}
+  [style*="color:#"],[style*="color: #"],[style*="color:var(--accent-glow)"]{color:inherit!important}[style*="background:rgba(34"],[style*="background:rgba(239"],[style*="background:rgba(52"],[style*="background:#"],[style*="background:linear-gradient"]{background:rgba(255,255,255,.055)!important}[style*="border:1px solid rgba(34"],[style*="border:1px solid rgba(239"],[style*="border-color:rgba(239"]{border-color:rgba(255,255,255,.14)!important}
+  @media (max-width:980px){.module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.quick-grid{grid-template-columns:1fr}.content{padding-left:24px;padding-right:24px}.tabs,.header{padding-left:24px;padding-right:24px}}
+  @media (max-width:560px){.module-grid{grid-template-columns:1fr}.hero-title{font-size:26px}.header{gap:10px}.tab{flex:1;text-align:center}.hotkey-field{align-items:flex-start;flex-direction:column}.hotkey-input-wrap{min-width:0;width:100%}}
 </style>
 </head>
 <body>
@@ -90,7 +45,7 @@
 <div class="header">
   <div class="logo">&#9889;</div>
   <h1>SilentGPT</h1>
-  <span class="version">v...</span>
+  <span class="version">v 1.00.0</span>
   <button class="update-badge" id="header-update-btn">Update Available</button>
 </div>
 
@@ -108,92 +63,83 @@
 <div class="content">
 
   <div class="tab-panel active" id="tab-home">
-    <div class="card" style="text-align:center;padding:30px 22px 24px">
-      <div style="font-size:44px;margin-bottom:8px;filter:drop-shadow(0 0 20px rgba(111,143,132,0.4))">&#9889;</div>
-      <div style="font-size:22px;font-weight:700;margin-bottom:4px">Welcome to <span style="color:var(--accent-glow)">SilentGPT</span></div>
-      <div style="font-size:13px;color:var(--text-dim);margin-bottom:20px">The invisible AI overlay that lives on your screen</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:left">
-        <div style="background:rgba(111,143,132,0.06);border:1px solid rgba(111,143,132,0.1);border-radius:10px;padding:12px">
-          <div style="font-size:16px;margin-bottom:2px">&#128269;</div>
-          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Answer</div>
-          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">Instant AI answers</div>
-        </div>
-        <div style="background:rgba(111,143,132,0.06);border:1px solid rgba(111,143,132,0.1);border-radius:10px;padding:12px">
-          <div style="font-size:16px;margin-bottom:2px">&#129518;</div>
-          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Solve</div>
-          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">Step-by-step solutions</div>
-        </div>
-        <div style="background:rgba(111,143,132,0.06);border:1px solid rgba(111,143,132,0.1);border-radius:10px;padding:12px">
-          <div style="font-size:16px;margin-bottom:2px">&#128221;</div>
-          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Essay</div>
-          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">Full essays on any topic</div>
-        </div>
-        <div style="background:rgba(111,143,132,0.06);border:1px solid rgba(111,143,132,0.1);border-radius:10px;padding:12px">
-          <div style="font-size:16px;margin-bottom:2px">&#128187;</div>
-          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Code</div>
-          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">Write & debug code</div>
-        </div>
-        <div style="background:rgba(111,143,132,0.06);border:1px solid rgba(111,143,132,0.1);border-radius:10px;padding:12px">
-          <div style="font-size:16px;margin-bottom:2px">&#128218;</div>
-          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Research</div>
-          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">Credible source analysis</div>
-        </div>
-        <div style="background:rgba(111,143,132,0.06);border:1px solid rgba(111,143,132,0.1);border-radius:10px;padding:12px">
-          <div style="font-size:16px;margin-bottom:2px">&#127760;</div>
-          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Translate</div>
-          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">35+ languages</div>
-        </div>
-        <div style="background:rgba(111,143,132,0.06);border:1px solid rgba(111,143,132,0.1);border-radius:10px;padding:12px">
-          <div style="font-size:16px;margin-bottom:2px">&#9993;&#65039;</div>
-          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Email</div>
-          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">Draft & paste replies</div>
-        </div>
-        <div style="background:rgba(111,143,132,0.06);border:1px solid rgba(111,143,132,0.1);border-radius:10px;padding:12px">
-          <div style="font-size:16px;margin-bottom:2px">&#127183;</div>
-          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Flashcards</div>
-          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">Fullscreen study cards</div>
-        </div>
-        <div style="background:rgba(111,143,132,0.06);border:1px solid rgba(111,143,132,0.1);border-radius:10px;padding:12px">
-          <div style="font-size:16px;margin-bottom:2px">&#128640;</div>
-          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Autopilot</div>
-          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">Auto-fill quizzes & forms</div>
-        </div>
-        <div style="background:rgba(111,143,132,0.06);border:1px solid rgba(111,143,132,0.1);border-radius:10px;padding:12px">
-          <div style="font-size:16px;margin-bottom:2px">&#9000;&#65039;</div>
-          <div style="font-size:12px;font-weight:600;margin-bottom:1px">Drip Type</div>
-          <div style="font-size:10px;color:var(--text-dim);line-height:1.3">Human-like typing</div>
-        </div>
+    <div class="card hero-panel">
+      <div class="hero-kicker">CLASSIFIED AI OPERATING LAYER</div>
+      <div class="hero-mark"><span>&#9889;</span></div>
+      <div class="hero-title">Welcome to SilentGPT</div>
+      <div class="hero-subtitle">The invisible AI overlay that lives on your screen</div>
+    </div>
+
+    <div class="module-grid" aria-label="SilentGPT AI system modules">
+      <div class="module-card">
+        <div class="module-head"><div class="module-tags"><span class="module-tag">simulation</span><span class="module-tag">ai-powered</span></div><div class="module-id">SG-01</div></div>
+        <div class="module-title">Answer</div>
+        <div class="module-desc">Instant visual interpretation and concise AI answers for any captured screen state.</div>
+        <div class="phase-row"><span>0% sync</span><span>Phase 1</span></div><div class="phase-bars"><span class="active"></span><span class="active"></span><span class="active"></span><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-head"><div class="module-tags"><span class="module-tag">solver</span><span class="module-tag">logic</span></div><div class="module-id">SG-02</div></div>
+        <div class="module-title">Solve</div>
+        <div class="module-desc">Step-by-step reasoning modules for math, science, and structured problem solving.</div>
+        <div class="phase-row"><span>12% sync</span><span>Phase 2</span></div><div class="phase-bars"><span class="active"></span><span class="active"></span><span class="active"></span><span class="active"></span><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-head"><div class="module-tags"><span class="module-tag">draft</span><span class="module-tag">longform</span></div><div class="module-id">SG-03</div></div>
+        <div class="module-title">Essay</div>
+        <div class="module-desc">Structured writing generation with stealth-ready outlines, paragraphs, and revisions.</div>
+        <div class="phase-row"><span>8% sync</span><span>Phase 1</span></div><div class="phase-bars"><span class="active"></span><span class="active"></span><span class="active"></span><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-head"><div class="module-tags"><span class="module-tag">compiler</span><span class="module-tag">debug</span></div><div class="module-id">SG-04</div></div>
+        <div class="module-title">Code</div>
+        <div class="module-desc">Generate, inspect, and debug code directly from captured instructions or errors.</div>
+        <div class="phase-row"><span>19% sync</span><span>Phase 3</span></div><div class="phase-bars"><span class="active"></span><span class="active"></span><span class="active"></span><span class="active"></span><span class="active"></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-head"><div class="module-tags"><span class="module-tag">intel</span><span class="module-tag">sources</span></div><div class="module-id">SG-05</div></div>
+        <div class="module-title">Research</div>
+        <div class="module-desc">Deep-source analysis mode for credible summaries, comparisons, and evidence maps.</div>
+        <div class="phase-row"><span>15% sync</span><span>Phase 2</span></div><div class="phase-bars"><span class="active"></span><span class="active"></span><span class="active"></span><span class="active"></span><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-head"><div class="module-tags"><span class="module-tag">language</span><span class="module-tag">relay</span></div><div class="module-id">SG-06</div></div>
+        <div class="module-title">Translate</div>
+        <div class="module-desc">Low-friction translation layer for captured text, prompts, and active windows.</div>
+        <div class="phase-row"><span>10% sync</span><span>Phase 1</span></div><div class="phase-bars"><span class="active"></span><span class="active"></span><span class="active"></span><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-head"><div class="module-tags"><span class="module-tag">comms</span><span class="module-tag">paste</span></div><div class="module-id">SG-07</div></div>
+        <div class="module-title">Email</div>
+        <div class="module-desc">Reply drafting and rewrite support with fast paste-back into the active application.</div>
+        <div class="phase-row"><span>6% sync</span><span>Phase 1</span></div><div class="phase-bars"><span class="active"></span><span class="active"></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-head"><div class="module-tags"><span class="module-tag">memory</span><span class="module-tag">study</span></div><div class="module-id">SG-08</div></div>
+        <div class="module-title">Flashcards</div>
+        <div class="module-desc">Convert captured material into focused study cards inside a fullscreen review system.</div>
+        <div class="phase-row"><span>14% sync</span><span>Phase 2</span></div><div class="phase-bars"><span class="active"></span><span class="active"></span><span class="active"></span><span class="active"></span><span></span><span></span><span></span><span></span></div>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title">Quick Start</div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div style="display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid rgba(111,143,132,0.06)">
-          <div style="width:28px;height:28px;background:rgba(111,143,132,0.12);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--accent-glow);flex-shrink:0">1</div>
-          <div><div style="font-size:13px;font-weight:500">Press <kbd style="background:rgba(111,143,132,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:12px;font-weight:600;border:1px solid rgba(111,143,132,0.2)">Alt+1</kbd> to activate</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">Opens the overlay on your screen</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid rgba(111,143,132,0.06)">
-          <div style="width:28px;height:28px;background:rgba(111,143,132,0.12);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--accent-glow);flex-shrink:0">2</div>
-          <div><div style="font-size:13px;font-weight:500">Drag to select any area</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">Or press Tab to type a question</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:14px;padding:10px 0">
-          <div style="width:28px;height:28px;background:rgba(111,143,132,0.12);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--accent-glow);flex-shrink:0">3</div>
-          <div><div style="font-size:13px;font-weight:500">Get instant AI results</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">Click Paste to insert into your app, Copy, or Esc to dismiss</div></div>
-        </div>
+      <div class="card-title">Quick Start Protocol</div>
+      <div class="quick-grid">
+        <div class="quick-step"><div class="quick-num">1</div><div class="quick-copy"><strong>Summon overlay</strong>Press <kbd>Alt+1</kbd> to activate SilentGPT over the current screen.</div></div>
+        <div class="quick-step"><div class="quick-num">2</div><div class="quick-copy"><strong>Capture target</strong>Drag a region or press Tab to route a typed request into the AI layer.</div></div>
+        <div class="quick-step"><div class="quick-num">3</div><div class="quick-copy"><strong>Deploy output</strong>Copy, paste, pin, or dismiss results without breaking screen focus.</div></div>
       </div>
     </div>
 
     <div class="card" style="padding:16px 22px">
       <div class="card-title">Actions</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn btn-secondary" id="replay-tour-btn" style="flex:1;min-width:120px">&#127891; Replay Tour</button>
-        <button class="btn btn-secondary" id="home-settings-btn" style="flex:1;min-width:120px">&#9881;&#65039; Settings</button>
+        <button class="btn btn-secondary" id="replay-tour-btn" style="flex:1;min-width:120px">Replay Tour</button>
+        <button class="btn btn-secondary" id="home-settings-btn" style="flex:1;min-width:120px">Settings</button>
       </div>
     </div>
 
     <div style="text-align:center;padding:8px 0">
-      <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.15);color:#22c55e;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:600">&#9679; Phantom Mode — Undetectable by screen capture</div>
+      <div class="status-pill">Phantom Mode — Undetectable by screen capture</div>
     </div>
   </div>
 
@@ -273,8 +219,8 @@
       </div>
     </div>
 
-    <div class="card" style="border-color:rgba(239,68,68,0.2)">
-      <div class="card-title" style="color:#f87171">Stealth Mode</div>
+    <div class="card" style="border-color:rgba(255,255,255,0.14)">
+      <div class="card-title" style="color:#d8d8d2">Stealth Mode</div>
       <div class="toggle-row" style="border-bottom:none">
         <div class="toggle-info">
           <div class="toggle-label">Enable Stealth Mode</div>
@@ -282,53 +228,53 @@
         </div>
         <div class="toggle" id="toggle-lockdown" data-key="lockdownMode"><div class="thumb"></div></div>
       </div>
-      <div id="lockdown-details" style="display:none;margin-top:14px;border-top:1px solid rgba(239,68,68,0.1);padding-top:14px">
-        <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.12);border-radius:10px;padding:14px 16px;margin-bottom:14px">
+      <div id="lockdown-details" style="display:none;margin-top:14px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px">
+        <div style="background:rgba(255,255,255,0.045);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 16px;margin-bottom:14px">
           <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px">How to use Stealth Mode:</div>
           <div style="font-size:12px;color:var(--text-muted);line-height:1.8">
             <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:6px">
-              <span style="background:rgba(239,68,68,0.15);color:#f87171;padding:1px 8px;border-radius:4px;font-weight:700;font-size:11px;flex-shrink:0">1</span>
+              <span style="background:rgba(255,255,255,0.10);color:#d8d8d2;padding:1px 8px;border-radius:4px;font-weight:700;font-size:11px;flex-shrink:0">1</span>
               <span>Enable Stealth Mode and press <strong style="color:var(--text)">Save Settings</strong></span>
             </div>
             <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:6px">
-              <span style="background:rgba(239,68,68,0.15);color:#f87171;padding:1px 8px;border-radius:4px;font-weight:700;font-size:11px;flex-shrink:0">2</span>
+              <span style="background:rgba(255,255,255,0.10);color:#d8d8d2;padding:1px 8px;border-radius:4px;font-weight:700;font-size:11px;flex-shrink:0">2</span>
               <span>Open SilentGPT and <strong style="color:var(--text)">activate the overlay</strong> (Alt+1 or your hotkey)</span>
             </div>
             <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:6px">
-              <span style="background:rgba(239,68,68,0.15);color:#f87171;padding:1px 8px;border-radius:4px;font-weight:700;font-size:11px;flex-shrink:0">3</span>
+              <span style="background:rgba(255,255,255,0.10);color:#d8d8d2;padding:1px 8px;border-radius:4px;font-weight:700;font-size:11px;flex-shrink:0">3</span>
               <span><strong style="color:var(--text)">Then</strong> open the app you want to use SilentGPT with</span>
             </div>
             <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:6px">
-              <span style="background:rgba(239,68,68,0.15);color:#f87171;padding:1px 8px;border-radius:4px;font-weight:700;font-size:11px;flex-shrink:0">4</span>
+              <span style="background:rgba(255,255,255,0.10);color:#d8d8d2;padding:1px 8px;border-radius:4px;font-weight:700;font-size:11px;flex-shrink:0">4</span>
               <span>Use <strong style="color:var(--text)">stealth hotkeys</strong> to control SilentGPT (see below)</span>
             </div>
             <div style="display:flex;gap:10px;align-items:flex-start">
-              <span style="background:rgba(239,68,68,0.15);color:#f87171;padding:1px 8px;border-radius:4px;font-weight:700;font-size:11px;flex-shrink:0">5</span>
+              <span style="background:rgba(255,255,255,0.10);color:#d8d8d2;padding:1px 8px;border-radius:4px;font-weight:700;font-size:11px;flex-shrink:0">5</span>
               <span>When done, press Escape to hide the overlay</span>
             </div>
           </div>
         </div>
-        <div style="background:rgba(111,143,132,0.06);border:1px solid rgba(111,143,132,0.1);border-radius:10px;padding:14px 16px;margin-bottom:14px">
+        <div style="background:rgba(255,255,255,0.075);border:1px solid rgba(255,255,255,0.10);border-radius:10px;padding:14px 16px;margin-bottom:14px">
           <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px">Stealth Hotkeys (active in Stealth Mode)</div>
           <div style="font-size:12px;color:var(--text-muted);line-height:1.8">
-            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Toggle Overlay</span><kbd style="background:rgba(111,143,132,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(111,143,132,0.2)">Ctrl+Shift+Z</kbd></div>
-            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Answer Mode</span><kbd style="background:rgba(111,143,132,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(111,143,132,0.2)">Ctrl+Shift+A</kbd></div>
-            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Simple Mode</span><kbd style="background:rgba(111,143,132,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(111,143,132,0.2)">Ctrl+Shift+S</kbd></div>
-            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Translate</span><kbd style="background:rgba(111,143,132,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(111,143,132,0.2)">Ctrl+Shift+T</kbd></div>
-            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Drip Type</span><kbd style="background:rgba(111,143,132,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(111,143,132,0.2)">Ctrl+Shift+D</kbd></div>
-            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Stop Drip</span><kbd style="background:rgba(111,143,132,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(111,143,132,0.2)">Ctrl+Shift+X</kbd></div>
-            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Solve</span><kbd style="background:rgba(111,143,132,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(111,143,132,0.2)">Ctrl+Shift+V</kbd></div>
-            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Essay</span><kbd style="background:rgba(111,143,132,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(111,143,132,0.2)">Ctrl+Shift+E</kbd></div>
-            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Code</span><kbd style="background:rgba(111,143,132,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(111,143,132,0.2)">Ctrl+Shift+C</kbd></div>
-            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Research</span><kbd style="background:rgba(111,143,132,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(111,143,132,0.2)">Ctrl+Shift+F</kbd></div>
-            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Email</span><kbd style="background:rgba(111,143,132,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(111,143,132,0.2)">Ctrl+Shift+W</kbd></div>
-            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Flashcards</span><kbd style="background:rgba(111,143,132,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(111,143,132,0.2)">Ctrl+Shift+Q</kbd></div>
-            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Autopilot</span><kbd style="background:rgba(111,143,132,0.12);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(111,143,132,0.2)">Ctrl+Shift+P</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Toggle Overlay</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+Z</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Answer Mode</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+A</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Simple Mode</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+S</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Translate</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+T</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Drip Type</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+D</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Stop Drip</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+X</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Solve</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+V</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Essay</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+E</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Code</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+C</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Research</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+F</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Email</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+W</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Flashcards</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+Q</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Autopilot</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+P</kbd></div>
           </div>
         </div>
-        <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.12);border-radius:10px;padding:12px 16px">
+        <div style="background:rgba(255,255,255,0.045);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 16px">
           <div style="font-size:12px;color:var(--text-muted);line-height:1.6">
-            <strong style="color:#f59e0b">Important:</strong> Stealth Mode uses native OS-level screen capture that works through Safe Exam Browser, Respondus, and other lockdown browsers. Screen capture, cursor drag, and all hotkeys work normally. If native capture fails on your system, press Tab to type your question manually.
+            <strong style="color:#b6b6b0">Important:</strong> Stealth Mode uses native OS-level screen capture that works through Safe Exam Browser, Respondus, and other lockdown browsers. Screen capture, cursor drag, and all hotkeys work normally. If native capture fails on your system, press Tab to type your question manually.
           </div>
         </div>
       </div>
@@ -392,7 +338,7 @@
       <div class="card-title">Theme</div>
       <div class="field">
         <label>Accent Color</label>
-        <div class="color-row"><input type="color" id="setting-accentColor" value="#2f4f4f" /><span id="accent-hex">#2f4f4f</span></div>
+        <div class="color-row"><input type="color" id="setting-accentColor" value="#f2f2ee" /><span id="accent-hex">#f2f2ee</span></div>
       </div>
       <div class="field">
         <label>Font Size</label>
@@ -449,51 +395,51 @@
     <div class="card">
       <div class="card-title">Mode Shortcuts</div>
       <div class="hotkey-field">
-        <div class="hotkey-label"><span class="mode-dot" style="background:#60a5fa"></span>Answer</div>
+        <div class="hotkey-label"><span class="mode-dot" style="background:#d8d8d2"></span>Answer</div>
         <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyAnswer" readonly value="Alt+1" data-setting="hotkeyAnswer" /></div>
       </div>
       <div class="hotkey-field">
-        <div class="hotkey-label"><span class="mode-dot" style="background:#2f4f4f"></span>Simple</div>
+        <div class="hotkey-label"><span class="mode-dot" style="background:#f2f2ee"></span>Simple</div>
         <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeySimple" readonly value="Alt+6" data-setting="hotkeySimple" /></div>
       </div>
       <div class="hotkey-field">
-        <div class="hotkey-label"><span class="mode-dot" style="background:#34d399"></span>Translate</div>
+        <div class="hotkey-label"><span class="mode-dot" style="background:#d8d8d2"></span>Translate</div>
         <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyTranslate" readonly value="Alt+2" data-setting="hotkeyTranslate" /></div>
       </div>
       <div class="hotkey-field">
-        <div class="hotkey-label"><span class="mode-dot" style="background:#f59e0b"></span>Autopilot</div>
+        <div class="hotkey-label"><span class="mode-dot" style="background:#b6b6b0"></span>Autopilot</div>
         <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyAutopilot" readonly value="Alt+4" data-setting="hotkeyAutopilot" /></div>
       </div>
       <div class="hotkey-field">
-        <div class="hotkey-label"><span class="mode-dot" style="background:#f87171"></span>Drip Type</div>
+        <div class="hotkey-label"><span class="mode-dot" style="background:#d8d8d2"></span>Drip Type</div>
         <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyDripType" readonly value="Alt+5" data-setting="hotkeyDripType" /></div>
       </div>
       <div class="hotkey-field">
-        <div class="hotkey-label"><span class="mode-dot" style="background:#ef4444"></span>Stop Drip Type</div>
+        <div class="hotkey-label"><span class="mode-dot" style="background:#d8d8d2"></span>Stop Drip Type</div>
         <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyStopDrip" readonly value="Alt+0" data-setting="hotkeyStopDrip" /></div>
       </div>
       <div class="hotkey-field">
-        <div class="hotkey-label"><span class="mode-dot" style="background:#fb923c"></span>Solve</div>
+        <div class="hotkey-label"><span class="mode-dot" style="background:#c8c8c2"></span>Solve</div>
         <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeySolve" readonly value="Alt+7" data-setting="hotkeySolve" /></div>
       </div>
       <div class="hotkey-field">
-        <div class="hotkey-label"><span class="mode-dot" style="background:#a78bfa"></span>Essay</div>
+        <div class="hotkey-label"><span class="mode-dot" style="background:#d0d0ca"></span>Essay</div>
         <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyEssay" readonly value="Alt+8" data-setting="hotkeyEssay" /></div>
       </div>
       <div class="hotkey-field">
-        <div class="hotkey-label"><span class="mode-dot" style="background:#22d3ee"></span>Code</div>
+        <div class="hotkey-label"><span class="mode-dot" style="background:#d8d8d2"></span>Code</div>
         <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyCode" readonly value="Alt+9" data-setting="hotkeyCode" /></div>
       </div>
       <div class="hotkey-field">
-        <div class="hotkey-label"><span class="mode-dot" style="background:#4ade80"></span>Research</div>
+        <div class="hotkey-label"><span class="mode-dot" style="background:#c8c8c2"></span>Research</div>
         <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyResearch" readonly value="CmdOrCtrl+Alt+1" data-setting="hotkeyResearch" /></div>
       </div>
       <div class="hotkey-field">
-        <div class="hotkey-label"><span class="mode-dot" style="background:#f472b6"></span>Email</div>
+        <div class="hotkey-label"><span class="mode-dot" style="background:#d0d0ca"></span>Email</div>
         <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyEmail" readonly value="CmdOrCtrl+Alt+2" data-setting="hotkeyEmail" /></div>
       </div>
       <div class="hotkey-field">
-        <div class="hotkey-label"><span class="mode-dot" style="background:#2f4f4f"></span>Flashcards</div>
+        <div class="hotkey-label"><span class="mode-dot" style="background:#f2f2ee"></span>Flashcards</div>
         <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyFlashcards" readonly value="CmdOrCtrl+Alt+3" data-setting="hotkeyFlashcards" /></div>
       </div>
     </div>
@@ -505,7 +451,7 @@
         <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyApp" readonly value="Alt+M" data-setting="hotkeyApp" /></div>
       </div>
       <div class="hotkey-field">
-        <div class="hotkey-label"><span class="mode-dot" style="background:#dc2626"></span>Self-Destruct</div>
+        <div class="hotkey-label"><span class="mode-dot" style="background:#b6b6b0"></span>Self-Destruct</div>
         <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeySelfDestruct" readonly value="Cmd+Alt+Shift+Backspace" data-setting="hotkeySelfDestruct" /></div>
       </div>
     </div>
@@ -557,19 +503,19 @@
         </div>
       </div>
 
-      <div class="card" id="sub-pastdue-card" style="display:none;border-color:rgba(239,68,68,0.3)">
-        <div class="card-title" style="color:#ef4444">&#9888; Payment Failed</div>
+      <div class="card" id="sub-pastdue-card" style="display:none;border-color:rgba(255,255,255,0.18)">
+        <div class="card-title" style="color:#d8d8d2">&#9888; Payment Failed</div>
         <div style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:14px">
           Your last payment failed. Please update your payment method to keep your subscription active. If not resolved, your access will be revoked.
         </div>
-        <button class="btn btn-primary" id="sub-update-card-btn" style="width:100%;background:linear-gradient(135deg,#ef4444,#dc2626)">Update Payment Method</button>
+        <button class="btn btn-primary" id="sub-update-card-btn" style="width:100%;background:#f0f0ed">Update Payment Method</button>
       </div>
 
       <div class="card" id="sub-actions-card">
         <div class="card-title">Manage</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
           <button class="btn btn-secondary" id="sub-billing-btn" style="flex:1;min-width:140px">Manage Billing</button>
-          <button class="btn btn-secondary" id="sub-cancel-btn" style="flex:1;min-width:140px;color:#ef4444;border-color:rgba(239,68,68,0.3)">Cancel Subscription</button>
+          <button class="btn btn-secondary" id="sub-cancel-btn" style="flex:1;min-width:140px;color:#d8d8d2;border-color:rgba(255,255,255,0.18)">Cancel Subscription</button>
         </div>
         <div id="sub-action-status" style="font-size:12px;margin-top:12px;text-align:center;min-height:18px"></div>
       </div>
@@ -634,7 +580,7 @@
 
   <div class="tab-panel" id="tab-updates">
     <div class="card update-card">
-      <div class="update-version" id="current-version">v...</div>
+      <div class="update-version" id="current-version">v 1.00.0</div>
       <div class="update-label">Current Version</div>
       <button class="btn-update" id="check-update-btn">Check for Updates</button>
       <div class="update-status" id="update-status"></div>
@@ -662,10 +608,10 @@
         <a id="dl-release-link" href="#" style="font-size:11px;color:var(--text-dim);text-decoration:underline;cursor:pointer">View release notes on GitHub</a>
       </div>
     </div>
-    <div class="card" style="border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.04)">
-      <div class="card-title" style="color:#ef4444">Force Close</div>
+    <div class="card" style="border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.035)">
+      <div class="card-title" style="color:#d8d8d2">Force Close</div>
       <div style="font-size:12px;color:var(--text-dim);margin-bottom:12px;line-height:1.5">Immediately kills SilentGPT and all related processes (overlay, watchdog, pinned windows). Useful before installing an update or if something gets stuck.</div>
-      <button class="btn" id="force-close-btn" style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-weight:600;width:100%;padding:10px;font-size:13px;cursor:pointer;border-radius:8px;transition:all .15s" onmouseover="this.style.background='rgba(239,68,68,0.22)'" onmouseout="this.style.background='rgba(239,68,68,0.12)'">Force Close SilentGPT</button>
+      <button class="btn" id="force-close-btn" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:#d8d8d2;font-weight:600;width:100%;padding:10px;font-size:13px;cursor:pointer;border-radius:8px;transition:all .15s" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">Force Close SilentGPT</button>
     </div>
   </div>
 </div>
@@ -832,7 +778,7 @@
   document.getElementById('save-btn').addEventListener('click',function(){window.silentgpt.saveSettings(gather());showSaved()});
 
   document.getElementById('reset-btn').addEventListener('click',function(){
-    window.silentgpt.saveSettings({accentColor:'#2f4f4f',fontSize:14,fontFamily:'system-ui, -apple-system, sans-serif',borderRadius:12,hotkey:'Alt+3',hotkeyAnswer:'Alt+1',hotkeySimple:'Alt+6',hotkeyTranslate:'Alt+2',hotkeyAutopilot:'Alt+4',hotkeyDripType:'Alt+5',hotkeyStopDrip:'Alt+0',hotkeySolve:'Alt+7',hotkeyEssay:'Alt+8',hotkeyCode:'Alt+9',hotkeyResearch:'CmdOrCtrl+Alt+1',hotkeyEmail:'CmdOrCtrl+Alt+2',hotkeyFlashcards:'CmdOrCtrl+Alt+3',hotkeyApp:'Alt+M',hotkeySelfDestruct:'CmdOrCtrl+Alt+Shift+Backspace',language:'Spanish',phantomMode:false,invisibleOverlay:false,autoEngine:true,simpleMode:false,lockdownMode:false,credibleSourcesOnly:false,dripSpeed:40,dripWPM:45,dripDelay:10,typoRate:0.06,dripPauseChance:0.03,dripBurstChance:0.08,overlayOpacity:0});
+    window.silentgpt.saveSettings({accentColor:'#f2f2ee',fontSize:14,fontFamily:'system-ui, -apple-system, sans-serif',borderRadius:12,hotkey:'Alt+3',hotkeyAnswer:'Alt+1',hotkeySimple:'Alt+6',hotkeyTranslate:'Alt+2',hotkeyAutopilot:'Alt+4',hotkeyDripType:'Alt+5',hotkeyStopDrip:'Alt+0',hotkeySolve:'Alt+7',hotkeyEssay:'Alt+8',hotkeyCode:'Alt+9',hotkeyResearch:'CmdOrCtrl+Alt+1',hotkeyEmail:'CmdOrCtrl+Alt+2',hotkeyFlashcards:'CmdOrCtrl+Alt+3',hotkeyApp:'Alt+M',hotkeySelfDestruct:'CmdOrCtrl+Alt+Shift+Backspace',language:'Spanish',phantomMode:false,invisibleOverlay:false,autoEngine:true,simpleMode:false,lockdownMode:false,credibleSourcesOnly:false,dripSpeed:40,dripWPM:45,dripDelay:10,typoRate:0.06,dripPauseChance:0.03,dripBurstChance:0.08,overlayOpacity:0});
     loadSettings();showSaved();
   });
 
@@ -853,10 +799,10 @@
         var r=await window.silentgpt.checkForUpdates();
         if(r.upToDate){
           updateStatus.textContent='You are up to date!';
-          updateStatus.style.color='#6ec87a';
+          updateStatus.style.color='#d8d8d2';
         }else{
           updateStatus.innerHTML='Version <strong style="color:var(--text)">v'+r.latest+'</strong> is available!';
-          updateStatus.style.color='#34d399';
+          updateStatus.style.color='#d8d8d2';
 
           // Show platform download buttons
           var dlPanel=document.getElementById('update-downloads');
@@ -889,7 +835,7 @@
         }
       }catch(e){
         updateStatus.textContent='Could not check for updates.';
-        updateStatus.style.color='#ef4444';
+        updateStatus.style.color='#d8d8d2';
       }
       updateBtn.textContent='Check for Updates';
       updateBtn.disabled=false;
@@ -900,8 +846,8 @@
   (async function(){
     try{
       var v=await window.silentgpt.getAppVersion();
-      document.querySelector('.version').textContent='v'+v;
-      document.getElementById('current-version').textContent='v'+v;
+      document.querySelector('.version').textContent='v 1.00.0';
+      document.getElementById('current-version').textContent='v 1.00.0';
       // Auto-check for updates silently
       try{
         var r=await window.silentgpt.checkForUpdates();
@@ -962,7 +908,7 @@
         html+='<div class="card" style="padding:18px 22px">';
         html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
         html+='<div style="font-size:16px;font-weight:700;color:var(--text)">v'+r.version+'</div>';
-        html+='<div style="font-size:11px;color:var(--text-dim);background:rgba(111,143,132,0.08);padding:3px 10px;border-radius:6px">'+r.date+'</div>';
+        html+='<div style="font-size:11px;color:var(--text-dim);background:rgba(255,255,255,0.055);padding:3px 10px;border-radius:6px">'+r.date+'</div>';
         html+='</div>';
         html+='<div style="font-size:12px;color:var(--text-muted);line-height:1.7">'+bodyHtml+'</div>';
         html+='</div>';
@@ -992,19 +938,19 @@
       var desc=document.getElementById('ticket-description').value.trim();
       var email=document.getElementById('ticket-email').value.trim();
       var status=document.getElementById('ticket-status');
-      if(!subj||!desc){status.style.color='#ef4444';status.textContent='Please fill in subject and description.';return}
+      if(!subj||!desc){status.style.color='#d8d8d2';status.textContent='Please fill in subject and description.';return}
       submitBtn.disabled=true;submitBtn.textContent='Submitting...';
       try{
         var r=await window.silentgpt.submitTicket({subject:subj,description:desc,email:email});
         if(r.success){
           var msg='Ticket submitted! ID: '+r.ticketId;
           if(r.offline) msg+=' (saved locally — will sync when online)';
-          status.style.color='#6ec87a';status.textContent=msg;
+          status.style.color='#d8d8d2';status.textContent=msg;
           document.getElementById('ticket-subject').value='';
           document.getElementById('ticket-description').value='';
           loadUserTickets();
-        }else{status.style.color='#ef4444';status.textContent=r.error||'Failed to submit ticket.'}
-      }catch(e){status.style.color='#ef4444';status.textContent='Error submitting ticket.'}
+        }else{status.style.color='#d8d8d2';status.textContent=r.error||'Failed to submit ticket.'}
+      }catch(e){status.style.color='#d8d8d2';status.textContent='Error submitting ticket.'}
       submitBtn.disabled=false;submitBtn.textContent='Submit Ticket';
     });
   }
@@ -1018,9 +964,9 @@
       if(!tickets||tickets.length===0){el.textContent='No tickets submitted yet.';return}
       var html='';
       tickets.forEach(function(t){
-        var statusColors={'open':'#f59e0b','in-progress':'#3b82f6','resolved':'#6ec87a','closed':'#ef4444','wont-fix':'#6b7280'};
-        var statusColor=statusColors[t.status]||'#f59e0b';
-        html+='<div style="padding:12px 0;border-bottom:1px solid rgba(111,143,132,0.06)" data-ticket-id="'+(t.ghNumber||t.id)+'">';
+        var statusColors={'open':'#b6b6b0','in-progress':'#d8d8d2','resolved':'#d8d8d2','closed':'#d8d8d2','wont-fix':'#74746e'};
+        var statusColor=statusColors[t.status]||'#b6b6b0';
+        html+='<div style="padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.075)" data-ticket-id="'+(t.ghNumber||t.id)+'">';
         html+='<div style="display:flex;align-items:center;justify-content:space-between">';
         html+='<div style="font-size:14px;font-weight:500;color:var(--text)">'+esc(t.subject)+'</div>';
         html+='<div style="font-size:10px;font-weight:600;text-transform:uppercase;color:'+statusColor+';background:'+statusColor+'15;padding:3px 8px;border-radius:4px">'+esc(t.status)+'</div>';
@@ -1039,8 +985,8 @@
         }
         // Admin reply (visible to everyone)
         if(t.adminReply){
-          html+='<div style="margin-top:8px;padding:8px 12px;background:rgba(107,142,35,0.08);border-left:3px solid #6ec87a;border-radius:0 6px 6px 0;font-size:12px;color:var(--text-muted);line-height:1.5">';
-          html+='<div style="font-size:10px;font-weight:600;color:#6ec87a;margin-bottom:4px">ADMIN REPLY</div>';
+          html+='<div style="margin-top:8px;padding:8px 12px;background:rgba(255,255,255,0.055);border-left:3px solid #d8d8d2;border-radius:0 6px 6px 0;font-size:12px;color:var(--text-muted);line-height:1.5">';
+          html+='<div style="font-size:10px;font-weight:600;color:#d8d8d2;margin-bottom:4px">ADMIN REPLY</div>';
           html+=esc(t.adminReply);
           html+='</div>';
         }
@@ -1113,27 +1059,27 @@
       renewsEl.textContent='—';
 
       if(info.isAdmin){
-        badge.style.background='rgba(111,143,132,0.12)';badge.style.color='var(--accent-glow)';badge.textContent='Admin';
+        badge.style.background='rgba(255,255,255,0.08)';badge.style.color='var(--accent-glow)';badge.textContent='Admin';
         document.getElementById('sub-admin-card').style.display='block';renewsRow.style.display='none';
         return;
       }
 
       if(info.status==='active'&&!info.cancelAtPeriodEnd){
-        badge.style.background='rgba(34,197,94,0.1)';badge.style.color='#22c55e';badge.textContent='\u25CF Active';
+        badge.style.background='rgba(255,255,255,0.08)';badge.style.color='#d8d8d2';badge.textContent='\u25CF Active';
         document.getElementById('sub-actions-card').style.display='block';
       }else if(info.cancelAtPeriodEnd){
-        badge.style.background='rgba(245,158,11,0.1)';badge.style.color='#f59e0b';badge.textContent='\u25CF Cancelling';
+        badge.style.background='rgba(255,255,255,0.08)';badge.style.color='#b6b6b0';badge.textContent='\u25CF Cancelling';
         document.getElementById('sub-cancelled-card').style.display='block';
         document.getElementById('sub-cancel-date').textContent=info.currentPeriodEnd||'end of billing period';
         renewsLabel.textContent='Access until';
       }else if(info.status==='past_due'){
-        badge.style.background='rgba(239,68,68,0.1)';badge.style.color='#ef4444';badge.textContent='\u25CF Past Due';
+        badge.style.background='rgba(255,255,255,0.08)';badge.style.color='#d8d8d2';badge.textContent='\u25CF Past Due';
         document.getElementById('sub-pastdue-card').style.display='block';
       }else if(info.status==='trialing'){
-        badge.style.background='rgba(96,165,250,0.1)';badge.style.color='#60a5fa';badge.textContent='\u25CF Trial';
+        badge.style.background='rgba(255,255,255,0.08)';badge.style.color='#d8d8d2';badge.textContent='\u25CF Trial';
         document.getElementById('sub-actions-card').style.display='block';
       }else if(info.status==='canceled'){
-        badge.style.background='rgba(239,68,68,0.1)';badge.style.color='#ef4444';badge.textContent='\u25CF Cancelled';
+        badge.style.background='rgba(255,255,255,0.08)';badge.style.color='#d8d8d2';badge.textContent='\u25CF Cancelled';
         document.getElementById('sub-inactive-card').style.display='block';
         document.getElementById('sub-inactive-text').textContent='Your subscription has been cancelled. Subscribe again to regain access.';
         renewsRow.style.display='none';
@@ -1174,10 +1120,10 @@
     try{
       var r=await window.silentgpt.cancelSubscription();
       if(r.success){
-        status.style.color='#f59e0b';status.textContent='Subscription will cancel at end of period.';
+        status.style.color='#b6b6b0';status.textContent='Subscription will cancel at end of period.';
         setTimeout(function(){loadSubscription(true)},800);
-      }else{status.style.color='#ef4444';status.textContent=r.error||'Failed to cancel.';}
-    }catch(e){status.style.color='#ef4444';status.textContent='Error cancelling.';}
+      }else{status.style.color='#d8d8d2';status.textContent=r.error||'Failed to cancel.';}
+    }catch(e){status.style.color='#d8d8d2';status.textContent='Error cancelling.';}
     cancelBtn.disabled=false;cancelBtn.textContent='Cancel Subscription';
   });
 
@@ -1189,10 +1135,10 @@
     try{
       var r=await window.silentgpt.reactivateSubscription();
       if(r.success){
-        status.style.color='#6ec87a';status.textContent='Subscription reactivated!';
+        status.style.color='#d8d8d2';status.textContent='Subscription reactivated!';
         setTimeout(function(){loadSubscription(true)},800);
-      }else{status.style.color='#ef4444';status.textContent=r.error||'Failed to reactivate.';}
-    }catch(e){status.style.color='#ef4444';status.textContent='Error reactivating.';}
+      }else{status.style.color='#d8d8d2';status.textContent=r.error||'Failed to reactivate.';}
+    }catch(e){status.style.color='#d8d8d2';status.textContent='Error reactivating.';}
     reactBtn.disabled=false;reactBtn.textContent='Reactivate Subscription';
   });
 
@@ -1205,11 +1151,11 @@
       if(r.url){
         window.silentgpt.openExternal(r.url);
       }else{
-        document.getElementById('sub-action-status').style.color='#ef4444';
+        document.getElementById('sub-action-status').style.color='#d8d8d2';
         document.getElementById('sub-action-status').textContent=r.error||'Could not open billing.';
       }
     }catch(e){
-      document.getElementById('sub-action-status').style.color='#ef4444';
+      document.getElementById('sub-action-status').style.color='#d8d8d2';
       document.getElementById('sub-action-status').textContent='Network error. Check your connection.';
     }
     billingBtn.disabled=false;billingBtn.textContent='Manage Billing';
