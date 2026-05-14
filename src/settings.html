@@ -127,11 +127,9 @@
   .feature-related-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .feature-related-list div{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border:1px solid rgba(255,255,255,.10);border-radius:8px;background:rgba(255,255,255,.03);font-size:11px;color:#bdbdb8}
   .feature-related-list kbd{font-size:10px!important;white-space:nowrap}
-  .tab-panel{animation:tab-panel-in .22s ease both}
-  .tab-panel.tab-leaving{display:flex!important;pointer-events:none;animation:tab-panel-out .16s ease both}
-  .tab-panel.active{animation:tab-panel-in .24s cubic-bezier(.2,.8,.2,1) both}
-  @keyframes tab-panel-in{from{opacity:0;transform:translateY(10px) scale(.99);filter:blur(2px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
-  @keyframes tab-panel-out{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(-8px) scale(.99)}}
+  .tab-panel{animation:none}
+  .tab-panel.active{animation:tab-panel-in .18s ease both}
+  @keyframes tab-panel-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
   @media (max-width:560px){.feature-related-list{grid-template-columns:1fr}.feature-keybind-box{align-items:flex-start;flex-direction:column}.feature-modal-card{padding:22px}}
 
 
@@ -803,13 +801,8 @@
   function activateTab(tabName){
     var nextPanel=document.getElementById('tab-'+tabName);
     if(!nextPanel||nextPanel===activePanel)return;
-    var leaving=activePanel;
     tabs.forEach(function(x){x.classList.toggle('active',x.dataset.tab===tabName)});
-    if(leaving){
-      leaving.classList.add('tab-leaving');
-      leaving.classList.remove('active');
-      setTimeout(function(){leaving.classList.remove('tab-leaving')},180);
-    }
+    panels.forEach(function(panel){panel.classList.remove('active')});
     nextPanel.classList.add('active');
     activePanel=nextPanel;
     setSaveBarVisibility(tabName);
