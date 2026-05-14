@@ -189,7 +189,7 @@ const STORE_DEFAULTS = {
   apiKey:        BUILT_IN_API_KEY,
   openaiKey:     OPENAI_API_KEY,
   apiEndpoint:   'https://api.openai.com/v1/chat/completions',
-  model:         'gpt-4o',
+  model:         'gpt-5.4-mini',
   overlayOpacity: 0.0,
   accentColor:   '#2f4f4f',
   fontSize:      14,
@@ -1993,7 +1993,7 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
 
   // Determine which AI provider to use:
   // - Research mode → Perplexity (has web search built in)
-  // - Everything else → OpenAI GPT-4o (better vision, accuracy, JSON)
+  // - Everything else → OpenAI GPT-5.4 mini (better vision, accuracy, JSON)
   const usePerplexity = (mode === 'research');
 
   let apiKey, endpoint, model;
@@ -2009,7 +2009,7 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
     endpoint = 'https://api.perplexity.ai/chat/completions';
     model = 'sonar-pro';
   } else {
-    // OpenAI GPT-4o for all other modes
+    // OpenAI GPT-5.4 mini for all other modes
     apiKey = OPENAI_API_KEY;
     if (apiKey === OPENAI_KEY_PLACEHOLDER) {
       const stored = store.get('openaiKey');
@@ -2026,7 +2026,7 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
       model = 'sonar-pro';
     } else {
       endpoint = 'https://api.openai.com/v1/chat/completions';
-      model = 'gpt-4o';
+      model = 'gpt-5.4-mini';
     }
   }
 
@@ -2034,7 +2034,7 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
     return { error: 'API key not configured. Please reinstall SilentGPT or contact support.' };
   }
 
-  console.log(`[AI] Mode: ${mode}, Provider: ${endpoint.includes('openai') ? 'OpenAI GPT-4o' : 'Perplexity'}`);
+  console.log(`[AI] Mode: ${mode}, Provider: ${endpoint.includes('openai') ? 'OpenAI GPT-5.4 mini' : 'Perplexity'}`);
 
 
   // If we have nothing (no text, no image), show helpful error
@@ -2072,7 +2072,7 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
   }
   const msgs = [{ role: 'system', content: systemPrompt }];
 
-  // Build user message — include image(s) if available (GPT-4o has excellent vision)
+  // Build user message — include image(s) if available (GPT-5.4 mini has excellent vision)
   // Support multiple images via the `images` array
   const allImages = images && images.length > 0 ? images : (imageDataUrl ? [imageDataUrl] : []);
   const parts = [];
