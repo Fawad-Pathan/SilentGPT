@@ -33,6 +33,7 @@ contextBridge.exposeInMainWorld('silentgpt', {
   authSignup:      (data) => ipcRenderer.invoke('auth-signup', data),
   authSignin:      (data) => ipcRenderer.invoke('auth-signin', data),
   authDone:        ()     => ipcRenderer.send('auth-done'),
+  logout:          ()     => ipcRenderer.send('auth-logout'),
 
   welcomeDone:     () => ipcRenderer.send('welcome-done'),
   replayTour:      () => ipcRenderer.send('replay-tour'),

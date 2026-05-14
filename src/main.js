@@ -2839,6 +2839,15 @@ ipcMain.on('auth-done', () => {
   }
 });
 
+ipcMain.on('auth-logout', () => {
+  store.set('authDone', false);
+  try { if (overlayWin && !overlayWin.isDestroyed()) overlayWin.hide(); } catch (_) {}
+  showAuth();
+  setTimeout(() => {
+    try { if (settingsWin && !settingsWin.isDestroyed()) settingsWin.close(); } catch (_) {}
+  }, 100);
+});
+
 /* ─────────────────── Welcome / First Launch ─────────────────── */
 
 let welcomeWin = null;
