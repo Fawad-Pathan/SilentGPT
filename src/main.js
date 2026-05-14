@@ -16,6 +16,29 @@ const os = require('os');
 const { exec } = require('child_process');
 const Store = require('electron-store');
 
+const APP_ICON_PATH = path.join(__dirname, '..', 'assets', 'icon.png');
+const APP_TRAY_ICON_PATH = path.join(__dirname, '..', 'assets', 'icon_16.png');
+const BRAND_LOGO_CSS_PATH = path.join(__dirname, 'brand-logo.css');
+let cachedBrandLogoDataUrl = null;
+let cachedBrandLogoImage = null;
+
+function getBrandLogoDataUrl() {
+  if (cachedBrandLogoDataUrl) return cachedBrandLogoDataUrl;
+  const css = fs.readFileSync(BRAND_LOGO_CSS_PATH, 'utf8');
+  const match = css.match(/url\("(data:image\/png;base64,[^"]+)"\)/);
+  cachedBrandLogoDataUrl = match ? match[1] : '';
+  return cachedBrandLogoDataUrl;
+}
+
+function getAppIconImage(size) {
+  if (!cachedBrandLogoImage) {
+    const dataUrl = getBrandLogoDataUrl();
+    cachedBrandLogoImage = dataUrl ? nativeImage.createFromDataURL(dataUrl) : nativeImage.createFromPath(APP_ICON_PATH);
+  }
+  if (size && !cachedBrandLogoImage.isEmpty()) return cachedBrandLogoImage.resize({ width: size, height: size, quality: 'best' });
+  return cachedBrandLogoImage;
+}
+
 /* ─────────────────── Startup / Storage Configuration ─────────────────── */
 
 function ensureDirectory(dirPath) {
@@ -78,6 +101,7 @@ try { Menu.setApplicationMenu(null); } catch (_) {}
 
 function framelessWindowOptions() {
   return {
+    icon: getAppIconImage(),
     autoHideMenuBar: true,
     titleBarStyle: 'hidden',
     titleBarOverlay: {
@@ -982,9 +1006,10 @@ function toggle() {
 /* ─────────────────── Tray Icon ─────────────────── */
 
 function makeTray() {
-  const icon64 = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA2ElEQVR4nGNgGAWDAfD///8vBuL/eMT/M5AB/v//z4DHgP9QMU4NjFgMYGBgYPj/HwrwGPAfajAbNwMDVAMuA/5DNTNDDcEJ/v+HOuU/PkfhcwYTAwMDA8P/////J9YZYMDIwMDAwIjDgP9QNjMDHrBo0SJGZANYkTgcHBws2AxgRhJjYWRkhIux4HMGCwMDAwMrLgOQ/cyCywBmZBfgMoCZkZERT2CiGsCKLxCZGYkIRGY8schMIBaZscUiEwOe1MjMSCgaGRjwZ2hmIvIzCxYxqjXQGwAAL69DD1mFmEAAAAAASUVORK5CYII=';
+  let trayImage = getAppIconImage(16);
+  if (trayImage.isEmpty()) trayImage = nativeImage.createFromPath(APP_TRAY_ICON_PATH);
 
-  tray = new Tray(nativeImage.createFromDataURL('data:image/png;base64,' + icon64));
+  tray = new Tray(trayImage);
 
   const licensed = isAppUnlocked();
   const menu = Menu.buildFromTemplate([
@@ -2339,6 +2364,7 @@ async function openCheckoutWindow(url, sessionId) {
     resizable: true, minimizable: false, maximizable: false,
     title: 'SilentGPT — Subscribe',
     backgroundColor: '#020403',
+    icon: getAppIconImage(),
     webPreferences: { nodeIntegration: false, contextIsolation: true }
   });
 
@@ -3463,6 +3489,10 @@ function applyCloseResistance(win) {
 /* ─────────────────── App Lifecycle ─────────────────── */
 
 app.whenReady().then(async () => {
+  app.setAppUserModelId('net.trysilentgpt.app');
+  if (process.platform === 'darwin') {
+    try { app.dock?.setIcon(getAppIconImage()); } catch (_) {}
+  }
   // Initialize store AFTER app is ready so getPath('userData') works
   initStore();
   initAnalytics();
