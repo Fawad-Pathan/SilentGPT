@@ -334,7 +334,7 @@
         }
       }
       var compImg=capture?await compressImg(capture):null;
-      var res=await window.silentgpt.aiRequest({mode:'answer',text:ocr||'Look at the screen and write a detailed, natural response to whatever question or prompt is visible. Write as if you are a student answering. If there is math, read all notation from the image carefully — exponents, fractions, integrals, subscripts. Show your work.',imageDataUrl:compImg,region:null,language:settings.language});
+      var res=await window.silentgpt.aiRequest({mode:'answer',text:ocr||'Look at the screen and write a detailed, natural response to whatever question or prompt is visible. Write as if you are a student answering. If there is math, read all notation from the image carefully — exponents, fractions, integrals, subscripts. Give the actual final answer first, then show your work; do not only describe the method.',imageDataUrl:compImg,region:null,language:settings.language});
       if(res.error){
         dtPencil.innerHTML='<span class="pencil-icon">&#9998;</span> Auto Draft';
         dtPencil.disabled=false;
@@ -445,7 +445,7 @@
     var img=null, ocr=manual||null, allImages=[];
     if(capture&&selRect){
       img=await cropImg(capture,selRect);
-      // Skip OCR — GPT-4o vision with detail:high reads the image far more accurately
+      // Skip OCR — GPT-5.4 mini vision with detail:high reads the image far more accurately
       // than Tesseract, and bad OCR text actively confuses the model
       allImages=[img];
     } else if(captures.length>0&&!manual){
