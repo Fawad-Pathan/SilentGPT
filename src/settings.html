@@ -70,32 +70,35 @@
   #tab-home .hero-title{font-size:28px!important;line-height:1.1;font-weight:900!important;letter-spacing:-.04em!important;margin-bottom:16px;color:#f1f1f1;text-shadow:0 0 12px rgba(255,255,255,.17)}
   #tab-home .hero-subtitle{font-size:16px!important;color:#b8b8b8!important;line-height:1.4;max-width:none;margin:0 auto;font-weight:500;letter-spacing:-.04em}
   .home-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 12px;margin-top:18px}
-  #tab-home .module-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 12px;margin:18px 0 0!important}
-  #tab-home .module-card{height:146px!important;min-height:146px!important;padding:28px 28px!important;background:rgba(0,0,0,.12)!important;border:1px solid rgba(255,255,255,.16)!important;border-radius:5px!important;box-shadow:none!important;display:grid;grid-template-columns:1fr 34px;grid-template-rows:32px 1fr;align-items:end;transition:background .15s,border-color .15s;overflow:hidden;cursor:default}
+  #tab-home .module-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-auto-rows:1fr;gap:10px;margin:18px 0 0!important}
+  #tab-home .module-card{aspect-ratio:5/2!important;height:auto!important;min-height:58px!important;padding:10px 10px!important;background:rgba(0,0,0,.12)!important;border:1px solid rgba(255,255,255,.16)!important;border-radius:5px!important;box-shadow:none!important;display:grid;grid-template-columns:1fr 18px;grid-template-rows:18px 1fr;align-items:end;transition:background .15s,border-color .15s;overflow:hidden;cursor:default}
   #tab-home .module-card:hover{transform:none!important;background:rgba(255,255,255,.025)!important;border-color:rgba(255,255,255,.23)!important;box-shadow:none!important}
-  .module-icon{grid-column:1;grid-row:1;align-self:start;color:#dedede;width:31px;height:31px}
-  .module-icon svg{width:31px;height:31px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
-  #tab-home .module-title{grid-column:1;grid-row:2;font-size:20px!important;line-height:1;font-weight:900!important;letter-spacing:-.05em!important;margin:0 0 25px;color:#ededed!important}
-  #tab-home .module-desc{grid-column:1;grid-row:2;font-size:15px!important;color:#b6b6b6!important;line-height:1.2;min-height:0;margin-top:28px;letter-spacing:-.04em;font-weight:500}
-  .module-arrow{grid-column:2;grid-row:1 / span 2;align-self:center;justify-self:end;color:#aaa;font-size:34px;font-weight:200;line-height:1;margin-right:0;margin-top:12px}
+  .module-icon{grid-column:1;grid-row:1;align-self:start;color:#dedede;width:18px;height:18px}
+  .module-icon svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  #tab-home .module-title{grid-column:1;grid-row:2;font-size:13px!important;line-height:1;font-weight:900!important;letter-spacing:-.05em!important;margin:0 0 13px;color:#ededed!important}
+  #tab-home .module-desc{grid-column:1 / span 2;grid-row:2;font-size:9px!important;color:#b6b6b6!important;line-height:1.1;min-height:0;margin-top:18px;letter-spacing:-.04em;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .module-arrow{grid-column:2;grid-row:1 / span 2;align-self:center;justify-self:end;color:#aaa;font-size:18px;font-weight:200;line-height:1;margin-right:0;margin-top:4px}
   #tab-home .module-head,#tab-home .phase-row,#tab-home .phase-bars,.hero-kicker,#tab-home .quick-grid,#tab-home .quick-step,#tab-home .quick-num,#tab-home .quick-copy,#tab-home .card-title,#tab-home .status-pill,#tab-home .home-actions{display:none!important}
   .save-bar{position:fixed;left:1px;right:1px;bottom:1px;height:116px;z-index:8;display:flex;align-items:center;justify-content:flex-end;gap:22px;padding:28px 34px;background:rgba(0,0,0,.72);border-top:1px solid rgba(255,255,255,.13);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);-webkit-app-region:no-drag}
   .save-status{opacity:0;margin-right:auto;color:#cfcfcf;font-size:13px;transition:opacity .2s}.save-status.visible{opacity:1}
   .save-bar .btn{height:54px;min-width:136px;padding:0 30px!important;border-radius:3px!important;font-size:19px!important;text-transform:none!important;letter-spacing:-.04em!important;font-weight:900!important;border:1px solid rgba(255,255,255,.24)!important;cursor:pointer}
   .save-bar .btn-secondary{background:rgba(0,0,0,.3)!important;color:#efefef!important}
   .save-bar .btn-primary{min-width:220px;background:#f2f2f2!important;color:#050505!important;border-color:#fff!important;box-shadow:0 0 18px rgba(255,255,255,.08)!important}
-  @media (max-width:980px){.tabs{gap:8px;flex-wrap:wrap}.tab{font-size:14px!important;padding:0 14px!important}.home-grid,#tab-home .module-grid{grid-template-columns:1fr}.header,.tabs,.content{padding-left:28px!important;padding-right:28px!important}}
+  .save-bar.is-hidden{display:none!important}
+  @media (max-width:980px){.tabs{gap:8px;flex-wrap:wrap}.tab{font-size:14px!important;padding:0 14px!important}.home-grid{grid-template-columns:1fr}.header,.tabs,.content{padding-left:28px!important;padding-right:28px!important}}
 
   /* 700x900 launch-fit polish: compact header/tabs and use the provided logo asset. */
-  .header{padding:18px 24px 0!important;gap:12px!important;max-width:700px!important;flex-wrap:wrap!important}
+  .header{padding:12px 18px!important;gap:12px!important;max-width:700px!important;margin:16px auto 0!important;flex-wrap:wrap!important;background:linear-gradient(180deg,rgba(15,15,17,.78),rgba(5,5,6,.72))!important;border:1px solid rgba(255,255,255,.13)!important;border-radius:8px!important;box-shadow:0 18px 44px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.05)!important}
   .header .logo{width:38px!important;height:38px!important;flex:0 0 38px!important;border:1px solid rgba(255,255,255,.18)!important;border-radius:7px!important;background:#000!important;box-shadow:0 0 22px rgba(255,255,255,.14)!important;position:relative!important;color:transparent!important;font-size:0!important;overflow:hidden!important}
   .header .logo::before,.header .logo::after,.hero-mark::before,.hero-mark::after{display:none!important}
   .header h1{font-size:18px!important;letter-spacing:-.02em!important}
   .header .version{font-size:11px!important;padding:3px 8px!important}
   .header .update-badge{padding:5px 9px!important;font-size:10px!important;margin-left:0!important}
-  .tabs{max-width:700px!important;padding:12px 24px 0!important;gap:5px!important;flex-wrap:wrap!important;justify-content:flex-start!important}
-  .tab{height:34px!important;padding:0 9px!important;font-size:10px!important;letter-spacing:-.02em!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:4px!important;background:rgba(255,255,255,.035)!important}
-  .content{max-width:700px!important;padding:16px 24px 28px!important}
+  .window-close{position:static!important;margin-left:auto!important;width:32px!important;height:32px!important;border:1px solid rgba(255,255,255,.13)!important;border-radius:6px!important;background:rgba(255,255,255,.035)!important;color:#f0f0ed!important;font-size:24px!important;line-height:28px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
+  .window-close:hover{background:rgba(255,255,255,.07)!important;border-color:rgba(255,255,255,.20)!important;opacity:1!important}
+  .tabs{max-width:700px!important;margin:10px auto 0!important;padding:6px!important;gap:5px!important;flex-wrap:nowrap!important;justify-content:space-between!important;background:linear-gradient(180deg,rgba(15,15,17,.74),rgba(5,5,6,.68))!important;border:1px solid rgba(255,255,255,.13)!important;border-radius:8px!important;box-shadow:0 18px 44px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.05)!important}
+  .tab{height:34px!important;flex:1 1 0!important;min-width:0!important;padding:0 7px!important;font-size:10px!important;letter-spacing:-.02em!important;border:1px solid transparent!important;border-radius:5px!important;background:transparent!important;color:#bdbdb8!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}.tab:hover{background:rgba(255,255,255,.055)!important;border-color:rgba(255,255,255,.12)!important;color:#f2f2ee!important}.tab.active{background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.045))!important;border-color:rgba(255,255,255,.22)!important;color:#fff!important;box-shadow:0 0 18px rgba(255,255,255,.055),inset 0 1px 0 rgba(255,255,255,.10)!important}
+  .content{max-width:700px!important;padding:16px 0 28px!important}
   #tab-home .hero-panel{height:200px!important;padding:24px 18px!important}
   #tab-home .hero-mark{width:64px!important;height:64px!important;margin-bottom:12px!important;background:#000!important;border:1px solid rgba(255,255,255,.16)!important;border-radius:12px!important;box-shadow:0 0 24px rgba(255,255,255,.14)!important;overflow:hidden!important}
   #tab-home .hero-title{font-size:24px!important;margin-bottom:10px!important}
@@ -129,7 +132,7 @@
   <div class="tab-panel active" id="tab-home">
     <div class="card hero-panel">
       <div class="hero-mark"><span></span></div>
-      <div class="hero-title">Welcome to SilentGPT</div>
+      <div class="hero-title" id="welcome-user-message">Welcome User</div>
       <div class="hero-subtitle">The invisible AI overlay that lives on your screen.</div>
     </div>
 
@@ -636,7 +639,7 @@
   </div>
 </div>
 
-<div class="save-bar">
+<div class="save-bar is-hidden">
   <span class="save-status" id="save-status">Settings saved!</span>
   <button class="btn btn-secondary" id="reset-btn">Reset</button>
   <button class="btn btn-primary" id="save-btn">Save Settings</button>
@@ -646,12 +649,20 @@
 (function(){
   var tabs=document.querySelectorAll('.tab'), panels=document.querySelectorAll('.tab-panel');
   var currentSettings={};
-  tabs.forEach(function(t){t.addEventListener('click',function(){
-    tabs.forEach(function(x){x.classList.remove('active')});
-    panels.forEach(function(x){x.classList.remove('active')});
-    t.classList.add('active');
-    document.getElementById('tab-'+t.dataset.tab).classList.add('active');
-  })});
+  var saveBar=document.querySelector('.save-bar');
+
+  function setSaveBarVisibility(tabName){
+    if(saveBar)saveBar.classList.toggle('is-hidden',tabName!=='general');
+  }
+
+  function activateTab(tabName){
+    tabs.forEach(function(x){x.classList.toggle('active',x.dataset.tab===tabName)});
+    panels.forEach(function(x){x.classList.toggle('active',x.id==='tab-'+tabName)});
+    setSaveBarVisibility(tabName);
+  }
+
+  tabs.forEach(function(t){t.addEventListener('click',function(){activateTab(t.dataset.tab)})});
+  setSaveBarVisibility('home');
 
   async function loadSettings(){
     var s=await window.silentgpt.getSettings();
@@ -678,6 +689,11 @@
       var el=document.getElementById('hk-'+f);
       if(el&&s[f])el.value=s[f];
     });
+    var welcome=document.getElementById('welcome-user-message');
+    if(welcome){
+      var name=(s.authName||'').trim();
+      welcome.textContent='Welcome '+(name||'User');
+    }
     updateVals();
     // Show lockdown details if lockdown mode is active
     var ldToggle=document.getElementById('toggle-lockdown');
@@ -890,10 +906,7 @@
           btn.style.display='inline-block';
           btn.addEventListener('click',function(){
             // Switch to updates tab
-            tabs.forEach(function(x){x.classList.remove('active')});
-            panels.forEach(function(x){x.classList.remove('active')});
-            document.querySelector('[data-tab="updates"]').classList.add('active');
-            document.getElementById('tab-updates').classList.add('active');
+            activateTab('updates');
             // Auto-trigger the update check
             document.getElementById('check-update-btn').click();
           });
@@ -907,10 +920,7 @@
   if(replayBtn)replayBtn.addEventListener('click',function(){ window.silentgpt.replayTour(); });
   var homeSettingsBtn=document.getElementById('home-settings-btn');
   if(homeSettingsBtn)homeSettingsBtn.addEventListener('click',function(){
-    tabs.forEach(function(x){x.classList.remove('active')});
-    panels.forEach(function(x){x.classList.remove('active')});
-    document.querySelector('[data-tab="general"]').classList.add('active');
-    document.getElementById('tab-general').classList.add('active');
+    activateTab('general');
   });
 
   // Force Close button
