@@ -722,13 +722,13 @@ function makeSettings() {
   // Clean up stale reference
   settingsWin = null;
 
-  const bounds = fitWindowToPrimaryDisplay(700, 800);
-  const minSize = fitMinimumSize(560, 640);
+  const bounds = fitWindowToPrimaryDisplay(1080, 1440, { margin: 24 });
+  const minSize = fitMinimumSize(760, 900, { margin: 24 });
   settingsWin = new BrowserWindow({
     ...bounds,
     ...minSize,
     ...framelessWindowOptions(),
-    resizable: true, minimizable: true, maximizable: false,
+    frame: false, resizable: true, minimizable: true, maximizable: false,
     title: 'SilentGPT Settings',
     backgroundColor: '#020403',
     webPreferences: {
