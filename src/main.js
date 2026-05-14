@@ -874,10 +874,18 @@ async function grabScreen() {
       thumbnailSize: { width: Math.round(width * scale), height: Math.round(height * scale) }
     });
     if (sources && sources.length > 0) {
-      const img = sources[0].thumbnail.toDataURL();
+      const displayId = String(display.id || '');
+      const aspect = width / height;
+      const source = sources.find(src => String(src.display_id || '') === displayId)
+        || sources.find(src => {
+          const size = src.thumbnail.getSize();
+          return size && size.height && Math.abs((size.width / size.height) - aspect) < 0.03;
+        })
+        || sources[0];
+      const img = source.thumbnail.toDataURL();
       if (img && img.length > MIN_VALID_SIZE) return img; // Good capture
       // If image is too small, desktopCapturer probably returned blank/black — fall through
-      console.log(`[CAPTURE] desktopCapturer returned small image (${img ? img.length : 0} chars) — trying native capture`);
+      console.log(`[CAPTURE] desktopCapturer returned small image (${img ? img.length : 0} chars) for ${source.name || 'screen'} — trying native capture`);
     }
   } catch (_) {}
 
@@ -928,11 +936,7 @@ function showWithMode(mode) {
   if (!isAppUnlocked()) { showActivate(); return; }
   if (!overlayWin) makeOverlay();
 
-  if (overlayUp) {
-    overlayWin.setIgnoreMouseEvents(false);          // reset click-through from previous session
-    overlayWin.webContents.send('set-mode', mode);
-    return;
-  }
+  const wasOverlayVisible = overlayUp && overlayWin && !overlayWin.isDestroyed() && overlayWin.isVisible();
 
   const finishShow = (img) => {
     if (!overlayWin) return;
@@ -967,9 +971,16 @@ function showWithMode(mode) {
     return;
   }
 
-  // Normal mode: overlay is hidden at this point, capture the full screen
-  // grabScreen() now tries desktopCapturer first, then native capture as fallback
-  grabScreen().then(img => finishShow(img)).catch(() => finishShow(null));
+  // Normal mode: hide any existing overlay before capture so Alt+1 never reuses
+  // the previous screenshot or captures the answer panel itself.
+  if (wasOverlayVisible) {
+    try { overlayWin.hide(); } catch (_) {}
+    overlayUp = false;
+    stopLockdownKeepAlive();
+  }
+  setTimeout(() => {
+    grabScreen().then(img => finishShow(img)).catch(() => finishShow(null));
+  }, wasOverlayVisible ? 180 : 0);
 }
 
 // Instant Answer: capture full screen → show overlay → auto-send to AI (no drag needed)
@@ -2065,6 +2076,9 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
   // If simpleMode toggle is ON, override 'answer' mode to use 'simple' prompt
   const effectiveMode = (mode === 'answer' && store.get('simpleMode')) ? 'simple' : mode;
   let systemPrompt = prompts[effectiveMode] || prompts.answer;
+  if (['answer', 'simple', 'solve', 'essay', 'code', 'research', 'flashcards'].includes(effectiveMode)) {
+    systemPrompt += '\n\nOutput must be neat and direct. Put the final result first as "Answer: ..." unless the mode explicitly says only the answer. Use clean readable math symbols: write √(...) instead of sqrt(...), x²/x³ for simple powers, / for simple fractions, and Unicode symbols such as π, ∞, ≤, ≥, ≈, ±, ×, ÷ where appropriate. Avoid raw LaTeX commands in the visible answer. For math, silently double-check the copied notation and arithmetic before responding; if the screenshot is unclear or missing key information, say what is unclear instead of guessing.';
+  }
   // Prepend user's custom AI context if set
   const aiContext = (store.get('aiContext') || '').trim();
   if (aiContext) {
