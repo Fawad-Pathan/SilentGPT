@@ -88,15 +88,17 @@
   @media (max-width:980px){.tabs{gap:8px;flex-wrap:wrap}.tab{font-size:14px!important;padding:0 14px!important}.home-grid,#tab-home .module-grid{grid-template-columns:1fr}.header,.tabs,.content{padding-left:28px!important;padding-right:28px!important}}
 
   /* 700x900 launch-fit polish: compact header/tabs and use the provided logo asset. */
-  .header{padding:18px 24px 0!important;gap:12px!important;max-width:700px!important;flex-wrap:wrap!important}
+  .header{padding:12px 18px!important;gap:12px!important;max-width:700px!important;margin:16px auto 0!important;flex-wrap:wrap!important;background:linear-gradient(180deg,rgba(15,15,17,.78),rgba(5,5,6,.72))!important;border:1px solid rgba(255,255,255,.13)!important;border-radius:8px!important;box-shadow:0 18px 44px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.05)!important}
   .header .logo{width:38px!important;height:38px!important;flex:0 0 38px!important;border:1px solid rgba(255,255,255,.18)!important;border-radius:7px!important;background:#000!important;box-shadow:0 0 22px rgba(255,255,255,.14)!important;position:relative!important;color:transparent!important;font-size:0!important;overflow:hidden!important}
   .header .logo::before,.header .logo::after,.hero-mark::before,.hero-mark::after{display:none!important}
   .header h1{font-size:18px!important;letter-spacing:-.02em!important}
   .header .version{font-size:11px!important;padding:3px 8px!important}
   .header .update-badge{padding:5px 9px!important;font-size:10px!important;margin-left:0!important}
-  .tabs{max-width:700px!important;padding:12px 24px 0!important;gap:5px!important;flex-wrap:wrap!important;justify-content:flex-start!important}
-  .tab{height:34px!important;padding:0 9px!important;font-size:10px!important;letter-spacing:-.02em!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:4px!important;background:rgba(255,255,255,.035)!important}
-  .content{max-width:700px!important;padding:16px 24px 28px!important}
+  .window-close{position:static!important;margin-left:auto!important;width:32px!important;height:32px!important;border:1px solid rgba(255,255,255,.13)!important;border-radius:6px!important;background:rgba(255,255,255,.035)!important;color:#f0f0ed!important;font-size:24px!important;line-height:28px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
+  .window-close:hover{background:rgba(255,255,255,.07)!important;border-color:rgba(255,255,255,.20)!important;opacity:1!important}
+  .tabs{max-width:700px!important;margin:10px auto 0!important;padding:6px!important;gap:5px!important;flex-wrap:nowrap!important;justify-content:space-between!important;background:linear-gradient(180deg,rgba(15,15,17,.74),rgba(5,5,6,.68))!important;border:1px solid rgba(255,255,255,.13)!important;border-radius:8px!important;box-shadow:0 18px 44px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.05)!important}
+  .tab{height:34px!important;flex:1 1 0!important;min-width:0!important;padding:0 7px!important;font-size:10px!important;letter-spacing:-.02em!important;border:1px solid transparent!important;border-radius:5px!important;background:transparent!important;color:#bdbdb8!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}.tab:hover{background:rgba(255,255,255,.055)!important;border-color:rgba(255,255,255,.12)!important;color:#f2f2ee!important}.tab.active{background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.045))!important;border-color:rgba(255,255,255,.22)!important;color:#fff!important;box-shadow:0 0 18px rgba(255,255,255,.055),inset 0 1px 0 rgba(255,255,255,.10)!important}
+  .content{max-width:700px!important;padding:16px 0 28px!important}
   #tab-home .hero-panel{height:200px!important;padding:24px 18px!important}
   #tab-home .hero-mark{width:64px!important;height:64px!important;margin-bottom:12px!important;background:#000!important;border:1px solid rgba(255,255,255,.16)!important;border-radius:12px!important;box-shadow:0 0 24px rgba(255,255,255,.14)!important;overflow:hidden!important}
   #tab-home .hero-title{font-size:24px!important;margin-bottom:10px!important}
