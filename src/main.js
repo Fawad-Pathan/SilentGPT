@@ -722,8 +722,8 @@ function makeSettings() {
   // Clean up stale reference
   settingsWin = null;
 
-  const bounds = fitWindowToPrimaryDisplay(1080, 1440, { margin: 24 });
-  const minSize = fitMinimumSize(760, 900, { margin: 24 });
+  const bounds = fitWindowToPrimaryDisplay(700, 900, { margin: 24 });
+  const minSize = fitMinimumSize(700, 900, { margin: 24 });
   settingsWin = new BrowserWindow({
     ...bounds,
     ...minSize,
