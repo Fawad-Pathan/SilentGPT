@@ -101,7 +101,6 @@
 <div class="tabs">
   <button class="tab active" data-tab="home">Home</button>
   <button class="tab" data-tab="general">General</button>
-  <button class="tab" data-tab="appearance">Appearance</button>
   <button class="tab" data-tab="hotkeys">Hotkeys</button>
   <button class="tab" data-tab="subscription">Subscription</button>
   <button class="tab" data-tab="support">Support</button>
@@ -192,6 +191,20 @@
       <div class="toggle-row">
         <div class="toggle-info"><div class="toggle-label">Invisible Overlay</div><div class="toggle-desc">Overlay background is fully transparent — content floats over your screen</div></div>
         <div class="toggle" id="toggle-invisible" data-key="invisibleOverlay"><div class="thumb"></div></div>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">Ghost Answer</div>
+          <div class="toggle-desc">Show answer text only — no background, no box, no border. Maximum stealth.</div>
+        </div>
+        <div class="toggle" id="toggle-ghostAnswer" data-key="ghostAnswer"><div class="thumb"></div></div>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">Clear Screen</div>
+          <div class="toggle-desc">Hide all overlay UI (mode indicator, instructions, buttons). Only the response panel shows after you drag-select.</div>
+        </div>
+        <div class="toggle" id="toggle-clearScreen" data-key="clearScreen"><div class="thumb"></div></div>
       </div>
       <div class="toggle-row">
         <div class="toggle-info"><div class="toggle-label">Auto Engine</div><div class="toggle-desc">Automatically selects the best AI model for your query</div></div>
@@ -368,54 +381,6 @@
         <label>Burst Typing</label>
         <div class="slider-row"><input type="range" id="setting-dripBurstChance" min="0" max="0.25" step="0.01" /><span class="slider-value" id="drip-burst-value">8%</span></div>
         <div class="hint">Chance of briefly speeding up — like quickly typing a familiar word or phrase</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="tab-panel" id="tab-appearance">
-    <div class="card">
-      <div class="card-title">Theme</div>
-      <div class="field">
-        <label>Accent Color</label>
-        <div class="color-row"><input type="color" id="setting-accentColor" value="#f2f2ee" /><span id="accent-hex">#f2f2ee</span></div>
-      </div>
-      <div class="field">
-        <label>Font Size</label>
-        <div class="slider-row"><input type="range" id="setting-fontSize" min="10" max="22" step="1" /><span class="slider-value" id="fontsize-value">14px</span></div>
-      </div>
-      <div class="field">
-        <label>Border Radius</label>
-        <div class="slider-row"><input type="range" id="setting-borderRadius" min="0" max="24" step="1" /><span class="slider-value" id="radius-value">12px</span></div>
-      </div>
-      <div class="field">
-        <label>Overlay Opacity</label>
-        <div class="slider-row"><input type="range" id="setting-overlayOpacity" min="0" max="10" step="1" /><span class="slider-value" id="opacity-value">0</span></div>
-        <div class="hint">0 = invisible, 10 = fully darkened overlay</div>
-      </div>
-      <div class="toggle-row">
-        <div class="toggle-info">
-          <div class="toggle-label">Ghost Answer</div>
-          <div class="toggle-desc">Show answer text only — no background, no box, no border. Maximum stealth.</div>
-        </div>
-        <div class="toggle" id="toggle-ghostAnswer" data-key="ghostAnswer"><div class="thumb"></div></div>
-      </div>
-      <div class="toggle-row">
-        <div class="toggle-info">
-          <div class="toggle-label">Clear Screen</div>
-          <div class="toggle-desc">Hide all overlay UI (mode indicator, instructions, buttons). Only the response panel shows after you drag-select.</div>
-        </div>
-        <div class="toggle" id="toggle-clearScreen" data-key="clearScreen"><div class="thumb"></div></div>
-      </div>
-      <div class="field">
-        <label>Font Family</label>
-        <select id="setting-fontFamily">
-          <option value="system-ui, -apple-system, sans-serif">System Default</option>
-          <option value="'Inter', sans-serif">Inter</option>
-          <option value="'SF Pro Display', sans-serif">SF Pro</option>
-          <option value="'Segoe UI', sans-serif">Segoe UI</option>
-          <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
-          <option value="'Fira Code', monospace">Fira Code</option>
-        </select>
       </div>
     </div>
   </div>
@@ -664,6 +629,7 @@
 <script>
 (function(){
   var tabs=document.querySelectorAll('.tab'), panels=document.querySelectorAll('.tab-panel');
+  var currentSettings={};
   tabs.forEach(function(t){t.addEventListener('click',function(){
     tabs.forEach(function(x){x.classList.remove('active')});
     panels.forEach(function(x){x.classList.remove('active')});
@@ -673,6 +639,7 @@
 
   async function loadSettings(){
     var s=await window.silentgpt.getSettings();
+    currentSettings=s||{};
     document.querySelectorAll('.toggle').forEach(function(tog){
       var k=tog.dataset.key;
       if(k){if(s[k])tog.classList.add('active');else tog.classList.remove('active')}
@@ -768,28 +735,39 @@
     }
   });
 
+  function valueOrExisting(id,key,fallback,parser){
+    var el=document.getElementById(id);
+    if(!el)return currentSettings[key]!==undefined?currentSettings[key]:fallback;
+    return parser?parser(el.value):el.value;
+  }
+
+  function toggleActive(id){
+    var el=document.getElementById(id);
+    return !!(el&&el.classList.contains('active'));
+  }
+
   function gather(){
     return {
-      lockdownMode:document.getElementById('toggle-lockdown').classList.contains('active'),
-      phantomMode:document.getElementById('toggle-phantom').classList.contains('active'),
-      invisibleOverlay:document.getElementById('toggle-invisible').classList.contains('active'),
-      autoEngine:document.getElementById('toggle-autoengine').classList.contains('active'),
-      simpleMode:document.getElementById('toggle-simple').classList.contains('active'),
-      credibleSourcesOnly:document.getElementById('toggle-credible').classList.contains('active'),
-      startAtLogin:document.getElementById('toggle-startup').classList.contains('active'),
+      lockdownMode:toggleActive('toggle-lockdown'),
+      phantomMode:toggleActive('toggle-phantom'),
+      invisibleOverlay:toggleActive('toggle-invisible'),
+      autoEngine:toggleActive('toggle-autoengine'),
+      simpleMode:toggleActive('toggle-simple'),
+      credibleSourcesOnly:toggleActive('toggle-credible'),
+      startAtLogin:toggleActive('toggle-startup'),
       autopilotDelay:parseInt(document.getElementById('autopilotDelay').value)||800,
       autopilotDelayRandom:parseInt(document.getElementById('autopilotDelayRandom').value)||500,
-      autopilotHumanize:document.getElementById('toggle-apHumanize').classList.contains('active'),
-      autopilotScrollTo:document.getElementById('toggle-apScrollTo').classList.contains('active'),
-      language:document.getElementById('setting-language').value,
-      aiContext:(document.getElementById('setting-aiContext').value||'').trim(),
-      accentColor:document.getElementById('setting-accentColor').value,
-      fontSize:parseInt(document.getElementById('setting-fontSize').value),
-      borderRadius:parseInt(document.getElementById('setting-borderRadius').value),
-      overlayOpacity:parseInt(document.getElementById('setting-overlayOpacity').value)||0,
-      ghostAnswer:document.getElementById('toggle-ghostAnswer').classList.contains('active'),
-      clearScreen:document.getElementById('toggle-clearScreen').classList.contains('active'),
-      fontFamily:document.getElementById('setting-fontFamily').value,
+      autopilotHumanize:toggleActive('toggle-apHumanize'),
+      autopilotScrollTo:toggleActive('toggle-apScrollTo'),
+      language:valueOrExisting('setting-language','language','Spanish'),
+      aiContext:(valueOrExisting('setting-aiContext','aiContext','')||'').trim(),
+      accentColor:valueOrExisting('setting-accentColor','accentColor','#f2f2ee'),
+      fontSize:valueOrExisting('setting-fontSize','fontSize',14,function(v){return parseInt(v)||14}),
+      borderRadius:valueOrExisting('setting-borderRadius','borderRadius',12,function(v){return parseInt(v)||12}),
+      overlayOpacity:valueOrExisting('setting-overlayOpacity','overlayOpacity',0,function(v){return parseInt(v)||0}),
+      ghostAnswer:toggleActive('toggle-ghostAnswer'),
+      clearScreen:toggleActive('toggle-clearScreen'),
+      fontFamily:valueOrExisting('setting-fontFamily','fontFamily','system-ui, -apple-system, sans-serif'),
       dripSpeed:40,
       dripWPM:parseInt(document.getElementById('setting-dripWPM').value)||45,
       dripDelay:parseInt(document.getElementById('setting-dripDelay').value)||10,
@@ -817,7 +795,7 @@
   document.getElementById('save-btn').addEventListener('click',function(){window.silentgpt.saveSettings(gather());showSaved()});
 
   document.getElementById('reset-btn').addEventListener('click',function(){
-    window.silentgpt.saveSettings({accentColor:'#f2f2ee',fontSize:14,fontFamily:'system-ui, -apple-system, sans-serif',borderRadius:12,hotkey:'Alt+3',hotkeyAnswer:'Alt+1',hotkeySimple:'Alt+6',hotkeyTranslate:'Alt+2',hotkeyAutopilot:'Alt+4',hotkeyDripType:'Alt+5',hotkeyStopDrip:'Alt+0',hotkeySolve:'Alt+7',hotkeyEssay:'Alt+8',hotkeyCode:'Alt+9',hotkeyResearch:'CmdOrCtrl+Alt+1',hotkeyEmail:'CmdOrCtrl+Alt+2',hotkeyFlashcards:'CmdOrCtrl+Alt+3',hotkeyApp:'Alt+M',hotkeySelfDestruct:'CmdOrCtrl+Alt+Shift+Backspace',language:'Spanish',phantomMode:false,invisibleOverlay:false,autoEngine:true,simpleMode:false,lockdownMode:false,credibleSourcesOnly:false,dripSpeed:40,dripWPM:45,dripDelay:10,typoRate:0.06,dripPauseChance:0.03,dripBurstChance:0.08,overlayOpacity:0});
+    window.silentgpt.saveSettings({accentColor:'#f2f2ee',fontSize:14,fontFamily:'system-ui, -apple-system, sans-serif',borderRadius:12,hotkey:'Alt+3',hotkeyAnswer:'Alt+1',hotkeySimple:'Alt+6',hotkeyTranslate:'Alt+2',hotkeyAutopilot:'Alt+4',hotkeyDripType:'Alt+5',hotkeyStopDrip:'Alt+0',hotkeySolve:'Alt+7',hotkeyEssay:'Alt+8',hotkeyCode:'Alt+9',hotkeyResearch:'CmdOrCtrl+Alt+1',hotkeyEmail:'CmdOrCtrl+Alt+2',hotkeyFlashcards:'CmdOrCtrl+Alt+3',hotkeyApp:'Alt+M',hotkeySelfDestruct:'CmdOrCtrl+Alt+Shift+Backspace',language:'Spanish',phantomMode:false,invisibleOverlay:false,ghostAnswer:false,clearScreen:false,autoEngine:true,simpleMode:false,lockdownMode:false,credibleSourcesOnly:false,dripSpeed:40,dripWPM:45,dripDelay:10,typoRate:0.06,dripPauseChance:0.03,dripBurstChance:0.08,overlayOpacity:0});
     loadSettings();showSaved();
   });
 
