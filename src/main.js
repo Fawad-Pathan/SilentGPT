@@ -189,7 +189,7 @@ const STORE_DEFAULTS = {
   apiKey:        BUILT_IN_API_KEY,
   openaiKey:     OPENAI_API_KEY,
   apiEndpoint:   'https://api.openai.com/v1/chat/completions',
-  model:         'gpt-4o',
+  model:         'gpt-5.4-mini',
   overlayOpacity: 0.0,
   accentColor:   '#2f4f4f',
   fontSize:      14,
@@ -1993,7 +1993,7 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
 
   // Determine which AI provider to use:
   // - Research mode → Perplexity (has web search built in)
-  // - Everything else → OpenAI GPT-4o (better vision, accuracy, JSON)
+  // - Everything else → OpenAI GPT-5.4 mini (better vision, accuracy, JSON)
   const usePerplexity = (mode === 'research');
 
   let apiKey, endpoint, model;
@@ -2009,7 +2009,7 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
     endpoint = 'https://api.perplexity.ai/chat/completions';
     model = 'sonar-pro';
   } else {
-    // OpenAI GPT-4o for all other modes
+    // OpenAI GPT-5.4 mini for all other modes
     apiKey = OPENAI_API_KEY;
     if (apiKey === OPENAI_KEY_PLACEHOLDER) {
       const stored = store.get('openaiKey');
@@ -2026,7 +2026,7 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
       model = 'sonar-pro';
     } else {
       endpoint = 'https://api.openai.com/v1/chat/completions';
-      model = 'gpt-4o';
+      model = 'gpt-5.4-mini';
     }
   }
 
@@ -2034,7 +2034,7 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
     return { error: 'API key not configured. Please reinstall SilentGPT or contact support.' };
   }
 
-  console.log(`[AI] Mode: ${mode}, Provider: ${endpoint.includes('openai') ? 'OpenAI GPT-4o' : 'Perplexity'}`);
+  console.log(`[AI] Mode: ${mode}, Provider: ${endpoint.includes('openai') ? 'OpenAI GPT-5.4 mini' : 'Perplexity'}`);
 
 
   // If we have nothing (no text, no image), show helpful error
@@ -2046,12 +2046,12 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
   }
 
   const prompts = {
-    answer:    "You are a helpful AI assistant. ALWAYS start your response with the direct answer on the first line, clearly stated. Then leave a blank line and provide a brief explanation if needed. For math problems: state the final answer first (e.g. 'Answer: 42' or 'The integral equals 2x³ + C'), then show key steps below. FORMATTING RULES: Never use LaTeX commands like \\frac{}{}, \\left, \\right, \\int, \\sum, \\sqrt, etc. Instead write math in plain readable text: use / for fractions (e.g. '3/4' not '\\frac{3}{4}'), ^ for exponents (e.g. 'x^2'), sqrt() for roots, and Unicode symbols where helpful (∫, Σ, π, ∞, ², ³). Keep responses concise — no more than 8-10 lines. If the content contains math or science notation in the image, read it VERY carefully. Pay close attention to exponents, fractions, subscripts, and special symbols.",
+    answer:    "You are a helpful AI assistant. ALWAYS start your response with the direct answer on the first line, clearly stated. For math problems or equations visible in an image, you MUST compute the actual final answer first (e.g. 'Answer: x = 7' or 'Answer: 42') before explaining. Never only describe how to solve it; if enough information is visible, finish the calculation. Then leave a blank line and provide a brief explanation if needed. FORMATTING RULES: Never use LaTeX commands like \\frac{}{}, \\left, \\right, \\int, \\sum, \\sqrt, etc. Instead write math in plain readable text: use / for fractions (e.g. '3/4' not '\\frac{3}{4}'), ^ for exponents (e.g. 'x^2'), sqrt() for roots, and Unicode symbols where helpful (∫, Σ, π, ∞, ², ³). Keep responses concise — no more than 8-10 lines. If the content contains math or science notation in the image, read it VERY carefully. Pay close attention to exponents, fractions, subscripts, and special symbols.",
     simple:    "You are a helpful AI assistant. Give ONLY the final answer — no explanation, no steps, no reasoning, no extra words. If it's a math problem, just the number or expression. If it's a question, just the answer. If it's multiple choice, just the letter. Nothing else. NEVER use LaTeX commands — write math in plain text with / for fractions, ^ for exponents, sqrt() for roots. Read mathematical notation from the image extremely carefully.",
     translate: `You are a professional translator. Translate ALL the provided text into ${language || store.get('language')}. Only provide the translation, no explanations.`,
     summarize: 'You are an expert summarizer. Start with a one-line summary, then key takeaways. Be concise. Never use LaTeX formatting.',
-    explain:   'You are an expert teacher. Start with the direct answer, then explain step by step. Keep it clear and readable. NEVER use LaTeX commands like \\frac, \\left, \\right — write math in plain text with / for fractions, ^ for exponents, sqrt() for roots, and Unicode symbols (∫, Σ, π, ², ³). If the content contains math or science, read all notation from the image VERY carefully.',
-    solve:     'You are an expert tutor. Solve the problem step-by-step, showing ALL work exactly as a student would write it on paper. Number each step clearly. State the final answer on its own line at the end (e.g. "Final Answer: 42"). NEVER use LaTeX — write math in plain text with / for fractions, ^ for exponents, sqrt() for roots, and Unicode symbols (∫, Σ, π, ∞, ², ³). Read all notation from the image VERY carefully.',
+    explain:   'You are an expert teacher. Start with the direct answer, then explain step by step. For math problems or equations visible in an image, compute the actual final answer before explaining; never only describe the method. Keep it clear and readable. NEVER use LaTeX commands like \\frac, \\left, \\right — write math in plain text with / for fractions, ^ for exponents, sqrt() for roots, and Unicode symbols (∫, Σ, π, ², ³). If the content contains math or science, read all notation from the image VERY carefully.',
+    solve:     'You are an expert tutor. Solve the problem completely. First line MUST be the actual final answer (e.g. "Answer: x = 7" or "Answer: 42"). Then show the step-by-step work exactly as a student would write it on paper. Number each step clearly. Do not only explain the method; complete the arithmetic/algebra/calculus and give the final numeric or symbolic result. Repeat the final answer on its own line at the end (e.g. "Final Answer: 42"). NEVER use LaTeX — write math in plain text with / for fractions, ^ for exponents, sqrt() for roots, and Unicode symbols (∫, Σ, π, ∞, ², ³). Read all notation from the image VERY carefully.',
     essay:     'You are an academic essay writer. Write a well-structured essay on the topic shown. Include: a clear thesis statement, 3-4 body paragraphs with topic sentences and supporting evidence, and a strong conclusion. Use formal academic tone. Aim for 500-800 words. Write in proper paragraph form — no bullet points or lists.',
     code:      'You are an expert programmer. Write clean, well-documented code to solve the problem shown. Use markdown code blocks with the correct language specifier (e.g. ```python, ```javascript, ```java, ```cpp). Include comments explaining key logic. Follow best practices: meaningful variable names, error handling, efficiency. If the language is not specified, infer it from context.',
     research:  store.get('credibleSourcesOnly')
@@ -2072,18 +2072,18 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
   }
   const msgs = [{ role: 'system', content: systemPrompt }];
 
-  // Build user message — include image(s) if available (GPT-4o has excellent vision)
+  // Build user message — include image(s) if available (GPT-5.4 mini has excellent vision)
   // Support multiple images via the `images` array
   const allImages = images && images.length > 0 ? images : (imageDataUrl ? [imageDataUrl] : []);
   const parts = [];
   if (text && allImages.length > 0) {
-    parts.push({ type: 'text', text: text + '\n\n[NOTE: The above text was extracted via OCR and may contain errors, especially with math notation like exponents, fractions, and symbols. ALWAYS rely on the attached image(s) for the exact notation — the images are the ground truth.' + (allImages.length > 1 ? ' Multiple screen captures are provided — analyze ALL of them together.' : '') + ']' });
+    parts.push({ type: 'text', text: text + '\n\n[NOTE: The above text was extracted via OCR and may contain errors, especially with math notation like exponents, fractions, and symbols. ALWAYS rely on the attached image(s) for the exact notation — the images are the ground truth. If a math problem or equation is visible, solve it fully and give the actual final answer first; do not just describe how to solve it.' + (allImages.length > 1 ? ' Multiple screen captures are provided — analyze ALL of them together.' : '') + ']' });
   } else if (text) {
     parts.push({ type: 'text', text: text });
   } else {
     parts.push({ type: 'text', text: allImages.length > 1
-      ? 'Analyze ALL the screen captures shown in the images. Read any visible text carefully and respond to whatever questions or prompts are visible across all images.'
-      : 'Analyze the selected screen region shown in the image. Read any visible text carefully and respond accordingly. Pay extra attention to mathematical notation — exponents, fractions, integrals, subscripts, and special symbols.' });
+      ? 'Analyze ALL the screen captures shown in the images. Read any visible text carefully and respond to whatever questions or prompts are visible across all images. If a math problem or equation is visible, solve it fully and give the actual final answer first — do not just describe how to solve it.'
+      : 'Analyze the selected screen region shown in the image. Read any visible text carefully and respond accordingly. If a math problem or equation is visible, solve it fully and give the actual final answer first — do not just describe how to solve it. Pay extra attention to mathematical notation — exponents, fractions, integrals, subscripts, and special symbols.' });
   }
   for (const img of allImages) {
     parts.push({ type: 'image_url', image_url: { url: img, detail: 'high' } });
