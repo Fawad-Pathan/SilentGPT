@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SilentGPT Overlay</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] },
+    startup: { typeset: false }
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 <style>
   :root {
     --accent: #2f4f4f;
@@ -41,7 +49,7 @@
 
   #instructions kbd{padding:1px 4px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:3px;font-family:inherit;font-size:10px;color:var(--text-muted)}
 
-  #response-panel{position:fixed;z-index:200;display:none;width:440px;max-height:60vh;background:var(--glass);backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);border:1px solid var(--glass-border);border-radius:var(--radius);overflow:hidden;animation:panelIn .3s cubic-bezier(.16,1,.3,1);box-shadow:0 24px 80px rgba(0,0,0,.45),0 0 0 0.5px rgba(255,255,255,0.1),inset 0 1px 0 var(--glass-glow)}
+  #response-panel{position:fixed;z-index:200;display:none;width:min(720px,calc(100vw - 24px));min-width:360px;min-height:140px;max-width:calc(100vw - 20px);max-height:82vh;resize:both;background:var(--glass);backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);border:1px solid var(--glass-border);border-radius:var(--radius);overflow:hidden;animation:panelIn .3s cubic-bezier(.16,1,.3,1);box-shadow:0 24px 80px rgba(0,0,0,.45),0 0 0 0.5px rgba(255,255,255,0.1),inset 0 1px 0 var(--glass-glow)}
   @keyframes panelIn{from{opacity:0;transform:translateY(10px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
 
   #response-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);cursor:move;background:rgba(255,255,255,0.03)}
@@ -50,7 +58,7 @@
   #response-header .actions button{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);padding:4px 10px;border-radius:8px;font-size:11px;font-family:inherit;cursor:pointer;transition:all .15s;backdrop-filter:blur(10px)}
   #response-header .actions button:hover{background:rgba(255,255,255,0.12);color:var(--text);border-color:rgba(255,255,255,0.2)}
 
-  #response-body{padding:14px;overflow-y:auto;max-height:calc(60vh - 44px);line-height:1.6;font-size:var(--font-size)}
+  #response-body{padding:14px;overflow:auto;flex:1;min-height:0;max-height:none;line-height:1.6;font-size:var(--font-size)}
   #response-body.loading{display:flex;align-items:center;justify-content:center;min-height:60px}
 
   .spinner{display:inline-flex;gap:4px;align-items:center}
@@ -62,6 +70,8 @@
   #response-body p{margin:6px 0}
   #response-body code{background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;font-family:'SF Mono','Fira Code',monospace;font-size:.9em}
   #response-body pre{background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:6px;padding:10px;overflow-x:auto;margin:8px 0}
+  #response-body mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%;padding:2px 0}
+  #response-body .math-fallback{font-family:'SF Mono','Fira Code',monospace;color:var(--text-muted)}
   #response-body pre code{background:none;padding:0;font-size:12px}
   #response-body ul,#response-body ol{padding-left:18px;margin:6px 0}
   #response-body li{margin:3px 0}
@@ -145,7 +155,7 @@
 
 <script>
 (function(){
-  var currentMode='answer', isSelecting=false, selStart=null, selRect=null, capture=null, captures=[], settings={}, textMode=false, dripTypeActive=false;
+  var currentMode='answer', isSelecting=false, selStart=null, selRect=null, capture=null, captures=[], settings={}, textMode=false, dripTypeActive=false, requestSeq=0;
 
   var $=function(id){return document.getElementById(id)};
   var layer=$('capture-layer'), sel=$('selection'), selLbl=$('selection-label');
@@ -156,7 +166,11 @@
   var inputBar=$('text-input-bar'), inputEl=$('text-input');
   var dtPanel=$('drip-type-panel'), dtArea=$('dt-textarea'), dtStart=$('dt-start-btn'), dtClose=$('dt-close-btn'), dtPencil=$('dt-pencil-btn');
 
-  window.silentgpt.onScreenCaptured(function(u){capture=u;if(captures.length===0&&u)captures=[u];updateCaptureUI()});
+  window.silentgpt.onScreenCaptured(function(u){
+    capture=u||null;
+    captures=u?[u]:[];
+    updateCaptureUI();
+  });
 
   window.silentgpt.onLoadSettings(function(s){
     settings=s;
@@ -434,6 +448,7 @@
   }
 
   async function processRequest(manual){
+    var seq=++requestSeq;
     resModeText.textContent=currentMode.charAt(0).toUpperCase()+currentMode.slice(1);
     resPanel.style.display='flex';
     resPanel.style.flexDirection='column';
@@ -462,9 +477,12 @@
     addCaptureBtn.style.display='none';captureCount.style.display='none';
     try{
       var r=await window.silentgpt.aiRequest({mode:currentMode,text:ocr||manual||null,imageDataUrl:img,images:allImages.length>1?allImages:undefined,region:selRect,language:settings.language});
+      if(seq!==requestSeq)return;
       if(r.error){resBody.className='';resBody.innerHTML='<div class="error-msg">'+esc(r.error)+'</div>';return}
       if(currentMode==='autopilot'){handleAutopilotResponse(r.result);return}
+      if(seq!==requestSeq)return;
       resBody.className='';resBody.innerHTML=fmtMd(r.result);
+      renderMath();
       // Mode-specific enhancements
       if(currentMode==='flashcards'){
         var fbtn=document.createElement('button');
@@ -478,7 +496,7 @@
       pasteBtn.textContent=(currentMode==='email')?'Paste Reply':'Paste';
       // Enable click-through: user can interact with exam below the overlay
       enableClickThrough();
-    }catch(err){resBody.className='';resBody.innerHTML='<div class="error-msg">'+esc(err.message)+'</div>'}
+    }catch(err){if(seq===requestSeq){resBody.className='';resBody.innerHTML='<div class="error-msg">'+esc(err.message)+'</div>'}}
   }
 
   // ── Click-Through: let user click on exam/app below the transparent overlay ──
@@ -598,10 +616,12 @@
 
   function posPanel(){
     if(selRect){
+      var panelW=Math.min(Math.max(resPanel.offsetWidth||720,360),window.innerWidth-20);
+      var panelH=Math.min(Math.max(resPanel.offsetHeight||420,220),window.innerHeight-20);
       var x=selRect.x+selRect.width+12, y=selRect.y;
-      if(x+440>window.innerWidth)x=selRect.x-440-12;
+      if(x+panelW>window.innerWidth)x=selRect.x-panelW-12;
       if(x<10)x=10;
-      if(y+350>window.innerHeight)y=window.innerHeight-360;
+      if(y+panelH>window.innerHeight)y=Math.max(10,window.innerHeight-panelH-10);
       resPanel.style.left=x+'px';resPanel.style.top=y+'px';resPanel.style.transform='';
     }else{
       resPanel.style.left='50%';resPanel.style.top='50%';resPanel.style.transform='translate(-50%,-50%)';
@@ -616,8 +636,12 @@
       i.onload=function(){
         var c=document.createElement('canvas');
         var sx=i.width/window.innerWidth, sy=i.height/window.innerHeight;
-        c.width=r.width*sx; c.height=r.height*sy;
-        c.getContext('2d').drawImage(i,r.x*sx,r.y*sy,r.width*sx,r.height*sy,0,0,c.width,c.height);
+        var cropW=Math.max(1,Math.round(r.width*sx)), cropH=Math.max(1,Math.round(r.height*sy));
+        var cropX=Math.max(0,Math.round(r.x*sx)), cropY=Math.max(0,Math.round(r.y*sy));
+        if(cropX+cropW>i.width)cropW=i.width-cropX;
+        if(cropY+cropH>i.height)cropH=i.height-cropY;
+        c.width=cropW; c.height=cropH;
+        c.getContext('2d').drawImage(i,cropX,cropY,cropW,cropH,0,0,c.width,c.height);
         // Use PNG for crops up to 1600px — lossless, critical for text/math/code readability
         // Use high-quality JPEG only for very large crops to keep file size under API limits
         if(c.width<=1600&&c.height<=1600){
@@ -701,7 +725,6 @@
 
   function fmtMd(t){
     if(!t)return'';
-    t=cleanLatex(t); // Strip LaTeX before rendering
     var h=esc(t);
     h=h.replace(/```(\w*)\n([\s\S]*?)```/g,'<pre><code>$2</code></pre>');
     h=h.replace(/`([^`]+)`/g,'<code>$1</code>');
@@ -716,6 +739,12 @@
     h='<p>'+h+'</p>';
     h=h.replace(/<p><\/p>/g,'');
     return h;
+  }
+
+  function renderMath(){
+    if(window.MathJax&&window.MathJax.typesetPromise){
+      window.MathJax.typesetPromise([resBody]).catch(function(){});
+    }
   }
 
   function esc(t){var d=document.createElement('div');d.appendChild(document.createTextNode(t));return d.innerHTML}
