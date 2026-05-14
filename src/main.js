@@ -103,12 +103,7 @@ function framelessWindowOptions() {
   return {
     icon: getAppIconImage(),
     autoHideMenuBar: true,
-    titleBarStyle: 'hidden',
-    titleBarOverlay: {
-      color: '#00000000',
-      symbolColor: '#eef5f0',
-      height: 32
-    }
+    titleBarStyle: 'hidden'
   };
 }
 

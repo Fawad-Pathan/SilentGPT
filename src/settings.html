@@ -45,8 +45,6 @@
   body{min-height:100vh;padding:0 0 116px!important;background:#030303!important;background-image:radial-gradient(ellipse at 14% 8%,rgba(255,255,255,.045),transparent 27%),radial-gradient(ellipse at 68% 30%,rgba(255,255,255,.022),transparent 34%),linear-gradient(135deg,#030303 0%,#090909 46%,#010101 100%)!important;border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 0 0 1px rgba(0,0,0,.92);font-size:16px;color:#ededed;overflow-y:auto}
   body::before{opacity:.32;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.76) 100%),linear-gradient(rgba(255,255,255,.012) 50%,rgba(0,0,0,.16) 50%);background-size:100% 100%,100% 4px}
   body::after{opacity:.25;filter:blur(38px)}
-  .window-close{position:fixed;top:27px;right:23px;z-index:10;width:30px;height:30px;border:0!important;background:transparent!important;color:#f0f0f0!important;font-size:34px;font-weight:200;line-height:24px;padding:0;cursor:pointer;-webkit-app-region:no-drag;text-transform:none!important;box-shadow:none!important;letter-spacing:0}
-  .window-close:hover{opacity:.75;transform:none!important;background:transparent!important}
   .header{padding:62px 42px 0!important;gap:22px;max-width:1080px;margin:0 auto;align-items:center}
   .header .logo{width:66px;height:66px;border:0;border-radius:0;background:transparent!important;box-shadow:none;position:relative;color:transparent;font-size:0;flex:0 0 66px}
   .header .logo,.hero-mark{background:transparent!important}
@@ -94,8 +92,6 @@
   .header h1{font-size:18px!important;letter-spacing:-.02em!important}
   .header .version{font-size:11px!important;padding:3px 8px!important}
   .header .update-badge{padding:5px 9px!important;font-size:10px!important;margin-left:0!important}
-  .window-close{position:static!important;margin-left:auto!important;width:32px!important;height:32px!important;border:1px solid rgba(255,255,255,.13)!important;border-radius:6px!important;background:rgba(255,255,255,.035)!important;color:#f0f0ed!important;font-size:24px!important;line-height:28px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
-  .window-close:hover{background:rgba(255,255,255,.07)!important;border-color:rgba(255,255,255,.20)!important;opacity:1!important}
   .tabs{max-width:700px!important;margin:10px auto 0!important;padding:6px!important;gap:5px!important;flex-wrap:nowrap!important;justify-content:space-between!important;background:linear-gradient(180deg,rgba(15,15,17,.74),rgba(5,5,6,.68))!important;border:1px solid rgba(255,255,255,.13)!important;border-radius:8px!important;box-shadow:0 18px 44px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.05)!important}
   .tab{height:34px!important;flex:1 1 0!important;min-width:0!important;padding:0 7px!important;font-size:10px!important;letter-spacing:-.02em!important;border:1px solid transparent!important;border-radius:5px!important;background:transparent!important;color:#bdbdb8!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}.tab:hover{background:rgba(255,255,255,.055)!important;border-color:rgba(255,255,255,.12)!important;color:#f2f2ee!important}.tab.active{background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.045))!important;border-color:rgba(255,255,255,.22)!important;color:#fff!important;box-shadow:0 0 18px rgba(255,255,255,.055),inset 0 1px 0 rgba(255,255,255,.10)!important}
   .content{max-width:700px!important;padding:16px 0 28px!important}
@@ -103,6 +99,40 @@
   #tab-home .hero-mark{width:64px!important;height:64px!important;margin-bottom:12px!important;background:#000!important;border:1px solid rgba(255,255,255,.16)!important;border-radius:12px!important;box-shadow:0 0 24px rgba(255,255,255,.14)!important;overflow:hidden!important}
   #tab-home .hero-title{font-size:24px!important;margin-bottom:10px!important}
   #tab-home .hero-subtitle{font-size:14px!important}
+
+
+  .module-card{position:relative;-webkit-app-region:no-drag}
+  #tab-home .module-card{cursor:pointer!important;transition:background .18s,border-color .18s,box-shadow .18s,transform .18s!important}
+  #tab-home .module-card:hover{transform:translateY(-2px)!important;box-shadow:0 14px 32px rgba(0,0,0,.24),0 0 22px rgba(255,255,255,.04)!important}
+  #tab-home .module-card:focus-visible{outline:2px solid rgba(255,255,255,.55);outline-offset:3px}
+  #tab-home .module-card.card-press{animation:card-press .32s cubic-bezier(.2,.8,.2,1)}
+  .module-arrow{transition:transform .18s,color .18s}
+  #tab-home .module-card:hover .module-arrow{transform:translateX(4px);color:#fff}
+  @keyframes card-press{0%{transform:scale(1)}42%{transform:scale(.965);border-color:rgba(255,255,255,.42);box-shadow:0 0 0 6px rgba(255,255,255,.045)}100%{transform:scale(1)}}
+
+  .feature-modal{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.68);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s ease;-webkit-app-region:no-drag}
+  .feature-modal.open{opacity:1;visibility:visible;pointer-events:auto}
+  .feature-modal-card{position:relative;width:min(520px,calc(100vw - 44px));max-height:calc(100vh - 44px);overflow:auto;padding:26px;background:linear-gradient(180deg,rgba(18,18,20,.98),rgba(5,5,6,.98));border:1px solid rgba(255,255,255,.20);border-radius:14px;box-shadow:0 28px 80px rgba(0,0,0,.62),0 0 42px rgba(255,255,255,.07),inset 0 1px 0 rgba(255,255,255,.08);transform:translateY(14px) scale(.97);transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+  .feature-modal.open .feature-modal-card{transform:translateY(0) scale(1);animation:modal-pop .28s cubic-bezier(.2,.8,.2,1)}
+  @keyframes modal-pop{0%{transform:translateY(16px) scale(.96);opacity:.65}72%{transform:translateY(-2px) scale(1.01);opacity:1}100%{transform:translateY(0) scale(1)}}
+  .feature-modal-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border:1px solid rgba(255,255,255,.16)!important;border-radius:9px!important;background:rgba(255,255,255,.045)!important;color:#f0f0ed!important;font-size:22px!important;line-height:1!important;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;text-transform:none!important;letter-spacing:0!important;transition:background .15s,transform .15s!important}
+  .feature-modal-close:hover{background:rgba(255,255,255,.09)!important;transform:scale(1.04)!important}
+  .feature-modal-kicker{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.18em;font-weight:900;margin-bottom:10px}
+  .feature-modal-title{font-size:30px;font-weight:900;letter-spacing:-.05em;margin-bottom:12px;color:#f5f5f2}
+  .feature-modal-desc{font-size:14px;line-height:1.6;color:#bdbdb8;margin-bottom:20px}
+  .feature-keybind-box{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:rgba(255,255,255,.045);margin-bottom:20px}
+  .feature-keybind-label{font-size:11px;color:#9c9c96;text-transform:uppercase;letter-spacing:.12em;font-weight:900}
+  .feature-keybind-box kbd{font-size:15px!important;font-weight:900;white-space:nowrap;padding:7px 11px!important;background:rgba(255,255,255,.11)!important}
+  .feature-related-title{font-size:11px;color:#d6d6d0;text-transform:uppercase;letter-spacing:.12em;font-weight:900;margin-bottom:10px}
+  .feature-related-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .feature-related-list div{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border:1px solid rgba(255,255,255,.10);border-radius:8px;background:rgba(255,255,255,.03);font-size:11px;color:#bdbdb8}
+  .feature-related-list kbd{font-size:10px!important;white-space:nowrap}
+  .tab-panel{animation:tab-panel-in .22s ease both}
+  .tab-panel.tab-leaving{display:flex!important;pointer-events:none;animation:tab-panel-out .16s ease both}
+  .tab-panel.active{animation:tab-panel-in .24s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes tab-panel-in{from{opacity:0;transform:translateY(10px) scale(.99);filter:blur(2px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+  @keyframes tab-panel-out{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(-8px) scale(.99)}}
+  @media (max-width:560px){.feature-related-list{grid-template-columns:1fr}.feature-keybind-box{align-items:flex-start;flex-direction:column}.feature-modal-card{padding:22px}}
 
 
   /* Layout consistency pass: keep every settings tab on the same spacing scale. */
@@ -123,7 +153,6 @@
   .header h1{min-width:0!important;line-height:1.1!important;white-space:nowrap!important}
   .header .version{flex:0 0 auto!important;line-height:1.2!important}
   .header .update-badge{margin-left:0!important;white-space:nowrap!important}
-  .window-close{flex:0 0 32px!important;margin-left:auto!important}
   .tabs{margin-top:10px!important;padding:6px!important;gap:6px!important;align-items:center!important}
   .tab{height:34px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;padding:0 7px!important;line-height:1!important}
   .content{padding:14px 0 28px!important}
@@ -183,7 +212,6 @@
   <h1>SilentGPT</h1>
   <span class="version">v3.29.3</span>
   <button class="update-badge" id="header-update-btn">Update Available</button>
-  <button class="window-close" aria-label="Close" onclick="window.close()">×</button>
 </div>
 
 <div class="tabs">
@@ -206,61 +234,61 @@
     </div>
 
     <div class="module-grid">
-      <div class="module-card">
+      <div class="module-card" data-feature="answer" role="button" tabindex="0">
         <div class="module-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="13" cy="13" r="9"></circle><path d="M20 20l8 8"></path></svg></div>
         <div class="module-title">Answer</div>
         <div class="module-desc">Instant AI answers</div>
         <div class="module-arrow">→</div>
       </div>
-      <div class="module-card">
+      <div class="module-card" data-feature="solve" role="button" tabindex="0">
         <div class="module-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M8 9h.01M8 16h.01M8 23h.01"></path><path d="M13 9h12M13 16h12M13 23h12"></path></svg></div>
         <div class="module-title">Solve</div>
         <div class="module-desc">Step-by-step solutions</div>
         <div class="module-arrow">→</div>
       </div>
-      <div class="module-card">
+      <div class="module-card" data-feature="essay" role="button" tabindex="0">
         <div class="module-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M9 5h10l5 5v17H9z"></path><path d="M19 5v6h6"></path><path d="M12 22h8M12 18h10"></path></svg></div>
         <div class="module-title">Essay</div>
         <div class="module-desc">Full essays on any topic</div>
         <div class="module-arrow">→</div>
       </div>
-      <div class="module-card">
+      <div class="module-card" data-feature="code" role="button" tabindex="0">
         <div class="module-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M13 9l-7 7 7 7"></path><path d="M19 9l7 7-7 7"></path></svg></div>
         <div class="module-title">Code</div>
         <div class="module-desc">Write & debug code</div>
         <div class="module-arrow">→</div>
       </div>
-      <div class="module-card">
+      <div class="module-card" data-feature="research" role="button" tabindex="0">
         <div class="module-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M7 25V15M14 25V8M21 25V12M28 25H4"></path></svg></div>
         <div class="module-title">Research</div>
         <div class="module-desc">Credible source analysis</div>
         <div class="module-arrow">→</div>
       </div>
-      <div class="module-card">
+      <div class="module-card" data-feature="translate" role="button" tabindex="0">
         <div class="module-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="12"></circle><path d="M4 16h24M16 4c4 4 5 20 0 24M16 4c-4 4-5 20 0 24"></path></svg></div>
         <div class="module-title">Translate</div>
         <div class="module-desc">35+ languages</div>
         <div class="module-arrow">→</div>
       </div>
-      <div class="module-card">
+      <div class="module-card" data-feature="email" role="button" tabindex="0">
         <div class="module-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M5 9h22v15H5z"></path><path d="M5 10l11 8 11-8"></path></svg></div>
         <div class="module-title">Email</div>
         <div class="module-desc">Draft & paste replies</div>
         <div class="module-arrow">→</div>
       </div>
-      <div class="module-card">
+      <div class="module-card" data-feature="flashcards" role="button" tabindex="0">
         <div class="module-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M10 6h12v20H10z"></path><path d="M13 26h11V9"></path></svg></div>
         <div class="module-title">Flashcards</div>
         <div class="module-desc">Fullscreen study cards</div>
         <div class="module-arrow">→</div>
       </div>
-      <div class="module-card">
+      <div class="module-card" data-feature="summarize" role="button" tabindex="0">
         <div class="module-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M7 25l3-1 14-14-2-2L8 22z"></path><path d="M20 10l2 2"></path></svg></div>
         <div class="module-title">Summarize</div>
         <div class="module-desc">Condense any content</div>
         <div class="module-arrow">→</div>
       </div>
-      <div class="module-card">
+      <div class="module-card" data-feature="chat" role="button" tabindex="0">
         <div class="module-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M5 8h15v11H9l-4 4z"></path><path d="M16 14h11v10h-4l-4 4v-4h-3z"></path></svg></div>
         <div class="module-title">Chat</div>
         <div class="module-desc">Ask AI anything</div>
@@ -711,6 +739,24 @@
   </div>
 </div>
 
+
+<div class="feature-modal" id="feature-modal" aria-hidden="true">
+  <div class="feature-modal-card" role="dialog" aria-modal="true" aria-labelledby="feature-modal-title">
+    <button class="feature-modal-close" id="feature-modal-close" aria-label="Close feature details">×</button>
+    <div class="feature-modal-kicker">Home Feature</div>
+    <div class="feature-modal-title" id="feature-modal-title">Answer</div>
+    <div class="feature-modal-desc" id="feature-modal-desc"></div>
+    <div class="feature-keybind-box">
+      <div>
+        <div class="feature-keybind-label">Default keybind</div>
+      </div>
+      <kbd id="feature-modal-keybind">Alt + 1</kbd>
+    </div>
+    <div class="feature-related-title">Other default shortcuts</div>
+    <div class="feature-related-list" id="feature-related-list"></div>
+  </div>
+</div>
+
 <div class="save-bar is-hidden">
   <span class="save-status" id="save-status">Settings saved!</span>
   <button class="btn btn-secondary" id="reset-btn">Reset</button>
@@ -722,6 +768,31 @@
   var tabs=document.querySelectorAll('.tab'), panels=document.querySelectorAll('.tab-panel');
   var currentSettings={};
   var saveBar=document.querySelector('.save-bar');
+  var activePanel=document.querySelector('.tab-panel.active');
+  var featureModal=document.getElementById('feature-modal');
+  var featureModalTitle=document.getElementById('feature-modal-title');
+  var featureModalDesc=document.getElementById('feature-modal-desc');
+  var featureModalKeybind=document.getElementById('feature-modal-keybind');
+  var featureRelatedList=document.getElementById('feature-related-list');
+  var featureModalClose=document.getElementById('feature-modal-close');
+  var featureCards=document.querySelectorAll('#tab-home .module-card[data-feature]');
+  var featureDetails={
+    answer:{name:'Answer',keybind:'Alt + 1',description:'Capture anything on your screen and get a direct AI answer you can copy, paste, or keep pinned while you work.'},
+    solve:{name:'Solve',keybind:'Alt + 7',description:'Break down math, science, homework, and technical problems into clear step-by-step solutions.'},
+    essay:{name:'Essay',keybind:'Alt + 8',description:'Generate structured essays with a thesis, intro, body sections, transitions, and a clean conclusion.'},
+    code:{name:'Code',keybind:'Alt + 9',description:'Write, debug, refactor, and explain code from screenshots or typed prompts across programming languages.'},
+    research:{name:'Research',keybind:'Cmd/Ctrl + Alt + 1',description:'Create deeper research-style responses with source-focused analysis for projects, papers, and comparisons.'},
+    translate:{name:'Translate',keybind:'Alt + 2',description:'Translate selected text from your screen into your chosen language without leaving your current app.'},
+    email:{name:'Email',keybind:'Cmd/Ctrl + Alt + 2',description:'Draft polished email replies, outreach, follow-ups, and professional messages ready to paste.'},
+    flashcards:{name:'Flashcards',keybind:'Cmd/Ctrl + Alt + 3',description:'Turn captured notes or study material into flashcards and review them in the dedicated study view.'},
+    summarize:{name:'Summarize',keybind:'Alt + 1',description:'Condense long articles, notes, screenshots, or messages into the key takeaways and action items.'},
+    chat:{name:'Chat',keybind:'Alt + 3',description:'Open a general AI conversation for open-ended questions, brainstorming, and follow-up prompts.'}
+  };
+  var shortcutList=[
+    ['Answer','Alt + 1'],['Stipple','Alt + 6'],['Translate','Alt + 2'],['Autopilot','Alt + 4'],
+    ['Drip Type','Alt + 5'],['Stop Drip Type','Alt + 0'],['Solve','Alt + 7'],['Essay','Alt + 8'],
+    ['Code','Alt + 9'],['Research','Cmd/Ctrl + Alt + 1'],['Email','Cmd/Ctrl + Alt + 2'],['Flashcards','Cmd/Ctrl + Alt + 3']
+  ];
 
   function setSaveBarVisibility(tabName){
     var visible=tabName==='general';
@@ -730,12 +801,66 @@
   }
 
   function activateTab(tabName){
+    var nextPanel=document.getElementById('tab-'+tabName);
+    if(!nextPanel||nextPanel===activePanel)return;
+    var leaving=activePanel;
     tabs.forEach(function(x){x.classList.toggle('active',x.dataset.tab===tabName)});
-    panels.forEach(function(x){x.classList.toggle('active',x.id==='tab-'+tabName)});
+    if(leaving){
+      leaving.classList.add('tab-leaving');
+      leaving.classList.remove('active');
+      setTimeout(function(){leaving.classList.remove('tab-leaving')},180);
+    }
+    nextPanel.classList.add('active');
+    activePanel=nextPanel;
     setSaveBarVisibility(tabName);
   }
 
+  function renderRelatedShortcuts(activeName){
+    if(!featureRelatedList)return;
+    featureRelatedList.innerHTML='';
+    shortcutList.forEach(function(item){
+      var row=document.createElement('div');
+      row.innerHTML='<span>'+item[0]+'</span><kbd>'+item[1]+'</kbd>';
+      if(item[0]===activeName)row.style.borderColor='rgba(255,255,255,.24)';
+      featureRelatedList.appendChild(row);
+    });
+  }
+
+  function openFeatureModal(featureKey){
+    var detail=featureDetails[featureKey]||featureDetails.answer;
+    if(!featureModal)return;
+    featureModalTitle.textContent=detail.name;
+    featureModalDesc.textContent=detail.description;
+    featureModalKeybind.textContent=detail.keybind;
+    renderRelatedShortcuts(detail.name);
+    featureModal.classList.add('open');
+    featureModal.setAttribute('aria-hidden','false');
+    if(featureModalClose)featureModalClose.focus();
+  }
+
+  function closeFeatureModal(){
+    if(!featureModal)return;
+    featureModal.classList.remove('open');
+    featureModal.setAttribute('aria-hidden','true');
+  }
+
   tabs.forEach(function(t){t.addEventListener('click',function(){activateTab(t.dataset.tab)})});
+  featureCards.forEach(function(card){
+    function trigger(){
+      card.classList.remove('card-press');
+      void card.offsetWidth;
+      card.classList.add('card-press');
+      setTimeout(function(){card.classList.remove('card-press')},340);
+      openFeatureModal(card.dataset.feature);
+    }
+    card.addEventListener('click',trigger);
+    card.addEventListener('keydown',function(e){
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();trigger()}
+    });
+  });
+  if(featureModalClose)featureModalClose.addEventListener('click',closeFeatureModal);
+  if(featureModal)featureModal.addEventListener('click',function(e){if(e.target===featureModal)closeFeatureModal()});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&featureModal&&featureModal.classList.contains('open'))closeFeatureModal()});
   setSaveBarVisibility('home');
 
   async function loadSettings(){
