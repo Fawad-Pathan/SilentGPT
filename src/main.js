@@ -2099,7 +2099,7 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + apiKey },
-      body: JSON.stringify({ model, messages: msgs, max_tokens: tokens, temperature: 0 })
+      body: JSON.stringify({ model, messages: msgs, max_completion_tokens: tokens, temperature: 0 })
     });
     if (!res.ok) return { error: `API Error (${res.status}): ${await res.text()}` };
     const data = await res.json();
