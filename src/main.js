@@ -736,8 +736,14 @@ function makeOverlay() {
 /* ─────────────────── Settings Window ─────────────────── */
 
 function makeSettings() {
-  // Guard: if settings window already exists and isn't destroyed, just focus it
-  if (settingsWin && !settingsWin.isDestroyed()) { settingsWin.focus(); return; }
+  // Guard: if settings window already exists and isn't destroyed, show/focus it.
+  // The Alt+M app hotkey can hide the main menu, so makeSettings must restore a
+  // hidden existing window instead of only focusing it.
+  if (settingsWin && !settingsWin.isDestroyed()) {
+    if (!settingsWin.isVisible()) settingsWin.show();
+    settingsWin.focus();
+    return;
+  }
   // Clean up stale reference
   settingsWin = null;
 
@@ -760,6 +766,20 @@ function makeSettings() {
   settingsWin.loadFile(path.join(__dirname, 'settings.html'));
   try { settingsWin.setContentProtection(true); } catch (_) {}
   settingsWin.on('closed', () => { settingsWin = null; });
+}
+
+function toggleSettings() {
+  if (settingsWin && !settingsWin.isDestroyed() && settingsWin.isVisible()) {
+    settingsWin.hide();
+    return;
+  }
+  makeSettings();
+}
+
+function showMainMenuIfReady() {
+  if (store.get('authDone') && store.get('onboardingDone') && isAppUnlocked()) {
+    makeSettings();
+  }
 }
 
 /* ─────────────────── Flashcards Window ─────────────────── */
@@ -1035,7 +1055,7 @@ function bindKeys() {
   globalShortcut.unregisterAll();
   // App/settings hotkeys always work
   const appKeys = [
-    [store.get('hotkeyApp'), makeSettings]
+    [store.get('hotkeyApp'), toggleSettings]
   ];
   for (const [key, fn] of appKeys) {
     if (!key) continue;
@@ -2275,6 +2295,7 @@ function proceedAfterActivation() {
   if (!overlayWin) makeOverlay();
   bindKeys();
   if (process.platform === 'darwin') app.dock?.hide();
+  showMainMenuIfReady();
 }
 
 function proceedAfterLicense() {
@@ -2831,6 +2852,8 @@ ipcMain.on('auth-done', () => {
     showWelcome();
   } else if (!isAppUnlocked()) {
     showActivate();
+  } else {
+    showMainMenuIfReady();
   }
 });
 
@@ -2887,6 +2910,7 @@ ipcMain.on('welcome-done', () => {
     showActivate();
   } else {
     if (process.platform === 'darwin') app.dock?.hide();
+    showMainMenuIfReady();
   }
 });
 
@@ -3536,6 +3560,7 @@ app.whenReady().then(async () => {
     showActivate();
   } else {
     if (process.platform === 'darwin') app.dock?.hide();
+    showMainMenuIfReady();
   }
 
   // Periodic re-validation: check Stripe subscription every 10 minutes
