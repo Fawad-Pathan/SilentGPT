@@ -2077,7 +2077,7 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
   const effectiveMode = (mode === 'answer' && store.get('simpleMode')) ? 'simple' : mode;
   let systemPrompt = prompts[effectiveMode] || prompts.answer;
   if (['answer', 'simple', 'solve', 'essay', 'code', 'research', 'flashcards'].includes(effectiveMode)) {
-    systemPrompt += '\n\nOutput must be neat and direct. Put the final result first as "Answer: ..." unless the mode explicitly says only the answer. Use clean readable math symbols: write √(...) instead of sqrt(...), x²/x³ for simple powers, / for simple fractions, and Unicode symbols such as π, ∞, ≤, ≥, ≈, ±, ×, ÷ where appropriate. Avoid raw LaTeX commands in the visible answer. For math, silently double-check the copied notation and arithmetic before responding; if the screenshot is unclear or missing key information, say what is unclear instead of guessing.';
+    systemPrompt += '\n\nWhen math notation is useful, format it as LaTeX using \\( ... \\) for inline math and \\[ ... \\] for displayed equations so the overlay can render it clearly.';
   }
   // Prepend user's custom AI context if set
   const aiContext = (store.get('aiContext') || '').trim();

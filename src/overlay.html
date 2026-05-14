@@ -729,7 +729,6 @@
 
   function fmtMd(t){
     if(!t)return'';
-    t=cleanLatex(t);
     var h=esc(t);
     h=h.replace(/```(\w*)\n([\s\S]*?)```/g,'<pre><code>$2</code></pre>');
     h=h.replace(/`([^`]+)`/g,'<code>$1</code>');
