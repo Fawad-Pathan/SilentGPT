@@ -1,6 +1,6 @@
 {
   "name": "silentgpt",
-  "version": "3.29.3",
+  "version": "1.00.0",
   "description": "SilentGPT — AI Screen Overlay",
   "main": "src/main.js",
   "author": {
