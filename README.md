@@ -16,6 +16,7 @@ Designed to stay minimal and discreet, SilentGPT supports hidden workflow behavi
 - Coding and school assistance
 - Privacy-focused workflow behavior
 - Lightweight desktop experience
+- Hidden from recordings and screen share
 
 ---
 
