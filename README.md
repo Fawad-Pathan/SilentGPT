@@ -1,3 +1,5 @@
+# SilentGPT
+
 SilentGPT is a desktop AI assistant focused on fast, simple, and low-profile productivity.
 
 The application is currently under heavy development and major remodeling is actively being done across the UI, features, and overall architecture. This is not a finished product yet and many things are still changing.
