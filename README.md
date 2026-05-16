@@ -1,25 +1,31 @@
 # SilentGPT
 
-SilentGPT is a desktop AI assistant focused on fast, simple, and low-profile productivity.
+SilentGPT is a lightweight desktop AI assistant built for fast, low-profile productivity.
 
-The application is currently under heavy development and major remodeling is actively being done across the UI, features, and overall architecture. This is not a finished product yet and many things are still changing.
+The app is currently under major development and remodeling.
 
-SilentGPT is designed around privacy and minimal interruption while working. The app is built to stay lightweight, discreet, and separated from normal desktop workflows, including support for keeping the interface hidden from common screen recording and screen sharing scenarios.
+Designed to stay minimal and discreet, SilentGPT supports hidden workflow behavior, including staying out of common screen recordings and screen sharing scenarios.
 
-Current focus areas include:
+---
 
-- UI redesign
-- Performance improvements
-- Better desktop integration
-- Workflow enhancements
-- AI response optimization
-- Privacy-focused desktop behavior
+## Features
 
-SilentGPT is being built to provide quick access to AI help for:
+- Floating desktop AI assistant
+- Fast keyboard-triggered access
+- Minimal interface
+- Coding and school assistance
+- Privacy-focused workflow behavior
+- Lightweight desktop experience
 
-- Coding
-- Schoolwork
-- Productivity
-- General desktop assistance
+---
 
-More updates coming soon. This app is NOT finished 
+## Status
+
+SilentGPT is actively being developed and updated frequently. Expect unfinished systems, bugs, and major changes over time.
+
+---
+
+## Author
+
+Fawad Pathan  
+Wilfrid Laurier University — Computer Science BSc
