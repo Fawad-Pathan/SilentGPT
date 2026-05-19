@@ -189,7 +189,7 @@
 <script>
 (function(){
   var currentMode='answer', isSelecting=false, selStart=null, selRect=null, capture=null, captures=[], settings={}, textMode=false, dripTypeActive=false, requestSeq=0;
-  var interviewStream=null, interviewRecorder=null, interviewActive=false, interviewBusy=false, interviewLastQuestion='', interviewLastAt=0;
+  var interviewStream=null, interviewKeepaliveStream=null, interviewRecorder=null, interviewActive=false, interviewBusy=false, interviewLastQuestion='', interviewLastAt=0, interviewAudioSource='audio';
 
   var $=function(id){return document.getElementById(id)};
   var layer=$('capture-layer'), sel=$('selection'), selLbl=$('selection-label');
@@ -332,7 +332,8 @@
     interviewActive=false;
     try{if(interviewRecorder&&interviewRecorder.state!=='inactive')interviewRecorder.stop()}catch(_){}
     try{if(interviewStream)interviewStream.getTracks().forEach(function(t){t.stop()})}catch(_){}
-    interviewRecorder=null;interviewStream=null;
+    try{if(interviewKeepaliveStream)interviewKeepaliveStream.getTracks().forEach(function(t){t.stop()})}catch(_){}
+    interviewRecorder=null;interviewStream=null;interviewKeepaliveStream=null;
     if(ivPanel)ivPanel.style.display='none';
   }
 
@@ -356,9 +357,9 @@
       interviewRecorder=mt?new MediaRecorder(interviewStream,{mimeType:mt}):new MediaRecorder(interviewStream);
       interviewActive=true;
       ivPanel.className='';
-      ivStatus.textContent='Listening for questions...';
+      ivStatus.textContent='Listening to '+interviewAudioSource+' for questions...';
       interviewRecorder.ondataavailable=function(ev){
-        if(!ev.data||ev.data.size<1200||!interviewActive)return;
+        if(!ev.data||ev.data.size<400||!interviewActive)return;
         handleInterviewAudio(ev.data,interviewRecorder.mimeType||mt||ev.data.type);
       };
       interviewRecorder.onerror=function(ev){
@@ -376,11 +377,15 @@
     if(navigator.mediaDevices.getDisplayMedia){
       try{
         var displayStream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
-        displayStream.getVideoTracks().forEach(function(t){t.stop()});
-        if(displayStream.getAudioTracks().length)return displayStream;
+        if(displayStream.getAudioTracks().length){
+          interviewKeepaliveStream=displayStream;
+          interviewAudioSource='system audio';
+          return new MediaStream(displayStream.getAudioTracks());
+        }
         displayStream.getTracks().forEach(function(t){t.stop()});
       }catch(_){}
     }
+    interviewAudioSource='microphone';
     return navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:true,autoGainControl:true}});
   }
 
