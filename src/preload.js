@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('silentgpt', {
   pasteToScreen:  ()       => ipcRenderer.invoke('paste-to-screen'),
   pinAnswer:      (html)   => ipcRenderer.invoke('pin-answer', html),
   recapture:      ()       => ipcRenderer.invoke('recapture-screen'),
+  getSystemAudioSource: () => ipcRenderer.invoke('get-system-audio-source'),
   openFlashcards: (cards)  => ipcRenderer.send('open-flashcards', cards),
   checkForUpdates:()       => ipcRenderer.invoke('check-for-updates'),
 

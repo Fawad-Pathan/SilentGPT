@@ -2018,6 +2018,19 @@ ipcMain.handle('recapture-screen', async () => {
   return img;
 });
 
+ipcMain.handle('get-system-audio-source', async () => {
+  try {
+    const sources = await desktopCapturer.getSources({
+      types: ['screen'],
+      thumbnailSize: { width: 0, height: 0 }
+    });
+    const source = sources[0];
+    return source ? { id: source.id, name: source.name } : { error: 'No screen source available for system audio capture.' };
+  } catch (err) {
+    return { error: err.message };
+  }
+});
+
 ipcMain.on('save-settings', (_ev, s) => {
   // Block renderer from modifying license/auth fields
   const protectedKeys = ['licenseKey','licenseValid','licenseEmail','stripeCustomerId','stripeSubscriptionId','subscriptionStatus','membershipTier','authDone','authPasswordHash','onboardingDone'];

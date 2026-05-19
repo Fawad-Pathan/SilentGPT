@@ -189,7 +189,7 @@
 <script>
 (function(){
   var currentMode='answer', isSelecting=false, selStart=null, selRect=null, capture=null, captures=[], settings={}, textMode=false, dripTypeActive=false, requestSeq=0;
-  var interviewStream=null, interviewKeepaliveStream=null, interviewRecorder=null, interviewActive=false, interviewBusy=false, interviewLastQuestion='', interviewLastAt=0, interviewAudioSource='audio';
+  var interviewStream=null, interviewKeepaliveStream=null, interviewAudioContext=null, interviewRecorder=null, interviewActive=false, interviewBusy=false, interviewLastQuestion='', interviewLastAt=0, interviewAudioSource='audio', interviewSourceNote='';
 
   var $=function(id){return document.getElementById(id)};
   var layer=$('capture-layer'), sel=$('selection'), selLbl=$('selection-label');
@@ -333,7 +333,8 @@
     try{if(interviewRecorder&&interviewRecorder.state!=='inactive')interviewRecorder.stop()}catch(_){}
     try{if(interviewStream)interviewStream.getTracks().forEach(function(t){t.stop()})}catch(_){}
     try{if(interviewKeepaliveStream)interviewKeepaliveStream.getTracks().forEach(function(t){t.stop()})}catch(_){}
-    interviewRecorder=null;interviewStream=null;interviewKeepaliveStream=null;
+    try{if(interviewAudioContext)interviewAudioContext.close()}catch(_){}
+    interviewRecorder=null;interviewStream=null;interviewKeepaliveStream=null;interviewAudioContext=null;
     if(ivPanel)ivPanel.style.display='none';
   }
 
@@ -357,7 +358,7 @@
       interviewRecorder=mt?new MediaRecorder(interviewStream,{mimeType:mt}):new MediaRecorder(interviewStream);
       interviewActive=true;
       ivPanel.className='';
-      ivStatus.textContent='Listening to '+interviewAudioSource+' for questions...';
+      ivStatus.textContent='Listening to '+interviewAudioSource+' for questions...'+(interviewSourceNote?' '+interviewSourceNote:'');
       interviewRecorder.ondataavailable=function(ev){
         if(!ev.data||ev.data.size<400||!interviewActive)return;
         handleInterviewAudio(ev.data,interviewRecorder.mimeType||mt||ev.data.type);
@@ -369,24 +370,54 @@
       interviewRecorder.start(6500);
     }catch(err){
       ivPanel.className='idle';
-      ivStatus.textContent='Microphone access failed: '+err.message;
+      ivStatus.textContent='Audio capture failed: '+err.message;
     }
   }
 
   async function getInterviewAudioStream(){
+    try{
+      return await getDesktopLoopbackAudioStream();
+    }catch(err){
+      interviewSourceNote='System audio unavailable: '+err.message+'. Microphone fallback will not hear headphones.';
+    }
     if(navigator.mediaDevices.getDisplayMedia){
       try{
         var displayStream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
         if(displayStream.getAudioTracks().length){
-          interviewKeepaliveStream=displayStream;
-          interviewAudioSource='system audio';
-          return new MediaStream(displayStream.getAudioTracks());
+          return makeRecorderAudioStream(displayStream,'system audio');
         }
         displayStream.getTracks().forEach(function(t){t.stop()});
-      }catch(_){}
+      }catch(err2){
+        interviewSourceNote='System audio unavailable: '+err2.message+'. Microphone fallback will not hear headphones.';
+      }
     }
     interviewAudioSource='microphone';
     return navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:true,autoGainControl:true}});
+  }
+
+  async function getDesktopLoopbackAudioStream(){
+    if(!window.silentgpt.getSystemAudioSource)throw new Error('system audio source API missing');
+    var source=await window.silentgpt.getSystemAudioSource();
+    if(!source||source.error)throw new Error((source&&source.error)||'no system audio source');
+    var stream=await navigator.mediaDevices.getUserMedia({
+      audio:{mandatory:{chromeMediaSource:'desktop',chromeMediaSourceId:source.id}},
+      video:{mandatory:{chromeMediaSource:'desktop',chromeMediaSourceId:source.id,maxWidth:1,maxHeight:1,maxFrameRate:1}}
+    });
+    return makeRecorderAudioStream(stream,'system audio');
+  }
+
+  function makeRecorderAudioStream(rawStream,label){
+    if(!rawStream.getAudioTracks().length)throw new Error('no audio track returned');
+    interviewKeepaliveStream=rawStream;
+    interviewAudioSource=label;
+    var AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)return new MediaStream(rawStream.getAudioTracks());
+    interviewAudioContext=new AC();
+    var src=interviewAudioContext.createMediaStreamSource(rawStream);
+    var dest=interviewAudioContext.createMediaStreamDestination();
+    src.connect(dest);
+    if(interviewAudioContext.state==='suspended')interviewAudioContext.resume().catch(function(){});
+    return dest.stream;
   }
 
   function blobToDataUrl(blob){
