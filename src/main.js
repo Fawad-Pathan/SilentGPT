@@ -2054,8 +2054,9 @@ ipcMain.handle('transcribe-audio', async (_ev, { dataUrl, mimeType }) => {
   const apiKey = configuredOpenAIKey();
   if (!apiKey || apiKey === OPENAI_KEY_PLACEHOLDER) return { error: 'OpenAI API key not configured.' };
 
-  const match = String(dataUrl || '').match(/^data:([^;]+);base64,(.+)$/);
+  const match = String(dataUrl || '').match(/^data:([^;]*);base64,(.*)$/);
   if (!match) return { error: 'No audio data received.' };
+  if (!match[2]) return { error: 'Audio stream is active, but the recorded chunk was empty. Check that the source is playing and not muted.' };
 
   try {
     const audioMime = mimeType || match[1] || 'audio/webm';

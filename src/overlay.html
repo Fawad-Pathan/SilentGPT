@@ -409,6 +409,10 @@
   async function handleInterviewAudio(blob,mimeType){
     try{
       var dataUrl=await blobToDataUrl(blob);
+      if(!dataUrl||dataUrl==='data:;base64,'){
+        ivStatus.textContent='Listening to '+interviewAudioSource+', but this audio chunk was empty.';
+        return;
+      }
       var tr=await window.silentgpt.transcribeAudio({dataUrl:dataUrl,mimeType:mimeType});
       if(!interviewActive)return;
       if(tr.error){ivStatus.textContent=tr.error;return}
