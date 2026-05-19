@@ -214,6 +214,7 @@ const STORE_DEFAULTS = {
   lastMode:      'answer',
   simpleMode:    false,
   phantomMode:   false,
+  allowScreenCapture: false,
   autoEngine:    true,
   credibleSourcesOnly: false,
   maxTokens:     1024,
@@ -545,6 +546,39 @@ let screenBeingCaptured = false;
 let screenCaptureSubId  = null;
 let screenCapturePoll   = null;
 
+function allowScreenCaptureVisibility() {
+  if (!store) initStore();
+  return !!store.get('allowScreenCapture');
+}
+
+function shouldProtectWindowFromCapture() {
+  return !allowScreenCaptureVisibility();
+}
+
+function setWindowCaptureVisibility(win, protect) {
+  if (!win || win.isDestroyed()) return;
+  try { win.setContentProtection(!!protect); } catch (_) {}
+}
+
+function getCaptureProtectedWindows() {
+  return [overlayWin, settingsWin, flashcardsWin, pinnedWin, activateWin, checkoutWin, authWin, welcomeWin]
+    .filter((win) => win && !win.isDestroyed());
+}
+
+function refreshCaptureProtection() {
+  const protect = shouldProtectWindowFromCapture();
+  getCaptureProtectedWindows().forEach((win) => setWindowCaptureVisibility(win, protect));
+
+  if (!overlayWin || overlayWin.isDestroyed()) return;
+  if (!protect || !screenBeingCaptured) {
+    try { overlayWin.setOpacity(1); } catch (_) {}
+    try { overlayWin.webContents.send('screen-share-status', false); } catch (_) {}
+  } else if (screenBeingCaptured) {
+    try { overlayWin.setOpacity(0); } catch (_) {}
+    try { overlayWin.webContents.send('screen-share-status', true); } catch (_) {}
+  }
+}
+
 /**
  * When screen recording/sharing is detected:
  *  - Set overlay window opacity to 0 (completely invisible in recordings)
@@ -557,6 +591,12 @@ let screenCapturePoll   = null;
 function onScreenCaptureChanged(isCapturing) {
   screenBeingCaptured = isCapturing;
   if (!overlayWin || overlayWin.isDestroyed()) return;
+
+  if (allowScreenCaptureVisibility()) {
+    try { overlayWin.setOpacity(1); } catch (_) {}
+    try { overlayWin.webContents.send('screen-share-status', false); } catch (_) {}
+    return;
+  }
 
   if (isCapturing) {
     // Make window completely invisible in screen capture
@@ -651,8 +691,7 @@ function cleanupScreenCaptureDetection() {
 
 /** Apply content protection — hides window from ALL screen capture/share/recording */
 function enforceContentProtection(win) {
-  if (!win || win.isDestroyed()) return;
-  try { win.setContentProtection(true); } catch (_) {}
+  setWindowCaptureVisibility(win, shouldProtectWindowFromCapture());
 }
 
 /** Re-apply window level + workspace visibility + content protection */
@@ -673,9 +712,11 @@ function applyOverlayLevel() {
   if (process.platform === 'win32') {
     try { overlayWin.moveTop(); } catch (_) {}
   }
-  // 4. If screen is being captured, keep opacity at 0
-  if (screenBeingCaptured) {
+  // 4. If screen is being captured and privacy protection is enabled, keep opacity at 0
+  if (screenBeingCaptured && shouldProtectWindowFromCapture()) {
     try { overlayWin.setOpacity(0); } catch (_) {}
+  } else {
+    try { overlayWin.setOpacity(1); } catch (_) {}
   }
 }
 
@@ -764,7 +805,7 @@ function makeSettings() {
   });
 
   settingsWin.loadFile(path.join(__dirname, 'settings.html'));
-  try { settingsWin.setContentProtection(true); } catch (_) {}
+  enforceContentProtection(settingsWin);
   settingsWin.on('closed', () => { settingsWin = null; });
 }
 
@@ -807,7 +848,7 @@ function showFlashcards(cardsText) {
   });
 
   flashcardsWin.loadFile(path.join(__dirname, 'flashcards.html'));
-  try { flashcardsWin.setContentProtection(true); } catch (_) {}
+  enforceContentProtection(flashcardsWin);
   flashcardsWin.webContents.on('did-finish-load', () => {
     flashcardsWin.webContents.send('load-cards', cardsText || '');
   });
@@ -1796,7 +1837,7 @@ ipcMain.handle('pin-answer', (_ev, html) => {
     hasShadow: true,
     webPreferences: { contextIsolation: true, nodeIntegration: false }
   });
-  try { pinnedWin.setContentProtection(true); } catch (_) {}
+  enforceContentProtection(pinnedWin);
   try { pinnedWin.setAlwaysOnTop(true, 'screen-saver', 1); } catch (_) { pinnedWin.setAlwaysOnTop(true); }
   if (process.platform === 'darwin') { try { pinnedWin.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true }); } catch (_) {} }
   const page = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
@@ -1983,8 +2024,7 @@ ipcMain.on('save-settings', (_ev, s) => {
   if (s.startAtLogin !== undefined) {
     try { app.setLoginItemSettings({ openAtLogin: s.startAtLogin }); } catch (_) {}
   }
-  // Content protection always on
-  try { if (overlayWin) overlayWin.setContentProtection(true); } catch (_) {}
+  refreshCaptureProtection();
   if (overlayWin)  overlayWin.webContents.send('load-settings', sanitizedSettings());
   if (settingsWin) settingsWin.webContents.send('settings-saved');
 });
@@ -2212,7 +2252,7 @@ function showActivate(options = {}) {
   });
 
   activateWin.loadFile(path.join(__dirname, 'activate.html'), openUpgrade ? { query: { upgrade: 'pro' } } : undefined);
-  try { activateWin.setContentProtection(true); } catch (_) {}
+  enforceContentProtection(activateWin);
   activateWin.once('ready-to-show', () => { activateWin.show(); activateWin.focus(); });
   if (openUpgrade) activateWin.webContents.once('did-finish-load', sendActivateUpgradeIntent);
   activateWin.on('closed', () => {
@@ -2399,7 +2439,7 @@ async function openCheckoutWindow(url, sessionId) {
   });
 
   checkoutWin.loadURL(url);
-  try { checkoutWin.setContentProtection(true); } catch (_) {}
+  enforceContentProtection(checkoutWin);
 
   // Monitor navigation — detect success redirect
   checkoutWin.webContents.on('will-redirect', async (_e, redirectUrl) => {
@@ -2751,7 +2791,7 @@ function showAuth() {
   });
 
   authWin.loadFile(path.join(__dirname, 'auth.html'));
-  try { authWin.setContentProtection(true); } catch (_) {}
+  enforceContentProtection(authWin);
   authWin.once('ready-to-show', () => { authWin.show(); authWin.focus(); });
   authWin.on('closed', () => {
     authWin = null;
@@ -2906,7 +2946,7 @@ function showWelcome() {
   });
 
   welcomeWin.loadFile(path.join(__dirname, 'welcome.html'));
-  try { welcomeWin.setContentProtection(true); } catch (_) {}
+  enforceContentProtection(welcomeWin);
   welcomeWin.once('ready-to-show', () => { welcomeWin.show(); welcomeWin.focus(); });
   welcomeWin.on('closed', () => {
     welcomeWin = null;
