@@ -303,6 +303,13 @@
         <div class="toggle" id="toggle-phantom" data-key="phantomMode"><div class="thumb"></div></div>
       </div>
       <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">Allow Screen Capture</div>
+          <div class="toggle-desc">Let SilentGPT appear in screenshots, recordings, and screen shares when you need to present or document it.</div>
+        </div>
+        <div class="toggle" id="toggle-allowScreenCapture" data-key="allowScreenCapture"><div class="thumb"></div></div>
+      </div>
+      <div class="toggle-row">
         <div class="toggle-info"><div class="toggle-label">Invisible Overlay</div><div class="toggle-desc">Overlay background is fully transparent — content floats over your screen</div></div>
         <div class="toggle" id="toggle-invisible" data-key="invisibleOverlay"><div class="thumb"></div></div>
       </div>
@@ -974,6 +981,7 @@
     return {
       lockdownMode:toggleActive('toggle-lockdown'),
       phantomMode:toggleActive('toggle-phantom'),
+      allowScreenCapture:toggleActive('toggle-allowScreenCapture'),
       invisibleOverlay:toggleActive('toggle-invisible'),
       autoEngine:toggleActive('toggle-autoengine'),
       simpleMode:toggleActive('toggle-simple'),
@@ -1019,7 +1027,7 @@
   document.getElementById('save-btn').addEventListener('click',function(){window.silentgpt.saveSettings(gather());showSaved()});
 
   document.getElementById('reset-btn').addEventListener('click',function(){
-    window.silentgpt.saveSettings({accentColor:'#f2f2ee',fontSize:14,fontFamily:'system-ui, -apple-system, sans-serif',borderRadius:12,hotkey:'Alt+3',hotkeyAnswer:'Alt+1',hotkeySimple:'Alt+6',hotkeyTranslate:'Alt+2',hotkeyAutopilot:'Alt+4',hotkeyDripType:'Alt+5',hotkeyStopDrip:'Alt+0',hotkeySolve:'Alt+7',hotkeyEssay:'Alt+8',hotkeyCode:'Alt+9',hotkeyResearch:'CmdOrCtrl+Alt+1',hotkeyEmail:'CmdOrCtrl+Alt+2',hotkeyFlashcards:'CmdOrCtrl+Alt+3',hotkeyApp:'Alt+M',hotkeySelfDestruct:'CmdOrCtrl+Alt+Shift+Backspace',language:'Spanish',phantomMode:false,invisibleOverlay:false,ghostAnswer:false,clearScreen:false,autoEngine:true,simpleMode:false,lockdownMode:false,credibleSourcesOnly:false,dripSpeed:40,dripWPM:45,dripDelay:10,typoRate:0.06,dripPauseChance:0.03,dripBurstChance:0.08,overlayOpacity:0});
+    window.silentgpt.saveSettings({accentColor:'#f2f2ee',fontSize:14,fontFamily:'system-ui, -apple-system, sans-serif',borderRadius:12,hotkey:'Alt+3',hotkeyAnswer:'Alt+1',hotkeySimple:'Alt+6',hotkeyTranslate:'Alt+2',hotkeyAutopilot:'Alt+4',hotkeyDripType:'Alt+5',hotkeyStopDrip:'Alt+0',hotkeySolve:'Alt+7',hotkeyEssay:'Alt+8',hotkeyCode:'Alt+9',hotkeyResearch:'CmdOrCtrl+Alt+1',hotkeyEmail:'CmdOrCtrl+Alt+2',hotkeyFlashcards:'CmdOrCtrl+Alt+3',hotkeyApp:'Alt+M',hotkeySelfDestruct:'CmdOrCtrl+Alt+Shift+Backspace',language:'Spanish',phantomMode:false,allowScreenCapture:false,invisibleOverlay:false,ghostAnswer:false,clearScreen:false,autoEngine:true,simpleMode:false,lockdownMode:false,credibleSourcesOnly:false,dripSpeed:40,dripWPM:45,dripDelay:10,typoRate:0.06,dripPauseChance:0.03,dripBurstChance:0.08,overlayOpacity:0});
     loadSettings();showSaved();
   });
 
