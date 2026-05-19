@@ -96,7 +96,10 @@
   #interview-panel .iv-actions{display:flex;gap:6px}
   #interview-panel button{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);padding:4px 9px;border-radius:8px;font-size:11px;font-family:inherit;cursor:pointer}
   #interview-panel button:hover{background:rgba(255,255,255,0.12);color:var(--text)}
-  #interview-panel .iv-body{padding:11px 12px 12px}
+  #interview-panel .iv-body{padding:11px 12px 10px}
+  #interview-panel .iv-footer{display:flex;justify-content:flex-end;padding:9px 12px 11px;border-top:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.025)}
+  #iv-next-btn{background:var(--accent)!important;color:#000!important;border-color:transparent!important;font-weight:700;padding:7px 12px!important;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+  #iv-next-btn:hover{filter:brightness(1.08)}
   #iv-status{font-size:11px;color:var(--text-dim);margin-bottom:8px}
   #iv-question{display:none;font-size:12px;color:var(--text-muted);line-height:1.45;margin-bottom:9px;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.07)}
   #iv-answer{font-size:13px;line-height:1.55;max-height:32vh;overflow:auto}
@@ -155,6 +158,7 @@
     <div id="iv-question"></div>
     <div id="iv-answer"></div>
   </div>
+  <div class="iv-footer"><button id="iv-next-btn">Next question</button></div>
 </div>
 
 <div id="response-panel">
@@ -189,7 +193,7 @@
 <script>
 (function(){
   var currentMode='answer', isSelecting=false, selStart=null, selRect=null, capture=null, captures=[], settings={}, textMode=false, dripTypeActive=false, requestSeq=0;
-  var interviewStream=null, interviewKeepaliveStream=null, interviewAudioContext=null, interviewRecorder=null, interviewActive=false, interviewBusy=false, interviewLastQuestion='', interviewLastAt=0, interviewAudioSource='audio', interviewSourceNote='';
+  var interviewStream=null, interviewKeepaliveStream=null, interviewAudioContext=null, interviewRecorder=null, interviewRecorderTimer=null, interviewActive=false, interviewBusy=false, interviewLastQuestion='', interviewLastAt=0, interviewAudioSource='audio', interviewSourceNote='', interviewTranscriptionErrors=0, interviewTranscriptBuffer='';
 
   var $=function(id){return document.getElementById(id)};
   var layer=$('capture-layer'), sel=$('selection'), selLbl=$('selection-label');
@@ -199,7 +203,7 @@
   var addCaptureBtn=$('add-capture-btn'), captureCount=$('capture-count');
   var inputBar=$('text-input-bar'), inputEl=$('text-input');
   var dtPanel=$('drip-type-panel'), dtArea=$('dt-textarea'), dtStart=$('dt-start-btn'), dtClose=$('dt-close-btn'), dtPencil=$('dt-pencil-btn');
-  var ivPanel=$('interview-panel'), ivStatus=$('iv-status'), ivQuestion=$('iv-question'), ivAnswer=$('iv-answer'), ivRestart=$('iv-restart-btn'), ivClose=$('iv-close-btn');
+  var ivPanel=$('interview-panel'), ivStatus=$('iv-status'), ivQuestion=$('iv-question'), ivAnswer=$('iv-answer'), ivNext=$('iv-next-btn'), ivRestart=$('iv-restart-btn'), ivClose=$('iv-close-btn');
 
   window.silentgpt.onScreenCaptured(function(u){
     capture=u||null;
@@ -330,6 +334,7 @@
 
   function stopInterviewMode(){
     interviewActive=false;
+    if(interviewRecorderTimer){clearTimeout(interviewRecorderTimer);interviewRecorderTimer=null}
     try{if(interviewRecorder&&interviewRecorder.state!=='inactive')interviewRecorder.stop()}catch(_){}
     try{if(interviewStream)interviewStream.getTracks().forEach(function(t){t.stop()})}catch(_){}
     try{if(interviewKeepaliveStream)interviewKeepaliveStream.getTracks().forEach(function(t){t.stop()})}catch(_){}
@@ -355,23 +360,45 @@
     try{
       interviewStream=await getInterviewAudioStream();
       var mt=audioMimeType();
-      interviewRecorder=mt?new MediaRecorder(interviewStream,{mimeType:mt}):new MediaRecorder(interviewStream);
       interviewActive=true;
       ivPanel.className='';
       ivStatus.textContent='Listening to '+interviewAudioSource+' for questions...'+(interviewSourceNote?' '+interviewSourceNote:'');
-      interviewRecorder.ondataavailable=function(ev){
-        if(!ev.data||ev.data.size<400||!interviewActive)return;
-        handleInterviewAudio(ev.data,interviewRecorder.mimeType||mt||ev.data.type);
-      };
-      interviewRecorder.onerror=function(ev){
-        ivPanel.className='idle';
-        ivStatus.textContent='Audio listener error: '+((ev.error&&ev.error.message)||'unknown error');
-      };
-      interviewRecorder.start(6500);
+      startInterviewRecorderLoop(mt);
     }catch(err){
       ivPanel.className='idle';
       ivStatus.textContent='Audio capture failed: '+err.message;
     }
+  }
+
+  function startInterviewRecorderLoop(mimeType){
+    if(!interviewActive||!interviewStream)return;
+    var chunks=[];
+    try{
+      interviewRecorder=mimeType?new MediaRecorder(interviewStream,{mimeType:mimeType}):new MediaRecorder(interviewStream);
+    }catch(err){
+      ivPanel.className='idle';
+      ivStatus.textContent='Audio recorder failed: '+err.message;
+      return;
+    }
+    interviewRecorder.ondataavailable=function(ev){
+      if(ev.data&&ev.data.size>0)chunks.push(ev.data);
+    };
+    interviewRecorder.onerror=function(ev){
+      console.warn('Interview recorder skipped:',(ev.error&&ev.error.message)||'unknown error');
+      if(interviewActive)interviewRecorderTimer=setTimeout(function(){startInterviewRecorderLoop(mimeType)},250);
+    };
+    interviewRecorder.onstop=function(){
+      if(chunks.length&&interviewActive){
+        var type=interviewRecorder.mimeType||mimeType||'audio/webm';
+        var blob=new Blob(chunks,{type:type});
+        if(blob.size>250)handleInterviewAudio(blob,type);
+      }
+      if(interviewActive)interviewRecorderTimer=setTimeout(function(){startInterviewRecorderLoop(mimeType)},160);
+    };
+    interviewRecorder.start();
+    interviewRecorderTimer=setTimeout(function(){
+      try{if(interviewRecorder&&interviewRecorder.state==='recording')interviewRecorder.stop()}catch(_){}
+    },4200);
   }
 
   async function getInterviewAudioStream(){
@@ -429,32 +456,75 @@
     });
   }
 
+  function setInterviewListeningStatus(extra){
+    ivStatus.textContent='Listening to '+interviewAudioSource+' for questions...'+(extra?' '+extra:'');
+  }
+
+  function resetInterviewForNext(){
+    interviewBusy=false;
+    interviewLastQuestion='';
+    interviewLastAt=0;
+    interviewTranscriptionErrors=0;
+    interviewTranscriptBuffer='';
+    ivPanel.className=interviewActive?'':'idle';
+    ivQuestion.style.display='none';
+    ivQuestion.textContent='';
+    ivAnswer.innerHTML='<span style="color:rgba(255,255,255,0.45)">Listening for the next question.</span>';
+    if(interviewActive)setInterviewListeningStatus();
+  }
+
   function looksLikeQuestion(text){
     var t=(text||'').trim();
     if(t.length<8)return false;
     if(/[?]\s*$/.test(t))return true;
     return /(^|\b)(what|why|how|when|where|who|which|can|could|would|should|do|does|did|are|is|was|were|tell me|walk me|explain|describe)\b/i.test(t) ||
-      /\b(can you|could you|would you|tell me about|walk me through|explain how|describe a time|why should|how would)\b/i.test(t);
+      /\b(can you|could you|would you|tell me about|walk me through|explain how|describe a time|why should|how would|give me an example|talk about|share a time|have you ever|what would you do|how do you handle)\b/i.test(t);
+  }
+
+  function addInterviewTranscript(text){
+    interviewTranscriptBuffer=(interviewTranscriptBuffer+' '+text).replace(/\s+/g,' ').trim();
+    if(interviewTranscriptBuffer.length>700)interviewTranscriptBuffer=interviewTranscriptBuffer.slice(-700).replace(/^[^\s]+\s?/,'');
+    return interviewTranscriptBuffer;
+  }
+
+  function questionCandidateFromTranscript(text){
+    var t=(text||'').trim();
+    if(!looksLikeQuestion(t))return '';
+    var parts=t.split(/(?<=[?.!])\s+/);
+    for(var i=parts.length-1;i>=0;i--){
+      var p=parts[i].trim();
+      if(looksLikeQuestion(p))return p;
+    }
+    return t.length>320?t.slice(-320):t;
   }
 
   async function handleInterviewAudio(blob,mimeType){
     try{
       var dataUrl=await blobToDataUrl(blob);
       if(!dataUrl||dataUrl==='data:;base64,'){
-        ivStatus.textContent='Listening to '+interviewAudioSource+', but this audio chunk was empty.';
+        setInterviewListeningStatus('(empty chunk skipped)');
         return;
       }
       var tr=await window.silentgpt.transcribeAudio({dataUrl:dataUrl,mimeType:mimeType});
       if(!interviewActive)return;
-      if(tr.error){ivStatus.textContent=tr.error;return}
+      if(tr.error){
+        interviewTranscriptionErrors++;
+        console.warn('Interview transcription skipped:',tr.error);
+        setInterviewListeningStatus(interviewTranscriptionErrors>=3?'(some audio chunks could not be transcribed)':'');
+        return;
+      }
       var text=(tr.text||'').replace(/\s+/g,' ').trim();
-      if(!text){ivStatus.textContent='Listening for questions...';return}
+      if(!text){setInterviewListeningStatus();return}
+      interviewTranscriptionErrors=0;
       ivStatus.textContent='Heard: '+(text.length>90?text.slice(0,87)+'...':text);
-      if(!looksLikeQuestion(text)||interviewBusy)return;
-      var normalized=text.toLowerCase().replace(/[^\w\s]/g,'').replace(/\s+/g,' ').trim();
+      var combined=addInterviewTranscript(text);
+      var candidate=questionCandidateFromTranscript(combined);
+      if(!candidate||interviewBusy)return;
+      var normalized=candidate.toLowerCase().replace(/[^\w\s]/g,'').replace(/\s+/g,' ').trim();
       if(normalized===interviewLastQuestion&&Date.now()-interviewLastAt<45000)return;
       interviewLastQuestion=normalized;interviewLastAt=Date.now();
-      answerInterviewQuestion(text);
+      interviewTranscriptBuffer='';
+      answerInterviewQuestion(candidate);
     }catch(err){
       if(interviewActive)ivStatus.textContent='Audio processing failed: '+err.message;
     }
@@ -475,9 +545,12 @@
       ivAnswer.innerHTML='<div class="error-msg">'+esc(err.message)+'</div>';
     }
     interviewBusy=false;
-    if(interviewActive){ivPanel.className='';ivStatus.textContent='Listening for the next question...'}
+    if(interviewActive){ivPanel.className='';setInterviewListeningStatus()}
   }
 
+  ivNext.addEventListener('click',function(){
+    resetInterviewForNext();
+  });
   ivRestart.addEventListener('click',function(){
     stopInterviewMode();
     setTimeout(function(){startInterviewMode()},250);
