@@ -8,7 +8,8 @@ const {
   screen,
   desktopCapturer,
   nativeImage,
-  clipboard
+  clipboard,
+  session
 } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -977,6 +978,8 @@ function showWithMode(mode) {
   if (!isAppUnlocked()) { showActivate(); return; }
   if (!overlayWin) makeOverlay();
 
+  if (mode === 'research') mode = 'interview';
+
   const wasOverlayVisible = overlayUp && overlayWin && !overlayWin.isDestroyed() && overlayWin.isVisible();
 
   const finishShow = (img) => {
@@ -993,6 +996,11 @@ function showWithMode(mode) {
     // In lockdown mode, start the keep-alive timer to stay above lockdown browsers
     if (isLockdown()) startLockdownKeepAlive();
   };
+
+  if (mode === 'interview') {
+    finishShow(null);
+    return;
+  }
 
   // In lockdown mode, use native OS capture (bypasses lockdown browser's Chromium hooks)
   // Safe Exam Browser / Respondus block desktopCapturer but can't block screencapture/GDI+
@@ -1089,6 +1097,7 @@ function makeTray() {
     { label: 'Drip Type Mode',  click: () => showWithMode('driptype'),  enabled: licensed },
     { type: 'separator' },
     ...(licensed ? [] : [{ label: 'Choose Lite or Pro', click: showActivate }, { type: 'separator' }]),
+    { label: 'Interview Mode', click: () => showWithMode('interview'), enabled: licensed },
     { label: 'Settings', click: makeSettings },
     { type: 'separator' },
     { label: hasProAccess() ? 'Pro Stealth Features Available' : 'Pro unlocks stealth features', enabled: false },
@@ -1127,7 +1136,7 @@ function bindKeys() {
     [store.get('hotkeySolve'),     () => showWithMode('solve')],
     [store.get('hotkeyEssay'),     () => showWithMode('essay')],
     [store.get('hotkeyCode'),      () => showWithMode('code')],
-    [store.get('hotkeyResearch'),  () => showWithMode('research')],
+    [store.get('hotkeyResearch'),  () => showWithMode('interview')],
     [store.get('hotkeyEmail'),     () => showWithMode('email')],
     [store.get('hotkeyFlashcards'),() => showWithMode('flashcards')],
     [store.get('hotkeyAutopilot'), () => showWithMode('autopilot')],
@@ -1151,7 +1160,7 @@ function bindKeys() {
       ['Control+Shift+V',  () => showWithMode('solve')],
       ['Control+Shift+E',  () => showWithMode('essay')],
       ['Control+Shift+C',  () => showWithMode('code')],
-      ['Control+Shift+F',  () => showWithMode('research')],
+      ['Control+Shift+F',  () => showWithMode('interview')],
       ['Control+Shift+W',  () => showWithMode('email')],
       ['Control+Shift+Q',  () => showWithMode('flashcards')],
       ['Control+Shift+P',  () => showWithMode('autopilot')],
@@ -2031,6 +2040,45 @@ ipcMain.on('save-settings', (_ev, s) => {
 
 /* ─────────────────── AI Request ─────────────────── */
 
+function configuredOpenAIKey() {
+  let apiKey = OPENAI_API_KEY;
+  if (apiKey === OPENAI_KEY_PLACEHOLDER) {
+    const stored = store.get('openaiKey');
+    if (stored && stored !== OPENAI_KEY_PLACEHOLDER && stored.length > 10) apiKey = stored;
+  }
+  return apiKey;
+}
+
+ipcMain.handle('transcribe-audio', async (_ev, { dataUrl, mimeType }) => {
+  if (!isAppUnlocked()) return { error: 'Choose Lite or Pro to use SilentGPT.' };
+  const apiKey = configuredOpenAIKey();
+  if (!apiKey || apiKey === OPENAI_KEY_PLACEHOLDER) return { error: 'OpenAI API key not configured.' };
+
+  const match = String(dataUrl || '').match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) return { error: 'No audio data received.' };
+
+  try {
+    const audioMime = mimeType || match[1] || 'audio/webm';
+    const ext = audioMime.includes('mp4') ? 'mp4' : audioMime.includes('wav') ? 'wav' : 'webm';
+    const bytes = Buffer.from(match[2], 'base64');
+    const form = new FormData();
+    form.append('model', 'gpt-4o-mini-transcribe');
+    form.append('response_format', 'json');
+    form.append('file', new Blob([bytes], { type: audioMime }), `interview.${ext}`);
+
+    const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + apiKey },
+      body: form
+    });
+    if (!res.ok) return { error: `Transcription error (${res.status}): ${await res.text()}` };
+    const data = await res.json();
+    return { text: (data.text || '').trim() };
+  } catch (err) {
+    return { error: 'Transcription failed: ' + err.message };
+  }
+});
+
 ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, region, language }) => {
   // Revalidate subscription if last check was >10 min ago (non-blocking for fresh checks)
   const lastCheck = store.get('lastSubscriptionCheck') || 0;
@@ -2043,7 +2091,7 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
   trackUsage(mode || 'answer');
 
   // Determine which AI provider to use:
-  // - Research mode → Perplexity (has web search built in)
+  // - Research mode → Perplexity (legacy source-focused mode)
   // - Everything else → OpenAI GPT-5.4 mini (better vision, accuracy, JSON)
   const usePerplexity = (mode === 'research');
 
@@ -2105,6 +2153,7 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
     solve:     'You are an expert tutor. Solve the problem completely. First line MUST be the actual final answer (e.g. "Answer: x = 7" or "Answer: 42"). Then show the step-by-step work exactly as a student would write it on paper. Number each step clearly. Do not only explain the method; complete the arithmetic/algebra/calculus and give the final numeric or symbolic result. Repeat the final answer on its own line at the end (e.g. "Final Answer: 42"). NEVER use LaTeX — write math in plain text with / for fractions, ^ for exponents, sqrt() for roots, and Unicode symbols (∫, Σ, π, ∞, ², ³). Read all notation from the image VERY carefully.',
     essay:     'You are an academic essay writer. Write a well-structured essay on the topic shown. Include: a clear thesis statement, 3-4 body paragraphs with topic sentences and supporting evidence, and a strong conclusion. Use formal academic tone. Aim for 500-800 words. Write in proper paragraph form — no bullet points or lists.',
     code:      'You are an expert programmer. Write clean, well-documented code to solve the problem shown. Use markdown code blocks with the correct language specifier (e.g. ```python, ```javascript, ```java, ```cpp). Include comments explaining key logic. Follow best practices: meaningful variable names, error handling, efficiency. If the language is not specified, infer it from context.',
+    interview: 'You are an interview copilot. A live audio transcript may contain filler words, partial sentences, or background conversation. When the transcript contains an interview question, answer it directly as a strong candidate would say it aloud. Keep the response concise, natural, and interview-ready: start with the answer, add 2-4 supporting points, and include a brief example when useful. Do not mention transcripts, audio, or that you are an AI.',
     research:  store.get('credibleSourcesOnly')
       ? 'You are a research specialist. Provide a thorough analysis using ONLY credible academic and institutional sources (.edu, .org, .gov domains). Do NOT cite .com or commercial sources. Structure: 1) Brief overview, 2) Key findings with data from credible sources only, 3) References — list only .edu/.org/.gov URLs. Be factual and thorough.'
       : 'You are a research specialist. Provide a thorough, well-organized analysis of the topic shown. Structure your response as: 1) Brief overview, 2) Key findings with specific details and data, 3) Sources and references at the end. Use real, credible sources where possible. Be factual and detailed.',
@@ -2116,7 +2165,7 @@ ipcMain.handle('ai-request', async (_ev, { mode, text, imageDataUrl, images, reg
   // If simpleMode toggle is ON, override 'answer' mode to use 'simple' prompt
   const effectiveMode = (mode === 'answer' && store.get('simpleMode')) ? 'simple' : mode;
   let systemPrompt = prompts[effectiveMode] || prompts.answer;
-  if (['answer', 'simple', 'solve', 'essay', 'code', 'research', 'flashcards'].includes(effectiveMode)) {
+  if (['answer', 'simple', 'solve', 'essay', 'code', 'research', 'interview', 'flashcards'].includes(effectiveMode)) {
     systemPrompt += '\n\nWhen math notation is useful, format it as LaTeX using \\( ... \\) for inline math and \\[ ... \\] for displayed equations so the overlay can render it clearly.';
   }
   // Prepend user's custom AI context if set
@@ -3570,8 +3619,26 @@ function applyCloseResistance(win) {
 
 /* ─────────────────── App Lifecycle ─────────────────── */
 
+function setupMediaPermissions() {
+  try {
+    session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+      callback(permission === 'media' || permission === 'display-capture');
+    });
+    session.defaultSession.setPermissionCheckHandler((_webContents, permission) => permission === 'media' || permission === 'display-capture');
+    session.defaultSession.setDisplayMediaRequestHandler((_request, callback) => {
+      desktopCapturer.getSources({ types: ['screen'] })
+        .then((sources) => {
+          if (!sources[0]) { callback({}); return; }
+          callback(process.platform === 'win32' ? { video: sources[0], audio: 'loopback' } : { video: sources[0] });
+        })
+        .catch(() => callback({}));
+    });
+  } catch (_) {}
+}
+
 app.whenReady().then(async () => {
   app.setAppUserModelId('net.trysilentgpt.app');
+  setupMediaPermissions();
   if (process.platform === 'darwin') {
     try { app.dock?.setIcon(getAppIconImage()); } catch (_) {}
   }

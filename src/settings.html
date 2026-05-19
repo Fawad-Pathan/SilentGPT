@@ -256,10 +256,10 @@
         <div class="module-desc">Write & debug code</div>
         <div class="module-arrow">→</div>
       </div>
-      <div class="module-card" data-feature="research" role="button" tabindex="0">
-        <div class="module-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M7 25V15M14 25V8M21 25V12M28 25H4"></path></svg></div>
-        <div class="module-title">Research</div>
-        <div class="module-desc">Credible source analysis</div>
+      <div class="module-card" data-feature="interview" role="button" tabindex="0">
+        <div class="module-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 5v11"></path><path d="M10 12v3a6 6 0 0 0 12 0v-3"></path><path d="M8 15a8 8 0 0 0 16 0"></path><path d="M16 23v4M11 27h10"></path></svg></div>
+        <div class="module-title">Interview</div>
+        <div class="module-desc">Live audio answers</div>
         <div class="module-arrow">→</div>
       </div>
       <div class="module-card" data-feature="translate" role="button" tabindex="0">
@@ -342,11 +342,12 @@
     </div>
 
     <div class="card">
-      <div class="card-title">Research Settings</div>
-      <div class="toggle-row" style="border-bottom:none">
+      <div class="card-title">Interview Settings</div>
+      <div style="font-size:12px;color:var(--text-dim);line-height:1.5">Interview mode listens to microphone audio, detects spoken questions, and drafts concise answers in the overlay.</div>
+      <div class="toggle-row" style="border-bottom:none;display:none">
         <div class="toggle-info">
-          <div class="toggle-label">Credible Sources Only</div>
-          <div class="toggle-desc">Research mode uses only .edu, .org, .gov sources — no commercial sites</div>
+          <div class="toggle-label">Live Question Detection</div>
+          <div class="toggle-desc">Interview mode listens for spoken questions and drafts answers live</div>
         </div>
         <div class="toggle" id="toggle-credible" data-key="credibleSourcesOnly"><div class="thumb"></div></div>
       </div>
@@ -439,7 +440,7 @@
             <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Solve</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+V</kbd></div>
             <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Essay</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+E</kbd></div>
             <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Code</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+C</kbd></div>
-            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Research</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+F</kbd></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Interview</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+F</kbd></div>
             <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Email</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+W</kbd></div>
             <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Flashcards</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+Q</kbd></div>
             <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Autopilot</span><kbd style="background:rgba(255,255,255,0.08);color:var(--accent-glow);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.20)">Ctrl+Shift+P</kbd></div>
@@ -556,7 +557,7 @@
         <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyCode" readonly value="Alt+9" data-setting="hotkeyCode" /></div>
       </div>
       <div class="hotkey-field">
-        <div class="hotkey-label"><span class="mode-dot" style="background:#c8c8c2"></span>Research</div>
+        <div class="hotkey-label"><span class="mode-dot" style="background:#c8c8c2"></span>Interview</div>
         <div class="hotkey-input-wrap"><input type="text" id="hk-hotkeyResearch" readonly value="CmdOrCtrl+Alt+1" data-setting="hotkeyResearch" /></div>
       </div>
       <div class="hotkey-field">
@@ -786,7 +787,7 @@
     solve:{name:'Solve',keybind:'Alt + 7',description:'Break down math, science, homework, and technical problems into clear step-by-step solutions.'},
     essay:{name:'Essay',keybind:'Alt + 8',description:'Generate structured essays with a thesis, intro, body sections, transitions, and a clean conclusion.'},
     code:{name:'Code',keybind:'Alt + 9',description:'Write, debug, refactor, and explain code from screenshots or typed prompts across programming languages.'},
-    research:{name:'Research',keybind:'Cmd/Ctrl + Alt + 1',description:'Create deeper research-style responses with source-focused analysis for projects, papers, and comparisons.'},
+    interview:{name:'Interview',keybind:'Cmd/Ctrl + Alt + 1',description:'Open a floating overlay that listens for spoken interview questions and drafts concise answers live.'},
     translate:{name:'Translate',keybind:'Alt + 2',description:'Translate selected text from your screen into your chosen language without leaving your current app.'},
     email:{name:'Email',keybind:'Cmd/Ctrl + Alt + 2',description:'Draft polished email replies, outreach, follow-ups, and professional messages ready to paste.'},
     flashcards:{name:'Flashcards',keybind:'Cmd/Ctrl + Alt + 3',description:'Turn captured notes or study material into flashcards and review them in the dedicated study view.'},
@@ -796,7 +797,7 @@
   var shortcutList=[
     ['Answer','Alt + 1'],['Stipple','Alt + 6'],['Translate','Alt + 2'],['Autopilot','Alt + 4'],
     ['Drip Type','Alt + 5'],['Stop Drip Type','Alt + 0'],['Solve','Alt + 7'],['Essay','Alt + 8'],
-    ['Code','Alt + 9'],['Research','Cmd/Ctrl + Alt + 1'],['Email','Cmd/Ctrl + Alt + 2'],['Flashcards','Cmd/Ctrl + Alt + 3']
+    ['Code','Alt + 9'],['Interview','Cmd/Ctrl + Alt + 1'],['Email','Cmd/Ctrl + Alt + 2'],['Flashcards','Cmd/Ctrl + Alt + 3']
   ];
 
   function setSaveBarVisibility(tabName){

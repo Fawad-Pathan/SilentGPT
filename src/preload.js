@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('silentgpt', {
   getSettings:    ()       => ipcRenderer.invoke('get-settings'),
   saveSettings:   (s)      => ipcRenderer.send('save-settings', s),
   aiRequest:      (params) => ipcRenderer.invoke('ai-request', params),
+  transcribeAudio:(data)   => ipcRenderer.invoke('transcribe-audio', data),
   dripType:       (text)   => ipcRenderer.invoke('drip-type', text),
   cancelDripType: ()       => ipcRenderer.send('cancel-drip-type'),
   autopilotExecute: (data) => ipcRenderer.invoke('autopilot-execute', data),

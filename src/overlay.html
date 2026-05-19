@@ -86,6 +86,21 @@
   #text-input-bar input:focus{border-color:var(--accent);box-shadow:0 8px 32px rgba(0,0,0,0.25),0 0 0 3px rgba(111,143,132,0.12),inset 0 1px 0 var(--glass-glow)}
   #text-input-bar input::placeholder{color:var(--text-dim)}
 
+  #interview-panel{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:180;display:none;width:min(560px,calc(100vw - 24px));background:var(--glass);backdrop-filter:blur(50px) saturate(180%);-webkit-backdrop-filter:blur(50px) saturate(180%);border:1px solid var(--glass-border);border-radius:14px;box-shadow:0 18px 60px rgba(0,0,0,.38),inset 0 1px 0 var(--glass-glow);overflow:hidden}
+  #interview-panel .iv-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.08)}
+  #interview-panel .iv-title{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;text-transform:uppercase}
+  #interview-panel .iv-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,.55);animation:pulseDot 1.4s infinite}
+  #interview-panel.idle .iv-dot{background:var(--text-dim);box-shadow:none;animation:none}
+  #interview-panel.answering .iv-dot{background:#f59e0b;box-shadow:0 0 0 0 rgba(245,158,11,.45)}
+  @keyframes pulseDot{70%{box-shadow:0 0 0 8px rgba(239,68,68,0)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}
+  #interview-panel .iv-actions{display:flex;gap:6px}
+  #interview-panel button{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);padding:4px 9px;border-radius:8px;font-size:11px;font-family:inherit;cursor:pointer}
+  #interview-panel button:hover{background:rgba(255,255,255,0.12);color:var(--text)}
+  #interview-panel .iv-body{padding:11px 12px 12px}
+  #iv-status{font-size:11px;color:var(--text-dim);margin-bottom:8px}
+  #iv-question{display:none;font-size:12px;color:var(--text-muted);line-height:1.45;margin-bottom:9px;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.07)}
+  #iv-answer{font-size:13px;line-height:1.55;max-height:32vh;overflow:auto}
+
   #drip-type-panel{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:300;display:none;width:520px;background:var(--glass);backdrop-filter:blur(60px) saturate(200%);-webkit-backdrop-filter:blur(60px) saturate(200%);border:1px solid var(--glass-border);border-radius:var(--radius);box-shadow:0 24px 80px rgba(0,0,0,.45),inset 0 1px 0 var(--glass-glow);animation:panelIn .3s cubic-bezier(.16,1,.3,1);overflow:hidden}
   #drip-type-panel .dt-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
   #drip-type-panel .dt-header h3{font-size:14px;font-weight:600;color:var(--accent);margin:0}
@@ -127,6 +142,21 @@
 <div id="capture-count" style="position:fixed;bottom:36px;right:8px;z-index:101;display:none;min-width:18px;height:18px;line-height:18px;text-align:center;background:var(--accent);color:#000;font-size:10px;font-weight:700;border-radius:9px;padding:0 4px;pointer-events:none"></div>
 <div id="text-input-bar"><input type="text" id="text-input" placeholder="Type your question..." autocomplete="off" /></div>
 
+<div id="interview-panel" class="idle">
+  <div class="iv-head">
+    <div class="iv-title"><span class="iv-dot"></span><span>Interview</span></div>
+    <div class="iv-actions">
+      <button id="iv-restart-btn">Restart</button>
+      <button id="iv-close-btn">Close</button>
+    </div>
+  </div>
+  <div class="iv-body">
+    <div id="iv-status">Starting audio listener...</div>
+    <div id="iv-question"></div>
+    <div id="iv-answer"></div>
+  </div>
+</div>
+
 <div id="response-panel">
   <div id="response-header">
     <span class="mode-label" id="response-mode-text">Answer</span>
@@ -159,6 +189,7 @@
 <script>
 (function(){
   var currentMode='answer', isSelecting=false, selStart=null, selRect=null, capture=null, captures=[], settings={}, textMode=false, dripTypeActive=false, requestSeq=0;
+  var interviewStream=null, interviewRecorder=null, interviewActive=false, interviewBusy=false, interviewLastQuestion='', interviewLastAt=0;
 
   var $=function(id){return document.getElementById(id)};
   var layer=$('capture-layer'), sel=$('selection'), selLbl=$('selection-label');
@@ -168,6 +199,7 @@
   var addCaptureBtn=$('add-capture-btn'), captureCount=$('capture-count');
   var inputBar=$('text-input-bar'), inputEl=$('text-input');
   var dtPanel=$('drip-type-panel'), dtArea=$('dt-textarea'), dtStart=$('dt-start-btn'), dtClose=$('dt-close-btn'), dtPencil=$('dt-pencil-btn');
+  var ivPanel=$('interview-panel'), ivStatus=$('iv-status'), ivQuestion=$('iv-question'), ivAnswer=$('iv-answer'), ivRestart=$('iv-restart-btn'), ivClose=$('iv-close-btn');
 
   window.silentgpt.onScreenCaptured(function(u){
     capture=u||null;
@@ -253,13 +285,19 @@
     }
   });
 
-  var labels={answer:'Answer',simple:'Simple',translate:'Translate',solve:'Solve',essay:'Essay',code:'Code',research:'Research',email:'Email',flashcards:'Flashcards',driptype:'Drip Type',autopilot:'Autopilot'};
+  var labels={answer:'Answer',simple:'Simple',translate:'Translate',solve:'Solve',essay:'Essay',code:'Code',research:'Interview',interview:'Interview',email:'Email',flashcards:'Flashcards',driptype:'Drip Type',autopilot:'Autopilot'};
   function setMode(m){
+    if(m==='research')m='interview';
     currentMode=m;
+    if(m!=='interview')stopInterviewMode();
     disableClickThrough();  // reset click-through so drag works on new mode
     resPanel.style.display='none';resPanel.style.transform='';resetSel();
     if(m!=='autopilot') modeInd.textContent=labels[m]||m;
     if(m==='driptype') showDT(); else hideDT();
+    if(m==='interview'){
+      startInterviewMode();
+      return;
+    }
     // Autopilot: auto-capture full screen immediately — no drag needed
     if(m==='autopilot'){
       instr.style.display='none';
@@ -275,6 +313,139 @@
       },150);
     }
   }
+
+  async function startInterviewMode(){
+    disableClickThrough();
+    textMode=false;inputBar.style.display='none';resPanel.style.display='none';sel.style.display='none';
+    instr.innerHTML='Listening for interview questions &middot; <kbd>Esc</kbd> close';
+    instr.style.display=settings.clearScreen?'none':'';
+    ivPanel.style.display='block';
+    ivPanel.className='idle';
+    ivStatus.textContent='Requesting microphone access...';
+    ivQuestion.style.display='none';ivQuestion.textContent='';
+    if(!ivAnswer.innerHTML)ivAnswer.innerHTML='<span style="color:rgba(255,255,255,0.45)">Answers will appear here when a question is detected.</span>';
+    await startInterviewAudio();
+    enableClickThrough();
+  }
+
+  function stopInterviewMode(){
+    interviewActive=false;
+    try{if(interviewRecorder&&interviewRecorder.state!=='inactive')interviewRecorder.stop()}catch(_){}
+    try{if(interviewStream)interviewStream.getTracks().forEach(function(t){t.stop()})}catch(_){}
+    interviewRecorder=null;interviewStream=null;
+    if(ivPanel)ivPanel.style.display='none';
+  }
+
+  function audioMimeType(){
+    if(typeof MediaRecorder==='undefined')return '';
+    var types=['audio/webm;codecs=opus','audio/webm','audio/mp4'];
+    for(var i=0;i<types.length;i++){if(MediaRecorder.isTypeSupported(types[i]))return types[i]}
+    return '';
+  }
+
+  async function startInterviewAudio(){
+    if(interviewActive)return;
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+      ivPanel.className='idle';
+      ivStatus.textContent='Microphone capture is not available in this Electron build.';
+      return;
+    }
+    try{
+      interviewStream=await getInterviewAudioStream();
+      var mt=audioMimeType();
+      interviewRecorder=mt?new MediaRecorder(interviewStream,{mimeType:mt}):new MediaRecorder(interviewStream);
+      interviewActive=true;
+      ivPanel.className='';
+      ivStatus.textContent='Listening for questions...';
+      interviewRecorder.ondataavailable=function(ev){
+        if(!ev.data||ev.data.size<1200||!interviewActive)return;
+        handleInterviewAudio(ev.data,interviewRecorder.mimeType||mt||ev.data.type);
+      };
+      interviewRecorder.onerror=function(ev){
+        ivPanel.className='idle';
+        ivStatus.textContent='Audio listener error: '+((ev.error&&ev.error.message)||'unknown error');
+      };
+      interviewRecorder.start(6500);
+    }catch(err){
+      ivPanel.className='idle';
+      ivStatus.textContent='Microphone access failed: '+err.message;
+    }
+  }
+
+  async function getInterviewAudioStream(){
+    if(navigator.mediaDevices.getDisplayMedia){
+      try{
+        var displayStream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
+        displayStream.getVideoTracks().forEach(function(t){t.stop()});
+        if(displayStream.getAudioTracks().length)return displayStream;
+        displayStream.getTracks().forEach(function(t){t.stop()});
+      }catch(_){}
+    }
+    return navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:true,autoGainControl:true}});
+  }
+
+  function blobToDataUrl(blob){
+    return new Promise(function(resolve,reject){
+      var fr=new FileReader();
+      fr.onload=function(){resolve(fr.result)};
+      fr.onerror=function(){reject(fr.error||new Error('Audio read failed'))};
+      fr.readAsDataURL(blob);
+    });
+  }
+
+  function looksLikeQuestion(text){
+    var t=(text||'').trim();
+    if(t.length<8)return false;
+    if(/[?]\s*$/.test(t))return true;
+    return /(^|\b)(what|why|how|when|where|who|which|can|could|would|should|do|does|did|are|is|was|were|tell me|walk me|explain|describe)\b/i.test(t) ||
+      /\b(can you|could you|would you|tell me about|walk me through|explain how|describe a time|why should|how would)\b/i.test(t);
+  }
+
+  async function handleInterviewAudio(blob,mimeType){
+    try{
+      var dataUrl=await blobToDataUrl(blob);
+      var tr=await window.silentgpt.transcribeAudio({dataUrl:dataUrl,mimeType:mimeType});
+      if(!interviewActive)return;
+      if(tr.error){ivStatus.textContent=tr.error;return}
+      var text=(tr.text||'').replace(/\s+/g,' ').trim();
+      if(!text){ivStatus.textContent='Listening for questions...';return}
+      ivStatus.textContent='Heard: '+(text.length>90?text.slice(0,87)+'...':text);
+      if(!looksLikeQuestion(text)||interviewBusy)return;
+      var normalized=text.toLowerCase().replace(/[^\w\s]/g,'').replace(/\s+/g,' ').trim();
+      if(normalized===interviewLastQuestion&&Date.now()-interviewLastAt<45000)return;
+      interviewLastQuestion=normalized;interviewLastAt=Date.now();
+      answerInterviewQuestion(text);
+    }catch(err){
+      if(interviewActive)ivStatus.textContent='Audio processing failed: '+err.message;
+    }
+  }
+
+  async function answerInterviewQuestion(question){
+    interviewBusy=true;
+    ivPanel.className='answering';
+    ivQuestion.style.display='block';
+    ivQuestion.textContent=question;
+    ivStatus.textContent='Question detected. Drafting answer...';
+    ivAnswer.innerHTML='<div class="spinner"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+    try{
+      var r=await window.silentgpt.aiRequest({mode:'interview',text:'Interview question: '+question+'\n\nAnswer as the candidate in a concise, natural spoken style.',imageDataUrl:null,region:null,language:settings.language});
+      if(r.error){ivAnswer.innerHTML='<div class="error-msg">'+esc(r.error)+'</div>'}
+      else{ivAnswer.innerHTML=fmtMd(r.result||'')}
+    }catch(err){
+      ivAnswer.innerHTML='<div class="error-msg">'+esc(err.message)+'</div>';
+    }
+    interviewBusy=false;
+    if(interviewActive){ivPanel.className='';ivStatus.textContent='Listening for the next question...'}
+  }
+
+  ivRestart.addEventListener('click',function(){
+    stopInterviewMode();
+    setTimeout(function(){startInterviewMode()},250);
+  });
+  ivClose.addEventListener('click',function(){
+    stopInterviewMode();
+    window.silentgpt.hideOverlay();
+  });
 
   function showDT(){
     dtPanel.style.display='block';
@@ -372,7 +543,7 @@
 
   layer.addEventListener('mousedown',function(e){
     if(e.button!==0||textMode)return;
-    if(currentMode==='driptype'||currentMode==='autopilot'||dripTypeActive)return;
+    if(currentMode==='driptype'||currentMode==='autopilot'||currentMode==='interview'||dripTypeActive)return;
     if(resPanel.style.display==='flex')return;
     if(settings.lockdownMode)return; // No screen capture in lockdown — drag is disabled
     isSelecting=true;
@@ -417,6 +588,7 @@
     }
     if(e.key==='Escape'){
       if(dtPanel.style.display==='block'){hideDT();setMode('answer');instr.style.display=''}
+      else if(currentMode==='interview'){stopInterviewMode();window.silentgpt.hideOverlay()}
       else if(resPanel.style.display==='flex'){disableClickThrough();resPanel.style.display='none';resPanel.style.transform='';resetSel()}
       else if(textMode){textMode=false;inputBar.style.display='none';inputEl.value='';instr.style.display=''}
       else{disableClickThrough();window.silentgpt.hideOverlay()}
@@ -506,7 +678,7 @@
   function enableClickThrough(){
     window.silentgpt.setIgnoreMouseEvents(true,{forward:true});
     // The response panel and input bar need to receive mouse events
-    [resPanel,inputBar,dtPanel].forEach(function(el){
+    [resPanel,inputBar,dtPanel,ivPanel].forEach(function(el){
       if(!el) return;
       el.addEventListener('mouseenter',function(){window.silentgpt.setIgnoreMouseEvents(false)});
       el.addEventListener('mouseleave',function(){window.silentgpt.setIgnoreMouseEvents(true,{forward:true})});
@@ -796,7 +968,7 @@
   });
 
   function updateCaptureUI(){
-    if(currentMode==='driptype'||currentMode==='autopilot'||settings.lockdownMode)return;
+    if(currentMode==='driptype'||currentMode==='autopilot'||currentMode==='interview'||settings.lockdownMode)return;
     if(captures.length>0&&resPanel.style.display!=='flex'){
       addCaptureBtn.style.display='flex';
       if(captures.length>1){captureCount.textContent=captures.length;captureCount.style.display='block'}
