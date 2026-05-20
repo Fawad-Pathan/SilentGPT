@@ -193,7 +193,7 @@
 <script>
 (function(){
   var currentMode='answer', isSelecting=false, selStart=null, selRect=null, capture=null, captures=[], settings={}, textMode=false, dripTypeActive=false, requestSeq=0;
-  var interviewStream=null, interviewKeepaliveStream=null, interviewAudioContext=null, interviewRecorder=null, interviewRecorderTimer=null, interviewActive=false, interviewBusy=false, interviewLastQuestion='', interviewLastAt=0, interviewAudioSource='audio', interviewSourceNote='', interviewTranscriptionErrors=0, interviewTranscriptBuffer='';
+  var interviewStream=null, interviewKeepaliveStream=null, interviewAudioContext=null, interviewRecorder=null, interviewRecorderTimer=null, interviewPendingTimer=null, interviewActive=false, interviewBusy=false, interviewLastQuestion='', interviewLastAt=0, interviewAudioSource='audio', interviewSourceNote='', interviewTranscriptionErrors=0, interviewTranscriptBuffer='', interviewPendingQuestion='';
 
   var $=function(id){return document.getElementById(id)};
   var layer=$('capture-layer'), sel=$('selection'), selLbl=$('selection-label');
@@ -335,6 +335,8 @@
   function stopInterviewMode(){
     interviewActive=false;
     if(interviewRecorderTimer){clearTimeout(interviewRecorderTimer);interviewRecorderTimer=null}
+    if(interviewPendingTimer){clearTimeout(interviewPendingTimer);interviewPendingTimer=null}
+    interviewPendingQuestion='';
     try{if(interviewRecorder&&interviewRecorder.state!=='inactive')interviewRecorder.stop()}catch(_){}
     try{if(interviewStream)interviewStream.getTracks().forEach(function(t){t.stop()})}catch(_){}
     try{if(interviewKeepaliveStream)interviewKeepaliveStream.getTracks().forEach(function(t){t.stop()})}catch(_){}
@@ -398,7 +400,7 @@
     interviewRecorder.start();
     interviewRecorderTimer=setTimeout(function(){
       try{if(interviewRecorder&&interviewRecorder.state==='recording')interviewRecorder.stop()}catch(_){}
-    },4200);
+    },5600);
   }
 
   async function getInterviewAudioStream(){
@@ -466,6 +468,8 @@
     interviewLastAt=0;
     interviewTranscriptionErrors=0;
     interviewTranscriptBuffer='';
+    interviewPendingQuestion='';
+    if(interviewPendingTimer){clearTimeout(interviewPendingTimer);interviewPendingTimer=null}
     ivPanel.className=interviewActive?'':'idle';
     ivQuestion.style.display='none';
     ivQuestion.textContent='';
@@ -483,7 +487,7 @@
 
   function addInterviewTranscript(text){
     interviewTranscriptBuffer=(interviewTranscriptBuffer+' '+text).replace(/\s+/g,' ').trim();
-    if(interviewTranscriptBuffer.length>700)interviewTranscriptBuffer=interviewTranscriptBuffer.slice(-700).replace(/^[^\s]+\s?/,'');
+    if(interviewTranscriptBuffer.length>1100)interviewTranscriptBuffer=interviewTranscriptBuffer.slice(-1100).replace(/^[^\s]+\s?/,'');
     return interviewTranscriptBuffer;
   }
 
@@ -493,9 +497,32 @@
     var parts=t.split(/(?<=[?.!])\s+/);
     for(var i=parts.length-1;i>=0;i--){
       var p=parts[i].trim();
-      if(looksLikeQuestion(p))return p;
+      if(looksLikeQuestion(p)){
+        var context=parts.slice(Math.max(0,i-1)).join(' ').trim();
+        return context.length>520?context.slice(-520).replace(/^[^\s]+\s?/,''):context;
+      }
     }
-    return t.length>320?t.slice(-320):t;
+    return t.length>520?t.slice(-520).replace(/^[^\s]+\s?/,''):t;
+  }
+
+  function scheduleInterviewQuestion(candidate){
+    if(!candidate||interviewBusy)return;
+    interviewPendingQuestion=candidate;
+    if(interviewPendingTimer)clearTimeout(interviewPendingTimer);
+    var complete=/[?]\s*$/.test(candidate)||candidate.length>260;
+    var delay=complete?1100:2600;
+    ivStatus.textContent='Question detected. Listening for the end...';
+    interviewPendingTimer=setTimeout(function(){
+      interviewPendingTimer=null;
+      var q=interviewPendingQuestion.trim();
+      interviewPendingQuestion='';
+      if(!q||interviewBusy)return;
+      var normalized=q.toLowerCase().replace(/[^\w\s]/g,'').replace(/\s+/g,' ').trim();
+      if(normalized===interviewLastQuestion&&Date.now()-interviewLastAt<45000)return;
+      interviewLastQuestion=normalized;interviewLastAt=Date.now();
+      interviewTranscriptBuffer='';
+      answerInterviewQuestion(q);
+    },delay);
   }
 
   async function handleInterviewAudio(blob,mimeType){
@@ -520,11 +547,7 @@
       var combined=addInterviewTranscript(text);
       var candidate=questionCandidateFromTranscript(combined);
       if(!candidate||interviewBusy)return;
-      var normalized=candidate.toLowerCase().replace(/[^\w\s]/g,'').replace(/\s+/g,' ').trim();
-      if(normalized===interviewLastQuestion&&Date.now()-interviewLastAt<45000)return;
-      interviewLastQuestion=normalized;interviewLastAt=Date.now();
-      interviewTranscriptBuffer='';
-      answerInterviewQuestion(candidate);
+      scheduleInterviewQuestion(candidate);
     }catch(err){
       if(interviewActive)ivStatus.textContent='Audio processing failed: '+err.message;
     }
