@@ -17,11 +17,11 @@ const os = require('os');
 const { exec } = require('child_process');
 const Store = require('electron-store');
 
-const APP_ICON_PATH = path.join(__dirname, '..', 'assets', 'icon.png');
+const APP_ICON_PATH = path.join(__dirname, '..', 'assets', 'icon.ico');
 const APP_TRAY_ICON_PATH = path.join(__dirname, '..', 'assets', 'icon_16.png');
 const BRAND_LOGO_CSS_PATH = path.join(__dirname, 'brand-logo.css');
 let cachedBrandLogoDataUrl = null;
-let cachedBrandLogoImage = null;
+let cachedAppIconImage = null;
 
 function getBrandLogoDataUrl() {
   if (cachedBrandLogoDataUrl) return cachedBrandLogoDataUrl;
@@ -32,12 +32,15 @@ function getBrandLogoDataUrl() {
 }
 
 function getAppIconImage(size) {
-  if (!cachedBrandLogoImage) {
-    const dataUrl = getBrandLogoDataUrl();
-    cachedBrandLogoImage = dataUrl ? nativeImage.createFromDataURL(dataUrl) : nativeImage.createFromPath(APP_ICON_PATH);
+  if (!cachedAppIconImage) {
+    cachedAppIconImage = nativeImage.createFromPath(APP_ICON_PATH);
   }
-  if (size && !cachedBrandLogoImage.isEmpty()) return cachedBrandLogoImage.resize({ width: size, height: size, quality: 'best' });
-  return cachedBrandLogoImage;
+  if (cachedAppIconImage.isEmpty()) {
+    const dataUrl = getBrandLogoDataUrl();
+    cachedAppIconImage = dataUrl ? nativeImage.createFromDataURL(dataUrl) : nativeImage.createFromPath(APP_ICON_PATH);
+  }
+  if (size && !cachedAppIconImage.isEmpty()) return cachedAppIconImage.resize({ width: size, height: size, quality: 'best' });
+  return cachedAppIconImage;
 }
 
 /* ─────────────────── Startup / Storage Configuration ─────────────────── */

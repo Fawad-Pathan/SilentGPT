@@ -28,6 +28,7 @@
   "build": {
     "appId": "net.trysilentgpt.app",
     "productName": "SilentGPT",
+    "artifactName": "SilentGPT.exe",
     "directories": {
       "output": "dist"
     },
@@ -45,7 +46,11 @@
           ]
         }
       ],
-      "icon": "assets/icon.png"
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico"
     }
   }
 }
