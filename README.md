@@ -22,7 +22,7 @@ Designed to stay minimal and discreet, SilentGPT supports hidden workflow behavi
 
 ## Status
 
-SilentGPT is actively being developed and updated frequently. Expect unfinished systems, bugs, and major changes over time.
+SilentGPT is actively being developed and updated frequently. Expect unfinished systems, bugs, and major changes over time. Coming Soon
 
 ---
 
